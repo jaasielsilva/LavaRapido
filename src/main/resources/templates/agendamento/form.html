@@ -35,9 +35,24 @@
                 </div>
             </div>
             
-            <div class="mb-3">
-                <label for="servicos" class="form-label text-light">Serviços</label>
-                <input type="text" class="form-control bg-dark text-light border-secondary" id="servicos" th:field="*{servicos}" placeholder="Ex: Lavagem Completa, Polimento..." required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="servicoId" class="form-label text-light">Serviço</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="servicoId" name="servicoId">
+                        <option value="">Selecione um serviço...</option>
+                        <option th:each="s : ${catalogoServicos}"
+                                th:value="${s.id}"
+                                th:text="${s.nome}"
+                                th:data-preco="${s.preco}">
+                            Lavagem Completa
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="servicos" class="form-label text-light">Serviços (descrição)</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="servicos" th:field="*{servicos}" placeholder="Ex: Lavagem Completa, Polimento...">
+                </div>
             </div>
 
             <div class="row">
@@ -67,6 +82,32 @@
                 </button>
             </div>
         </form>
+        
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function () {
+                var servicoSelect = document.getElementById('servicoId');
+                var servicosInput = document.getElementById('servicos');
+                var valorInput = document.getElementById('valor');
+
+                if (servicoSelect) {
+                    servicoSelect.addEventListener('change', function () {
+                        var option = this.options[this.selectedIndex];
+                        var nome = option.text || '';
+                        var preco = option.getAttribute('data-preco');
+
+                        if (nome && servicosInput && !servicosInput.value) {
+                            servicosInput.value = nome;
+                        }
+
+                        if (preco && valorInput) {
+                            valorInput.value = preco.replace(',', '.');
+                        }
+                    });
+                }
+            });
+        /*]]>*/
+        </script>
     </div>
 </body>
 </html>

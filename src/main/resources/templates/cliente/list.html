@@ -41,6 +41,20 @@
                     </div>
                     <div class="client-meta">
                         Cliente desde <span th:text="${#temporals.format(cliente.dataCadastro, 'dd/MM/yyyy')}">Data</span>
+                        <div class="d-flex justify-content-end mt-2 gap-2">
+                            <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}"
+                               class="btn btn-sm btn-outline-light"
+                               title="Editar cliente">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    title="Excluir"
+                                    th:onclick="'confirmarExclusaoCliente(' + ${cliente.id} + ')'"
+                                    sec:authorize="hasAnyAuthority('MASTER', 'ADMIN')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -129,7 +143,8 @@
                 </div>
             </div>
         </div>
-        <script>
+        <script th:inline="javascript">
+        /*<![CDATA[*/
             document.addEventListener("DOMContentLoaded", function () {
                 var modalElement = document.getElementById("modalAdicionarVeiculo");
                 var modalClienteIdInput = document.getElementById("modalClienteId");
@@ -173,7 +188,54 @@
                         });
                     });
                 });
+
+                var clienteSucesso = /*[[${clienteSucesso}]]*/ null;
+                var clienteErro = /*[[${clienteErro}]]*/ null;
+
+                if (clienteSucesso) {
+                    var msgSucesso;
+                    if (clienteSucesso === 'excluido') {
+                        msgSucesso = 'Cliente excluído com sucesso.';
+                    }
+                    if (msgSucesso) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: msgSucesso,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+
+                if (clienteErro) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: clienteErro,
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                }
             });
+
+            function confirmarExclusaoCliente(id) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: 'Você não poderá reverter isso!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar',
+                    background: '#0f1623',
+                    color: '#fff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/clientes/excluir/${id}`;
+                    }
+                });
+            }
+        /*]]>*/
         </script>
     </div>
 </body>

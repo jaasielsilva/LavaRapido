@@ -59,4 +59,8 @@ public class AgendamentoService {
             agendamentoRepository.save(agendamento);
         });
     }
+
+    public long contarPendentesPorEmpresa(Empresa empresa) {
+        return agendamentoRepository.countPendentesByEmpresa(empresa);
+    }
 }

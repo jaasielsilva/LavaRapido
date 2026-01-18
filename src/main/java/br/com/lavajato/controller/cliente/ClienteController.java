@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/clientes")
@@ -57,12 +58,17 @@ public class ClienteController {
     }
     
     @GetMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id) {
+    public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         br.com.lavajato.model.usuario.Usuario usuarioLogado = usuarioService.getUsuarioLogado();
-        if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
-            throw new IllegalStateException("Funcionários não têm permissão para excluir clientes.");
+        try {
+            if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
+                throw new IllegalStateException("Você não tem permissão para excluir este registro.");
+            }
+            clienteService.excluir(id);
+            redirectAttributes.addFlashAttribute("clienteSucesso", "excluido");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("clienteErro", e.getMessage());
         }
-        clienteService.excluir(id);
         return "redirect:/clientes";
     }
 }

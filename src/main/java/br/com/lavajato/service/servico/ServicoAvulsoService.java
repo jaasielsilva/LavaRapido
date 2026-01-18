@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -77,15 +78,57 @@ public class ServicoAvulsoService {
 
     public long contarConcluidosHoje() {
         Usuario usuario = usuarioService.getUsuarioLogado();
-        LocalDateTime inicio = LocalDate.now().atStartOfDay();
-        LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
-        return repository.countConcluidosHoje(usuario.getEmpresa(), inicio, fim);
+        return contarConcluidosHoje(usuario.getEmpresa());
     }
 
     public BigDecimal calcularFaturamentoHoje() {
         Usuario usuario = usuarioService.getUsuarioLogado();
+        return calcularFaturamentoHoje(usuario.getEmpresa());
+    }
+
+    public long contarConcluidosHoje(Empresa empresa) {
         LocalDateTime inicio = LocalDate.now().atStartOfDay();
         LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
-        return repository.sumFaturamentoHoje(usuario.getEmpresa(), inicio, fim);
+        return repository.countConcluidosHoje(empresa, inicio, fim);
+    }
+
+    public BigDecimal calcularFaturamentoHoje(Empresa empresa) {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
+        return repository.sumFaturamentoHoje(empresa, inicio, fim);
+    }
+
+    public java.util.List<ServicoAvulso> listarServicosDoDia(Empresa empresa, int limite) {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
+        java.util.List<ServicoAvulso> lista = repository.findServicosDoDia(empresa, inicio, fim);
+        if (lista.size() > limite) {
+            return lista.subList(0, limite);
+        }
+        return lista;
+    }
+
+    public BigDecimal calcularFaturamentoOntem(Empresa empresa) {
+        LocalDate ontem = LocalDate.now().minusDays(1);
+        LocalDateTime inicio = ontem.atStartOfDay();
+        LocalDateTime fim = ontem.atTime(LocalTime.MAX);
+        return repository.sumFaturamentoHoje(empresa, inicio, fim);
+    }
+
+    public BigDecimal calcularVariacaoHojeVsOntem(Empresa empresa) {
+        BigDecimal hoje = calcularFaturamentoHoje(empresa);
+        BigDecimal ontem = calcularFaturamentoOntem(empresa);
+
+        if (ontem.compareTo(BigDecimal.ZERO) == 0) {
+            if (hoje.compareTo(BigDecimal.ZERO) == 0) {
+                return BigDecimal.ZERO;
+            }
+            return BigDecimal.valueOf(100);
+        }
+
+        BigDecimal diferenca = hoje.subtract(ontem);
+        return diferenca
+                .multiply(BigDecimal.valueOf(100))
+                .divide(ontem, 2, RoundingMode.HALF_UP);
     }
 }

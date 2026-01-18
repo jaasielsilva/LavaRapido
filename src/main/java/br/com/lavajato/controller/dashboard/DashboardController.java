@@ -7,6 +7,8 @@ import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.empresa.EmpresaService;
 import br.com.lavajato.service.usuario.UsuarioService;
 import br.com.lavajato.service.veiculo.VeiculoService;
+import br.com.lavajato.service.agendamento.AgendamentoService;
+import br.com.lavajato.service.servico.ServicoAvulsoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,6 +29,12 @@ public class DashboardController {
 
     @Autowired
     private VeiculoService veiculoService;
+
+    @Autowired
+    private AgendamentoService agendamentoService;
+
+    @Autowired
+    private ServicoAvulsoService servicoAvulsoService;
 
     @Autowired
     private SecurityConfig.ActiveSessionCounter activeSessionCounter;
@@ -75,10 +83,25 @@ public class DashboardController {
             // Dados para o Dashboard Operacional (Original)
             long clientesCadastrados = clienteService.contarPorEmpresa(empresaContexto);
             model.addAttribute("clientesCadastrados", clientesCadastrados);
-            
-            // TODO: Implementar Services reais para Agendamentos e Faturamento
-            // Por enquanto, valores estáticos ou placeholders serão tratados no template se necessário,
-            // mas aqui passamos o que temos.
+
+            long agendamentosPendentes = agendamentoService.contarPendentesPorEmpresa(empresaContexto);
+            model.addAttribute("agendamentosPendentes", agendamentosPendentes);
+
+            long servicosHoje = servicoAvulsoService.contarConcluidosHoje(empresaContexto);
+            model.addAttribute("servicosHoje", servicosHoje);
+
+            java.util.List<br.com.lavajato.model.servico.ServicoAvulso> servicosHojeLista =
+                    servicoAvulsoService.listarServicosDoDia(empresaContexto, 5);
+            model.addAttribute("servicosHojeLista", servicosHojeLista);
+
+            java.math.BigDecimal faturamentoHoje = servicoAvulsoService.calcularFaturamentoHoje(empresaContexto);
+            model.addAttribute("faturamentoHoje", faturamentoHoje);
+
+            java.math.BigDecimal faturamentoVariacao = servicoAvulsoService.calcularVariacaoHojeVsOntem(empresaContexto);
+            model.addAttribute("faturamentoVariacao", faturamentoVariacao);
+            model.addAttribute("faturamentoSubiu", faturamentoVariacao.compareTo(java.math.BigDecimal.ZERO) > 0);
+            model.addAttribute("faturamentoCaiu", faturamentoVariacao.compareTo(java.math.BigDecimal.ZERO) < 0);
+            model.addAttribute("faturamentoVariacaoAbsoluta", faturamentoVariacao.abs());
         }
 
         return "dashboard";

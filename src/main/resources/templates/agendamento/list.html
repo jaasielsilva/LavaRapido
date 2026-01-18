@@ -82,6 +82,14 @@
                                
                             <span th:if="${agendamento.status.name() == 'CONCLUIDO'}" class="text-success"><i class="fa-solid fa-check-circle"></i> Finalizado</span>
                             <span th:if="${agendamento.status.name() == 'CANCELADO'}" class="text-danger"><i class="fa-solid fa-ban"></i> Cancelado</span>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    title="Excluir"
+                                    th:onclick="'confirmarExclusaoAgendamento(' + ${agendamento.id} + ')'"
+                                    sec:authorize="hasAnyAuthority('MASTER', 'ADMIN')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -109,6 +117,58 @@
                 </li>
             </ul>
         </nav>
+
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+            function confirmarExclusaoAgendamento(id) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: 'Você não poderá reverter isso!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar',
+                    background: '#0f1623',
+                    color: '#fff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/agendamentos/excluir/${id}`;
+                    }
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var agendamentoSucesso = /*[[${agendamentoSucesso}]]*/ null;
+                var agendamentoErro = /*[[${agendamentoErro}]]*/ null;
+
+                if (agendamentoSucesso) {
+                    var msgSucesso;
+                    if (agendamentoSucesso === 'excluido') {
+                        msgSucesso = 'Agendamento excluído com sucesso.';
+                    }
+                    if (msgSucesso) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: msgSucesso,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+
+                if (agendamentoErro) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: agendamentoErro,
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        /*]]>*/
+        </script>
     </div>
 </body>
 </html>

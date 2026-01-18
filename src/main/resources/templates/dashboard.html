@@ -104,7 +104,7 @@
                 <div class="card orange">
                     <div class="card-info">
                         <h4>Agendamentos Pendentes</h4>
-                        <span class="number">2</span> <!-- Hardcoded for now -->
+                        <span class="number" th:text="${agendamentosPendentes}">0</span>
                     </div>
                     <div class="icon-box">
                         <i class="fa-solid fa-calendar-days"></i>
@@ -114,7 +114,7 @@
                 <div class="card dark">
                     <div class="card-info">
                         <h4>Serviços Hoje</h4>
-                        <span class="number">2</span> <!-- Hardcoded for now -->
+                        <span class="number" th:text="${servicosHoje}">0</span>
                     </div>
                     <div class="icon-box">
                         <i class="fa-solid fa-car"></i>
@@ -124,9 +124,18 @@
                 <div class="card green" sec:authorize="hasAnyRole('MASTER','ADMIN')">
                     <div class="card-info">
                         <h4>Faturamento Hoje</h4>
-                        <span class="number">R$ 110</span> <!-- Hardcoded for now -->
+                        <span class="number"
+                              th:text="'R$ ' + ${#numbers.formatDecimal(faturamentoHoje, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
                         <div class="stat">
-                            <span class="up">↑ 12%</span> <span class="muted">vs. ontem</span>
+                            <span class="up text-success"
+                                  th:if="${faturamentoSubiu}"
+                                  th:text="'↑ ' + ${#numbers.formatDecimal(faturamentoVariacaoAbsoluta, 1, 'POINT', 0, 'COMMA')} + '%'">↑ 0%</span>
+                            <span class="down text-danger"
+                                  th:if="${faturamentoCaiu}"
+                                  th:text="'↓ ' + ${#numbers.formatDecimal(faturamentoVariacaoAbsoluta, 1, 'POINT', 0, 'COMMA')} + '%'">↓ 0%</span>
+                            <span class="muted"
+                                  th:if="${!faturamentoSubiu and !faturamentoCaiu}">0%</span>
+                            <span class="muted">vs. ontem</span>
                         </div>
                     </div>
                     <div class="icon-box">
@@ -144,27 +153,25 @@
                     </div>
 
                     <div class="list">
-                        <div class="item">
-                            <div class="item-info">
-                                <strong>João Oliveira</strong>
-                                <div class="sub-info">Volkswagen Golf - JKL-3456</div>
-                                <div class="service-type">Lavagem Simples</div>
-                            </div>
-                            <div class="item-actions">
-                                <span class="badge blue">Em Andamento</span>
-                                <span class="price">R$ 40</span>
-                            </div>
+                        <div th:if="${servicosHojeLista == null or servicosHojeLista.isEmpty()}" class="text-center py-4">
+                            <span class="text-muted">Nenhum serviço realizado hoje.</span>
                         </div>
 
-                        <div class="item">
+                        <div class="item" th:each="s : ${servicosHojeLista}">
                             <div class="item-info">
-                                <strong>Cliente Avulso</strong>
-                                <div class="sub-info">Fiat Argo - XYZ-9999</div>
-                                <div class="service-type">Lavagem Completa</div>
+                                <strong th:text="${s.nomeClienteDisplay}">Nome do Cliente</strong>
+                                <div class="sub-info" th:text="${s.veiculoDisplay}">Modelo - Placa</div>
+                                <div class="service-type"
+                                     th:text="${s.servico != null ? s.servico.nome : s.nomeServicoHistorico}">Tipo de serviço</div>
                             </div>
                             <div class="item-actions">
-                                <span class="badge green">Concluído</span>
-                                <span class="price">R$ 70</span>
+                                <span class="badge"
+                                      th:classappend="' bg-' + ${s.status.cor}"
+                                      th:text="${s.status.descricao}">Status</span>
+                                <span class="price"
+                                      th:text="'R$ ' + ${#numbers.formatDecimal(s.valor != null ? s.valor : (s.servico != null ? s.servico.preco : 0), 1, 'POINT', 0, 'COMMA')}">
+                                    R$ 0
+                                </span>
                             </div>
                         </div>
                     </div>

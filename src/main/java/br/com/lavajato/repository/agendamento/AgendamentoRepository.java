@@ -19,4 +19,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
 
     @Query("SELECT a FROM Agendamento a WHERE a.id = :id AND a.veiculo.cliente.empresa = :empresa")
     Optional<Agendamento> findByIdAndEmpresa(@Param("id") Long id, @Param("empresa") Empresa empresa);
+
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status IN ('AGENDADO','EM_ANDAMENTO')")
+    long countPendentesByEmpresa(@Param("empresa") Empresa empresa);
 }

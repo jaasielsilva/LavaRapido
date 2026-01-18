@@ -84,7 +84,8 @@
         </nav>
 
         <!-- Script for Delete Confirmation -->
-        <script>
+        <script th:inline="javascript">
+        /*<![CDATA[*/
             function confirmarExclusao(id) {
                 Swal.fire({
                     title: 'Tem certeza?',
@@ -103,6 +104,36 @@
                     }
                 })
             }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var veiculoSucesso = /*[[${veiculoSucesso}]]*/ null;
+                var veiculoErro = /*[[${veiculoErro}]]*/ null;
+
+                if (veiculoSucesso) {
+                    var msgSucesso;
+                    if (veiculoSucesso === 'excluido') {
+                        msgSucesso = 'Veículo excluído com sucesso.';
+                    }
+                    if (msgSucesso) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: msgSucesso,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+
+                if (veiculoErro) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: veiculoErro,
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        /*]]>*/
         </script>
 
         <!-- CSS for Placa Badge -->

@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Sort;
 
 @Controller
@@ -88,12 +88,17 @@ public class VeiculoController {
     }
     
     @GetMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id) {
+    public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         br.com.lavajato.model.usuario.Usuario usuarioLogado = usuarioService.getUsuarioLogado();
-        if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
-            throw new IllegalStateException("Funcionários não têm permissão para excluir veículos.");
+        try {
+            if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
+                throw new IllegalStateException("Você não tem permissão para excluir este registro.");
+            }
+            veiculoService.excluir(id);
+            redirectAttributes.addFlashAttribute("veiculoSucesso", "excluido");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("veiculoErro", e.getMessage());
         }
-        veiculoService.excluir(id);
         return "redirect:/veiculos";
     }
 }
