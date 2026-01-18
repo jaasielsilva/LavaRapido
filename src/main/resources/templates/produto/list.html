@@ -5,7 +5,7 @@
     <div>
         <!-- Header -->
         <header>
-            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1>Produtos</h1>
                     <div class="subtitle">Gerencie seu estoque e vendas</div>
@@ -17,7 +17,7 @@
                             0
                         </span>
                     </button>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
+                    <button class="btn btn-primary" id="btnNovoProduto" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
                         <i class="fa-solid fa-plus me-2"></i> Novo Produto
                     </button>
                 </div>
@@ -90,7 +90,19 @@
                                   th:classappend="'bg-soft-' + ${produto.categoria.cor}"
                                   style="font-size: 10px; padding: 4px 8px;"
                                   th:text="${produto.categoria.descricao}">Categoria</span>
-                            <a href="#" class="text-secondary small"><i class="fa-solid fa-pen-to-square"></i></a>
+                            <a href="#" 
+                               class="text-secondary small btn-edit-produto"
+                               th:data-id="${produto.id}"
+                               th:data-nome="${produto.nome}"
+                               th:data-descricao="${produto.descricao}"
+                               th:data-preco-venda="${produto.precoVenda}"
+                               th:data-preco-custo="${produto.precoCusto}"
+                               th:data-estoque="${produto.estoque}"
+                               th:data-estoque-minimo="${produto.estoqueMinimo}"
+                               th:data-categoria="${produto.categoria}"
+                               th:data-unidade="${produto.unidade}">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
                         </div>
 
                         <!-- Info Produto -->
@@ -185,11 +197,13 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header border-bottom border-secondary border-opacity-10">
-                        <h5 class="modal-title fw-bold">Novo Produto</h5>
+                        <h5 class="modal-title fw-bold" id="modalTituloProduto">Novo Produto</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form th:action="@{/produtos/salvar}" method="post" th:object="${novoProduto}">
                         <div class="modal-body">
+                            
+                            <input type="hidden" th:field="*{id}" id="produtoId" />
                             
                             <div class="mb-3">
                                 <label for="nome" class="form-label text-light small fw-bold">Nome *</label>
@@ -240,7 +254,7 @@
 
                         </div>
                         <div class="modal-footer border-top-0 pt-0">
-                            <button type="submit" class="btn btn-info w-100 fw-bold">Cadastrar Produto</button>
+                            <button type="submit" class="btn btn-info w-100 fw-bold" id="btnSubmitProduto">Cadastrar Produto</button>
                         </div>
                     </form>
                 </div>
@@ -259,6 +273,59 @@
                 const carrinhoVazioMsg = document.getElementById('carrinhoVazioMsg');
                 const vendaTotal = document.getElementById('vendaTotal');
                 const btnFinalizarVenda = document.getElementById('btnFinalizarVenda');
+                
+                const modalNovoProdutoEl = document.getElementById('modalNovoProduto');
+                const modalNovoProduto = modalNovoProdutoEl ? new bootstrap.Modal(modalNovoProdutoEl) : null;
+                const btnNovoProduto = document.getElementById('btnNovoProduto');
+                const modalTituloProduto = document.getElementById('modalTituloProduto');
+                const btnSubmitProduto = document.getElementById('btnSubmitProduto');
+                const inputId = document.getElementById('produtoId');
+                const inputNome = document.getElementById('nome');
+                const inputDescricao = document.getElementById('descricao');
+                const inputPrecoVenda = document.getElementById('precoVenda');
+                const inputPrecoCusto = document.getElementById('precoCusto');
+                const inputEstoque = document.getElementById('estoque');
+                const inputEstoqueMinimo = document.getElementById('estoqueMinimo');
+                const selectCategoria = document.getElementById('categoria');
+                const selectUnidade = document.getElementById('unidade');
+
+                if (btnNovoProduto) {
+                    btnNovoProduto.addEventListener('click', function() {
+                        if (inputId) inputId.value = '';
+                        if (inputNome) inputNome.value = '';
+                        if (inputDescricao) inputDescricao.value = '';
+                        if (inputPrecoVenda) inputPrecoVenda.value = '';
+                        if (inputPrecoCusto) inputPrecoCusto.value = '';
+                        if (inputEstoque) inputEstoque.value = '';
+                        if (inputEstoqueMinimo) inputEstoqueMinimo.value = inputEstoqueMinimo.getAttribute('value') || '';
+                        if (selectCategoria) selectCategoria.selectedIndex = 0;
+                        if (selectUnidade) selectUnidade.selectedIndex = 0;
+                        if (modalTituloProduto) modalTituloProduto.textContent = 'Novo Produto';
+                        if (btnSubmitProduto) btnSubmitProduto.textContent = 'Cadastrar Produto';
+                    });
+                }
+
+                document.querySelectorAll('.btn-edit-produto').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const data = this.dataset;
+
+                        if (inputId) inputId.value = data.id || '';
+                        if (inputNome) inputNome.value = data.nome || '';
+                        if (inputDescricao) inputDescricao.value = data.descricao && data.descricao !== 'null' ? data.descricao : '';
+                        if (inputPrecoVenda) inputPrecoVenda.value = data.precoVenda || '';
+                        if (inputPrecoCusto) inputPrecoCusto.value = data.precoCusto && data.precoCusto !== 'null' ? data.precoCusto : '';
+                        if (inputEstoque) inputEstoque.value = data.estoque && data.estoque !== 'null' ? data.estoque : '';
+                        if (inputEstoqueMinimo) inputEstoqueMinimo.value = data.estoqueMinimo && data.estoqueMinimo !== 'null' ? data.estoqueMinimo : '';
+                        if (selectCategoria && data.categoria) selectCategoria.value = data.categoria;
+                        if (selectUnidade && data.unidade) selectUnidade.value = data.unidade;
+
+                        if (modalTituloProduto) modalTituloProduto.textContent = 'Editar Produto';
+                        if (btnSubmitProduto) btnSubmitProduto.textContent = 'Salvar Alterações';
+
+                        if (modalNovoProduto) modalNovoProduto.show();
+                    });
+                });
 
                 // --- Lógica de Quantidade no Card ---
                 document.querySelectorAll('.btn-qtd-menos').forEach(btn => {

@@ -32,8 +32,23 @@ public class ProdutoService {
         Usuario usuario = usuarioService.getUsuarioLogado();
         if (produto.getId() == null) {
             produto.setEmpresa(usuario.getEmpresa());
+            return repository.save(produto);
+        } else {
+            Produto existente = repository.findById(produto.getId())
+                    .orElseThrow(() -> new IllegalStateException("Produto não encontrado"));
+            if (!existente.getEmpresa().equals(usuario.getEmpresa())) {
+                throw new IllegalStateException("Usuário não pode editar produto de outra empresa");
+            }
+            existente.setNome(produto.getNome());
+            existente.setDescricao(produto.getDescricao());
+            existente.setPrecoVenda(produto.getPrecoVenda());
+            existente.setPrecoCusto(produto.getPrecoCusto());
+            existente.setEstoque(produto.getEstoque());
+            existente.setEstoqueMinimo(produto.getEstoqueMinimo());
+            existente.setCategoria(produto.getCategoria());
+            existente.setUnidade(produto.getUnidade());
+            return repository.save(existente);
         }
-        return repository.save(produto);
     }
 
     public Optional<Produto> buscarPorId(Long id) {
