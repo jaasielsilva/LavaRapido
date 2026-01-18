@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <!-- Header -->
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Serviços Avulsos</h1>
+                    <div class="subtitle">Serviços do dia sem agendamento prévio</div>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoServico">
+                    <i class="fa-solid fa-plus"></i> Novo Serviço
+                </button>
+            </div>
+        </header>
+
+        <!-- Metrics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 d-flex flex-column justify-content-center" style="background-color: #0f1623; border: 1px solid #1e293b; height: 100px;">
+                    <span class="text-secondary small text-uppercase fw-bold">Em Fila</span>
+                    <span class="fs-2 fw-bold text-warning" th:text="${emFila}">0</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 d-flex flex-column justify-content-center" style="background-color: #0f1623; border: 1px solid #1e293b; height: 100px;">
+                    <span class="text-secondary small text-uppercase fw-bold">Concluídos Hoje</span>
+                    <span class="fs-2 fw-bold text-success" th:text="${concluidosHoje}">0</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 d-flex flex-column justify-content-center" style="background-color: #0f1623; border: 1px solid #1e293b; height: 100px;">
+                    <span class="text-secondary small text-uppercase fw-bold">Faturamento Hoje</span>
+                    <span class="fs-2 fw-bold text-white" th:text="'R$ ' + ${#numbers.formatDecimal(faturamentoHoje, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div class="d-flex flex-column gap-3">
+            <div th:if="${servicos.empty}" class="text-center py-5">
+                <i class="fa-solid fa-car-tunnel fa-3x mb-3 text-muted"></i>
+                <h4 class="text-muted">Nenhum serviço registrado hoje</h4>
+            </div>
+
+            <div th:each="servico : ${servicos}" class="client-card p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-center">
+                    
+                    <!-- Info -->
+                    <div class="d-flex flex-column gap-2 flex-grow-1">
+                        <div class="d-flex align-items-center gap-3 mb-1">
+                            <span class="badge rounded-pill" 
+                                  th:classappend="'bg-' + ${servico.status.cor}"
+                                  th:text="${servico.status.descricao}"
+                                  style="font-size: 12px; padding: 6px 12px;">Em Andamento</span>
+                            
+                            <span class="text-secondary" style="font-size: 14px;" th:text="${#temporals.format(servico.dataCriacao, 'HH:mm')}">14:56</span>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-4 my-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-user text-primary"></i>
+                                <span class="fw-bold text-white" th:text="${servico.nomeClienteDisplay}">João Oliveira</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-car text-primary"></i>
+                                <span class="text-light" th:text="${servico.veiculoDisplay}">Volkswagen Golf - JKL-3456</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-1">
+                            <span class="text-info" th:text="${servico.tipoServico.descricao}">Lavagem Simples</span>
+                        </div>
+                    </div>
+
+                    <!-- Price & Action -->
+                    <div class="d-flex flex-column align-items-end justify-content-between h-100 gap-3">
+                        <div class="fs-4 fw-bold text-white" th:text="'R$ ' + ${#numbers.formatDecimal(servico.valor, 1, 'POINT', 0, 'COMMA')}">R$ 40</div>
+                        
+                        <div>
+                            <a th:if="${servico.status.name() == 'EM_FILA'}"
+                               th:href="@{/servicos-avulsos/status/{id}/EM_ANDAMENTO(id=${servico.id})}"
+                               class="btn btn-sm btn-primary">Iniciar</a>
+                            
+                            <a th:if="${servico.status.name() == 'EM_ANDAMENTO'}"
+                               th:href="@{/servicos-avulsos/status/{id}/CONCLUIDO(id=${servico.id})}"
+                               class="btn btn-sm btn-success">Concluir</a>
+
+                             <a th:if="${servico.status.name() == 'EM_FILA' or servico.status.name() == 'EM_ANDAMENTO'}"
+                               th:href="@{/servicos-avulsos/status/{id}/CANCELADO(id=${servico.id})}"
+                               class="btn btn-sm btn-outline-danger ms-2">Cancelar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL NOVO SERVIÇO -->
+        <div class="modal fade" id="modalNovoServico" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background-color: #0f1623; border: 1px solid #1e293b; color: white;">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title fw-bold">Registrar Serviço Avulso</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/servicos-avulsos/salvar}" th:object="${novoServico}" method="post">
+                        <div class="modal-body">
+                            
+                            <!-- Tabs Cliente -->
+                            <ul class="nav nav-pills nav-fill mb-3 gap-2 p-1 bg-dark rounded" id="pills-tab" role="tablist" style="border: 1px solid #334155;">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active rounded py-2" id="pills-cadastrado-tab" data-bs-toggle="pill" data-bs-target="#pills-cadastrado" type="button" role="tab" aria-selected="true">Cliente Cadastrado</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link rounded py-2" id="pills-avulso-tab" data-bs-toggle="pill" data-bs-target="#pills-avulso" type="button" role="tab" aria-selected="false">Cliente Avulso</button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content mb-4" id="pills-tabContent">
+                                <!-- Cliente Cadastrado -->
+                                <div class="tab-pane fade show active" id="pills-cadastrado" role="tabpanel">
+                                    <label class="form-label text-light fw-bold">Cliente</label>
+                                    <select class="form-select bg-dark text-light border-secondary" th:field="*{cliente}">
+                                        <option value="">Selecione um cliente...</option>
+                                        <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}">Carlos Silva</option>
+                                    </select>
+                                </div>
+                                <!-- Cliente Avulso -->
+                                <div class="tab-pane fade" id="pills-avulso" role="tabpanel">
+                                    <div class="mb-3">
+                                        <label class="form-label text-light fw-bold">Nome do Cliente</label>
+                                        <input type="text" class="form-control bg-dark text-light border-secondary" th:field="*{clienteAvulsoNome}" placeholder="Ex: Cliente Balcão">
+                                    </div>
+                                    <div>
+                                        <label class="form-label text-light fw-bold">Veículo (Modelo - Placa)</label>
+                                        <input type="text" class="form-control bg-dark text-light border-secondary" th:field="*{clienteAvulsoVeiculo}" placeholder="Ex: Fiat Argo - XYZ-9999">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Serviços (Radio) - Estilo Premium -->
+                            <label class="form-label text-light fw-bold mb-3">Selecione o Serviço</label>
+                            <div class="d-flex flex-column gap-3" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                                <div th:each="servico : ${catalogoServicos}" class="position-relative service-option-container">
+                                    <input type="radio" class="btn-check" name="servico" th:id="'servico-' + ${servico.id}" th:value="${servico.id}" required autocomplete="off">
+                                    <label class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center p-3 text-start service-card" th:for="'servico-' + ${servico.id}">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="service-icon-box" 
+                                                 th:classappend="'bg-soft-' + ${servico.categoria.cor}">
+                                                <i class="fa-solid" 
+                                                   th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white fs-6 mb-1" th:text="${servico.nome}">Lavagem Completa</div>
+                                                <div class="small text-muted d-flex align-items-center gap-2">
+                                                    <span><i class="fa-regular fa-clock me-1"></i><span th:text="${servico.tempoMinutos} + ' min'">60 min</span></span>
+                                                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="font-size: 10px;" th:text="${servico.categoria.descricao}">Lavagem</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold text-info fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 0, 'COMMA')}">R$ 70</div>
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-lg hover-scale">
+                                <i class="fa-solid fa-check me-2"></i>Registrar Serviço
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            /* Modal Styling Premium */
+            .modal-content {
+                border-radius: 24px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+                background: linear-gradient(145deg, #0f1623 0%, #0b101b 100%) !important;
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            }
+            
+            .modal-header {
+                padding: 24px 24px 16px 24px;
+            }
+            
+            .modal-body {
+                padding: 16px 24px 24px 24px;
+            }
+
+            /* Custom Scrollbar for Service List */
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+            ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+            ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+            /* Tab Active State */
+            .nav-pills .nav-link {
+                border-radius: 12px;
+                transition: all 0.3s ease;
+                background: rgba(255,255,255,0.03);
+                border: 1px solid transparent;
+            }
+            .nav-pills .nav-link.active {
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+                border: none;
+            }
+            .nav-pills .nav-link:not(.active):hover {
+                background: rgba(255,255,255,0.08);
+                color: white;
+            }
+            
+            /* Service Card Styling */
+            .service-card {
+                border-radius: 16px !important;
+                border: 1px solid rgba(255,255,255,0.05) !important;
+                background: rgba(255,255,255,0.02);
+                transition: all 0.2s ease;
+            }
+            
+            .service-option-container:hover .service-card {
+                background: rgba(255,255,255,0.05);
+                border-color: rgba(255,255,255,0.1) !important;
+                transform: translateY(-1px);
+            }
+
+            .btn-check:checked + .service-card {
+                background: rgba(14, 165, 233, 0.08);
+                border-color: #0ea5e9 !important;
+                box-shadow: 0 0 0 1px #0ea5e9;
+            }
+            
+            .service-icon-box {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+            }
+            
+            .bg-soft-info { background: rgba(14, 165, 233, 0.15); color: #38bdf8; }
+            .bg-soft-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+            .bg-soft-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+            .bg-soft-secondary { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+            /* Button Hover Scale */
+            .hover-scale {
+                transition: transform 0.2s;
+            }
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+            
+            /* Inputs */
+            .form-control, .form-select {
+                border-radius: 12px;
+                padding: 12px 16px;
+                background-color: rgba(0,0,0,0.2) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
+            }
+            .form-control:focus, .form-select:focus {
+                border-color: #0ea5e9 !important;
+                box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+            }
+        </style>
+    </div>
+</body>
+</html>

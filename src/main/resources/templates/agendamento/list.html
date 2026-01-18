@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Agendamentos</h1>
+                    <div class="subtitle">Gerencie os serviços agendados</div>
+                </div>
+                <a th:href="@{/agendamentos/novo}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Novo Agendamento
+                </a>
+            </div>
+        </header>
+
+        <div class="d-flex flex-column gap-3">
+            <div th:if="${agendamentos.empty}" class="text-center py-5">
+                <i class="fa-solid fa-calendar-xmark fa-3x mb-3 text-muted"></i>
+                <h4 class="text-muted">Nenhum agendamento encontrado</h4>
+            </div>
+
+            <div th:each="agendamento : ${agendamentos}" class="client-card p-4 position-relative">
+                <div class="d-flex justify-content-between align-items-start">
+                    
+                    <!-- Left Side: Info -->
+                    <div class="d-flex flex-column gap-2 flex-grow-1">
+                        <!-- Status & Date -->
+                        <div class="d-flex align-items-center gap-3 mb-1">
+                            <span class="badge rounded-pill" 
+                                  th:classappend="'bg-' + ${agendamento.status.cor}"
+                                  th:text="${agendamento.status.descricao}"
+                                  style="font-size: 12px; padding: 6px 12px;">Em Andamento</span>
+                            
+                            <div class="d-flex align-items-center gap-2 text-secondary" style="font-size: 14px;">
+                                <i class="fa-regular fa-calendar"></i>
+                                <span th:text="${#temporals.format(agendamento.data, 'dd/MM/yyyy')}">19/01/2026</span>
+                                <i class="fa-regular fa-clock ms-2"></i>
+                                <span th:text="${#temporals.format(agendamento.data, 'HH:mm')}">14:56</span>
+                            </div>
+                        </div>
+
+                        <!-- Client & Vehicle -->
+                        <div class="d-flex align-items-center gap-4 my-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-user text-primary"></i>
+                                <span class="fw-bold text-white" th:text="${agendamento.veiculo.cliente.nome}">Carlos Silva</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-car text-primary"></i>
+                                <span class="text-light">
+                                    <span th:text="${agendamento.veiculo.modelo}">Honda Civic</span> - 
+                                    <span th:text="${agendamento.veiculo.placa}">ABC-1234</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Services -->
+                        <div class="mt-1">
+                            <span class="text-info" th:text="${agendamento.servicos}">Lavagem Completa, Cristalização</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Side: Price & Actions -->
+                    <div class="d-flex flex-column align-items-end justify-content-between h-100 gap-3">
+                        <div class="fs-4 fw-bold text-white" th:text="'R$ ' + ${#numbers.formatDecimal(agendamento.valor, 1, 'POINT', 0, 'COMMA')}">R$ 350</div>
+                        
+                        <div class="d-flex gap-2">
+                            <!-- Actions based on status -->
+                            <a th:if="${agendamento.status.name() == 'AGENDADO'}"
+                               th:href="@{/agendamentos/status/{id}/EM_ANDAMENTO(id=${agendamento.id})}"
+                               class="btn btn-sm btn-outline-light">Iniciar</a>
+                            
+                            <a th:if="${agendamento.status.name() == 'EM_ANDAMENTO'}"
+                               th:href="@{/agendamentos/status/{id}/CONCLUIDO(id=${agendamento.id})}"
+                               class="btn btn-sm btn-primary">Concluir</a>
+
+                            <a th:if="${agendamento.status.name() == 'AGENDADO' or agendamento.status.name() == 'EM_ANDAMENTO'}"
+                               th:href="@{/agendamentos/status/{id}/CANCELADO(id=${agendamento.id})}"
+                               class="btn btn-sm btn-danger">Cancelar</a>
+                               
+                            <span th:if="${agendamento.status.name() == 'CONCLUIDO'}" class="text-success"><i class="fa-solid fa-check-circle"></i> Finalizado</span>
+                            <span th:if="${agendamento.status.name() == 'CANCELADO'}" class="text-danger"><i class="fa-solid fa-ban"></i> Cancelado</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Link (Optional, absolute position or small icon) -->
+                <a th:href="@{/agendamentos/editar/{id}(id=${agendamento.id})}" 
+                   class="position-absolute top-0 end-0 m-3 text-secondary opacity-50 hover-opacity-100"
+                   title="Editar">
+                    <i class="fa-solid fa-pen"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Pagination (reuse from other pages) -->
+        <nav th:if="${agendamentos.totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${agendamentos.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number - 1})}"><i class="fa-solid fa-chevron-left"></i></a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link" th:text="${(agendamentos.number + 1) + ' / ' + agendamentos.totalPages}">1 / 1</span>
+                </li>
+                <li class="page-item" th:classappend="${agendamentos.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number + 1})}"><i class="fa-solid fa-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</body>
+</html>

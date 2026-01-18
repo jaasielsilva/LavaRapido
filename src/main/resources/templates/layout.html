@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(conteudoPagina)">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lava-Jato SaaS</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-main">
+        <div class="logo">
+            <div class="logo-icon" th:if="${empresaLogada == null || empresaLogada.logo == null}">
+                <i class="fa-solid fa-car"></i>
+            </div>
+            <div class="logo-icon" th:if="${empresaLogada != null && empresaLogada.logo != null}" style="background: none; padding: 0;">
+                <img th:src="${empresaLogada.logo}" alt="Logo" style="max-width: 100%; max-height: 40px; border-radius: 6px;">
+            </div>
+            
+            <div class="logo-text">
+                <strong th:text="${empresaLogada != null ? empresaLogada.nome : 'Lava Jato SaaS'}">AutoShine</strong>
+                <span>Estética Automotiva</span>
+            </div>
+        </div>
+
+        <div class="menu">
+            <a th:href="@{/dashboard}">
+                <i class="fa-solid fa-table-columns"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a th:href="@{/clientes}">
+                <i class="fa-solid fa-users"></i>
+                <span>Clientes</span>
+            </a>
+
+            <a th:href="@{/agendamentos}">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Agendamentos</span>
+            </a>
+
+            <a th:href="@{/servicos-avulsos}">
+                <i class="fa-solid fa-wrench"></i>
+                <span>Serviços Avulsos</span>
+            </a>
+
+            <a th:href="@{/produtos}">
+                <i class="fa-solid fa-box-open"></i>
+                <span>Produtos</span>
+            </a>
+            
+            <a th:href="@{/catalogo}">
+                <i class="fa-solid fa-tags"></i>
+                <span>Catálogo</span>
+            </a>
+
+            <a th:href="@{/veiculos}">
+                <i class="fa-solid fa-car-side"></i>
+                <span>Veículos</span>
+            </a>
+
+            <a th:href="@{/empresas}"
+               sec:authorize="hasRole('MASTER')">
+                <i class="fa-solid fa-building"></i>
+                <span>Empresas</span>
+            </a>
+
+            <a th:href="@{/usuarios}"
+               sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>Usuários</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-link">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Sair</span>
+            </button>
+        </form>
+
+        <div class="version">
+            Versão Protótipo<br><strong>v1.0.0</strong>
+        </div>
+    </div>
+</div>
+
+<main class="main">
+    <div th:replace="${conteudoPagina}"></div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

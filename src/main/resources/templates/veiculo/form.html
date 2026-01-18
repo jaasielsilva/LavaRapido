@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Cadastro de Veículo</h1>
+    </div>
+
+    <form th:action="@{/veiculos/salvar}" th:object="${veiculo}" method="post" class="col-md-6">
+        <input type="hidden" th:field="*{id}" />
+        
+        <div class="mb-3">
+            <label for="placa" class="form-label">Placa</label>
+            <input type="text" class="form-control" id="placa" th:field="*{placa}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="modelo" class="form-label">Modelo</label>
+            <input type="text" class="form-control" id="modelo" th:field="*{modelo}">
+        </div>
+        
+        <div class="mb-3">
+            <label for="cliente" class="form-label">Cliente</label>
+            <select class="form-select" id="cliente" th:field="*{cliente}">
+                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"></option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a th:href="@{/veiculos}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</body>
+</html>

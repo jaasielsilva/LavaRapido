@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 th:text="${servico.id == null ? 'Novo Serviço' : 'Editar Serviço'}">Serviço</h1>
+                    <div class="subtitle">Cadastre um novo serviço no catálogo</div>
+                </div>
+            </div>
+        </header>
+
+        <form th:action="@{/catalogo/salvar}" th:object="${servico}" method="post" class="card p-4 shadow-sm" style="background-color: #0f1623; border: 1px solid #1e293b;">
+            <input type="hidden" th:field="*{id}" />
+            <input type="hidden" th:field="*{ativo}" />
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nome" class="form-label text-light">Nome do Serviço</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="nome" th:field="*{nome}" required placeholder="Ex: Lavagem Premium">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="categoria" class="form-label text-light">Categoria</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="categoria" th:field="*{categoria}" required>
+                        <option value="">Selecione...</option>
+                        <option th:each="cat : ${categorias}" 
+                                th:value="${cat}" 
+                                th:text="${cat.descricao}">Lavagem</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="descricao" class="form-label text-light">Descrição Curta</label>
+                <input type="text" class="form-control bg-dark text-light border-secondary" id="descricao" th:field="*{descricao}" placeholder="Ex: Lavagem completa com cera de carnaúba">
+                <div class="form-text text-secondary">Aparece abaixo do nome no card do catálogo.</div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="preco" class="form-label text-light">Preço (R$)</label>
+                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" id="preco" th:field="*{preco}" required placeholder="0.00">
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label for="tempoMinutos" class="form-label text-light">Tempo Estimado (min)</label>
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="tempoMinutos" th:field="*{tempoMinutos}" required placeholder="60">
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <a th:href="@{/catalogo}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-save"></i> Salvar Serviço
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

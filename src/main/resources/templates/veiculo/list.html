@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Veículos</h1>
+                    <div class="subtitle">Gerencie a frota de veículos cadastrados</div>
+                </div>
+                <a th:href="@{/veiculos/novo}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Novo Veículo
+                </a>
+            </div>
+            
+            <div class="search-bar mb-4">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <form th:action="@{/veiculos}" method="get" style="width: 100%;">
+                    <input type="text" name="busca" placeholder="Pesquisar por placa, modelo ou cliente..." th:value="${busca}">
+                </form>
+            </div>
+        </header>
+
+        <div class="d-flex flex-column gap-3">
+            <div th:if="${veiculos.empty}" class="text-center py-5">
+                <i class="fa-solid fa-car fa-3x mb-3 text-muted"></i>
+                <h4 class="text-muted">Nenhum veículo encontrado</h4>
+            </div>
+
+            <div th:each="veiculo : ${veiculos}" class="client-card p-3 d-flex align-items-center justify-content-between">
+                <!-- Esquerda: Placa e Infos -->
+                <div class="d-flex align-items-center gap-4">
+                    <!-- Placa Badge -->
+                    <div class="placa-badge">
+                        <div class="placa-header">BRASIL</div>
+                        <div class="placa-text" th:text="${veiculo.placa}">ABC-1234</div>
+                    </div>
+
+                    <!-- Detalhes -->
+                    <div>
+                        <h3 th:text="${veiculo.modelo}" style="margin: 0; font-size: 18px; color: white; font-weight: 600;">Modelo</h3>
+                        <div style="color: #94a3b8; font-size: 14px; margin-top: 4px;">
+                            <i class="fa-solid fa-user me-1"></i> <span th:text="${veiculo.cliente.nome}">Cliente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Direita: Ações -->
+                <div class="d-flex gap-2">
+                    <a th:href="@{/veiculos/editar/{id}(id=${veiculo.id})}" 
+                       class="btn btn-sm btn-outline-primary" 
+                       title="Editar">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger" 
+                            title="Excluir"
+                            th:onclick="'confirmarExclusao(' + ${veiculo.id} + ')'">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${veiculos.totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${veiculos.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/veiculos(page=${veiculos.number - 1}, size=${veiculos.size}, busca=${busca})}">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link" th:text="${(veiculos.number + 1) + ' / ' + veiculos.totalPages}">1 / 1</span>
+                </li>
+                <li class="page-item" th:classappend="${veiculos.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/veiculos(page=${veiculos.number + 1}, size=${veiculos.size}, busca=${busca})}">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Script for Delete Confirmation -->
+        <script>
+            function confirmarExclusao(id) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Você não poderá reverter isso!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar',
+                    background: '#0f1623',
+                    color: '#fff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/veiculos/excluir/${id}`;
+                    }
+                })
+            }
+        </script>
+
+        <!-- CSS for Placa Badge -->
+        <style>
+            .placa-badge {
+                background: white;
+                border: 2px solid #000;
+                border-top: 5px solid #003399;
+                border-radius: 4px;
+                padding: 2px 8px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                display: inline-block;
+                min-width: 100px;
+                position: relative;
+            }
+            .placa-header {
+                font-size: 8px;
+                color: white; 
+                position: absolute;
+                top: -5px;
+                left: 0;
+                right: 0;
+                font-weight: bold;
+                display: none; /* Simplificado */
+            }
+            .placa-text {
+                font-size: 20px;
+                font-weight: 700;
+                color: #000;
+                letter-spacing: 2px;
+                line-height: 1;
+            }
+        </style>
+    </div>
+</body>
+</html>

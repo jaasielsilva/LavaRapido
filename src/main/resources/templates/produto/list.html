@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <!-- Header -->
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Produtos</h1>
+                    <div class="subtitle">Gerencie seu estoque e vendas</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary position-relative" id="btnAbrirVenda" data-bs-toggle="modal" data-bs-target="#modalFinalizarVenda">
+                        <i class="fa-solid fa-cart-shopping me-2"></i> Vender
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info" id="badgeCarrinho">
+                            0
+                        </span>
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
+                        <i class="fa-solid fa-plus me-2"></i> Novo Produto
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="cards mb-4">
+            <div class="card blue">
+                <div class="card-info">
+                    <h4>Total Produtos</h4>
+                    <span class="number" th:text="${totalProdutos}">0</span>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+            </div>
+
+            <div class="card orange">
+                <div class="card-info">
+                    <h4>Estoque Baixo</h4>
+                    <span class="number" th:text="${estoqueBaixo}">0</span>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+
+            <div class="card green">
+                <div class="card-info">
+                    <h4>Valor em Estoque</h4>
+                    <span class="number" th:text="'R$ ' + ${#numbers.formatDecimal(valorEstoque, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="d-flex justify-content-between mb-4">
+            <div class="search-bar flex-grow-1 me-3">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Buscar produtos...">
+            </div>
+            <select class="form-select bg-dark text-secondary border-secondary w-auto" style="min-width: 200px;">
+                <option selected>Todas Categorias</option>
+                <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat.descricao}">Categoria</option>
+            </select>
+        </div>
+
+        <!-- Grid de Produtos -->
+        <div th:if="${produtos.empty}" class="text-center py-5">
+            <i class="fa-solid fa-box-open fa-3x mb-3 text-muted"></i>
+            <h4 class="text-muted">Nenhum produto encontrado</h4>
+            <p class="text-secondary mb-4">Cadastre seus produtos para gerenciar o estoque.</p>
+            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
+                <i class="fa-solid fa-plus"></i> Novo Produto
+            </button>
+        </div>
+
+        <div th:if="${!produtos.empty}" class="row g-3">
+            <div class="col-md-3" th:each="produto : ${produtos}">
+                <div class="card h-100 service-card position-relative overflow-hidden d-flex flex-column">
+                    <div class="card-body px-3 py-2 w-100">
+                        
+                        <!-- Header: Categoria e Edit -->
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="badge rounded-pill border border-opacity-10" 
+                                  th:classappend="'bg-soft-' + ${produto.categoria.cor}"
+                                  style="font-size: 10px; padding: 4px 8px;"
+                                  th:text="${produto.categoria.descricao}">Categoria</span>
+                            <a href="#" class="text-secondary small"><i class="fa-solid fa-pen-to-square"></i></a>
+                        </div>
+
+                        <!-- Info Produto -->
+                        <h6 class="card-title text-white fw-bold mb-1 text-truncate" th:title="${produto.nome}" th:text="${produto.nome}">Nome do Produto</h6>
+                        <p class="card-text text-secondary small mb-2 text-truncate" th:title="${produto.descricao}" th:text="${produto.descricao}">Descrição do produto</p>
+                        
+                        <!-- Preço -->
+                        <div class="fs-5 fw-bold text-info mb-2" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                        
+                        <!-- Estoque e Stepper -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-secondary" style="font-size: 11px;" th:text="'Estoque: ' + ${produto.estoque} + ' ' + ${produto.unidade.sigla}">Estoque: 15 un</small>
+                            <div class="input-group input-group-sm w-auto bg-dark border border-secondary rounded overflow-hidden">
+                                <button class="btn btn-sm btn-dark border-0 text-secondary px-1 btn-qtd-menos" type="button"><i class="fa-solid fa-minus" style="font-size: 9px;"></i></button>
+                                <input type="text" class="form-control bg-dark text-white text-center border-0 p-0 input-qtd" value="1" style="width: 25px; height: 20px; font-size: 11px;" readonly>
+                                <button class="btn btn-sm btn-dark border-0 text-secondary px-1 btn-qtd-mais" type="button"><i class="fa-solid fa-plus" style="font-size: 9px;"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botão Adicionar -->
+                    <button class="btn btn-info w-100 rounded-0 rounded-bottom py-1 fw-bold mt-auto btn-add-carrinho" 
+                            style="font-size: 12px;"
+                            th:data-id="${produto.id}"
+                            th:data-nome="${produto.nome}"
+                            th:data-preco="${produto.precoVenda}">
+                        <i class="fa-solid fa-cart-plus me-2"></i> Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Finalizar Venda -->
+        <div class="modal fade" id="modalFinalizarVenda" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom border-secondary border-opacity-10">
+                        <h5 class="modal-title fw-bold">Finalizar Venda</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-4">
+                            <!-- Coluna Esquerda: Itens -->
+                            <div class="col-md-8 border-end border-secondary border-opacity-10">
+                                <h6 class="text-info mb-3"><i class="fa-solid fa-list me-2"></i>Itens do Pedido</h6>
+                                
+                                <div id="listaItensVenda" class="d-flex flex-column gap-2 mb-3" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Itens serão injetados aqui via JS -->
+                                    <div class="text-center text-muted py-5" id="carrinhoVazioMsg">
+                                        <i class="fa-solid fa-cart-arrow-down fa-2x mb-2"></i>
+                                        <p>Carrinho vazio</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Coluna Direita: Pagamento e Total -->
+                            <div class="col-md-4 d-flex flex-column">
+                                <h6 class="text-info mb-3"><i class="fa-solid fa-user me-2"></i>Cliente (Opcional)</h6>
+                                <select class="form-select bg-dark text-light border-secondary focus-info mb-4" id="vendaCliente">
+                                    <option value="" selected>Selecione um cliente</option>
+                                    <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}">João</option>
+                                </select>
+
+                                <h6 class="text-info mb-3"><i class="fa-solid fa-money-bill-wave me-2"></i>Forma de Pagamento</h6>
+                                <div class="d-flex flex-column gap-2 mb-4">
+                                    <div class="form-check" th:each="forma : ${formasPagamento}">
+                                        <input class="form-check-input bg-dark border-secondary" type="radio" name="formaPagamento" th:id="${forma}" th:value="${forma}" th:checked="${forma.name() == 'DINHEIRO'}">
+                                        <label class="form-check-label text-light" th:for="${forma}" th:text="${forma.descricao}">
+                                            Dinheiro
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto pt-3 border-top border-secondary border-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-secondary">Total:</span>
+                                        <span class="fs-3 fw-bold text-white" id="vendaTotal">R$ 0,00</span>
+                                    </div>
+                                    <button type="button" class="btn btn-success w-100 fw-bold py-2" id="btnFinalizarVenda" disabled>
+                                        <i class="fa-solid fa-check me-2"></i> Finalizar Venda
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Novo Produto -->
+        <div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom border-secondary border-opacity-10">
+                        <h5 class="modal-title fw-bold">Novo Produto</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/produtos/salvar}" method="post" th:object="${novoProduto}">
+                        <div class="modal-body">
+                            
+                            <div class="mb-3">
+                                <label for="nome" class="form-label text-light small fw-bold">Nome *</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary focus-info" id="nome" th:field="*{nome}" placeholder="Nome do produto" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="descricao" class="form-label text-light small fw-bold">Descrição</label>
+                                <textarea class="form-control bg-dark text-light border-secondary focus-info" id="descricao" th:field="*{descricao}" placeholder="Descrição" rows="2"></textarea>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="precoVenda" class="form-label text-light small fw-bold">Preço de Venda *</label>
+                                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary focus-info" id="precoVenda" th:field="*{precoVenda}" placeholder="0" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="precoCusto" class="form-label text-light small fw-bold">Preço de Custo</label>
+                                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary focus-info" id="precoCusto" th:field="*{precoCusto}" placeholder="0">
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="estoque" class="form-label text-light small fw-bold">Estoque</label>
+                                    <input type="number" class="form-control bg-dark text-light border-secondary focus-info" id="estoque" th:field="*{estoque}" placeholder="0">
+                                </div>
+                                <div class="col-6">
+                                    <label for="estoqueMinimo" class="form-label text-light small fw-bold">Estoque Mínimo</label>
+                                    <input type="number" class="form-control bg-dark text-light border-secondary focus-info" id="estoqueMinimo" th:field="*{estoqueMinimo}" value="5">
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label for="categoria" class="form-label text-light small fw-bold">Categoria</label>
+                                    <select class="form-select bg-dark text-light border-secondary focus-info" id="categoria" th:field="*{categoria}">
+                                        <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat.descricao}">Outros</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="unidade" class="form-label text-light small fw-bold">Unidade</label>
+                                    <select class="form-select bg-dark text-light border-secondary focus-info" id="unidade" th:field="*{unidade}">
+                                        <option th:each="un : ${unidades}" th:value="${un}" th:text="${un.descricao}">Unidade</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="submit" class="btn btn-info w-100 fw-bold">Cadastrar Produto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Estado do Carrinho
+                let carrinho = [];
+
+                // Seletores
+                const badgeCarrinho = document.getElementById('badgeCarrinho');
+                const btnAbrirVenda = document.getElementById('btnAbrirVenda');
+                const listaItensVenda = document.getElementById('listaItensVenda');
+                const carrinhoVazioMsg = document.getElementById('carrinhoVazioMsg');
+                const vendaTotal = document.getElementById('vendaTotal');
+                const btnFinalizarVenda = document.getElementById('btnFinalizarVenda');
+
+                // --- Lógica de Quantidade no Card ---
+                document.querySelectorAll('.btn-qtd-menos').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const input = this.parentElement.querySelector('.input-qtd');
+                        let val = parseInt(input.value);
+                        if (val > 1) input.value = val - 1;
+                    });
+                });
+
+                document.querySelectorAll('.btn-qtd-mais').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const input = this.parentElement.querySelector('.input-qtd');
+                        input.value = parseInt(input.value) + 1;
+                    });
+                });
+
+                // --- Adicionar ao Carrinho ---
+                document.querySelectorAll('.btn-add-carrinho').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        const nome = this.dataset.nome;
+                        const preco = parseFloat(this.dataset.preco);
+                        
+                        // Pegar quantidade do input vizinho
+                        const cardBody = this.closest('.card').querySelector('.card-body');
+                        const qtdInput = cardBody.querySelector('.input-qtd');
+                        const quantidade = parseInt(qtdInput.value);
+
+                        // Verificar se já existe
+                        const itemExistente = carrinho.find(item => item.id === id);
+                        if (itemExistente) {
+                            itemExistente.quantidade += quantidade;
+                        } else {
+                            carrinho.push({ id, nome, preco, quantidade });
+                        }
+
+                        atualizarUI();
+                        
+                        // Resetar input
+                        qtdInput.value = 1;
+
+                        // Feedback visual (Toast ou SweetAlert seria melhor, mas aqui simples)
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<i class="fa-solid fa-check me-2"></i> Adicionado!';
+                        this.classList.replace('btn-info', 'btn-success');
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                            this.classList.replace('btn-success', 'btn-info');
+                        }, 1000);
+                    });
+                });
+
+                // --- Renderizar Modal de Venda ---
+                function atualizarUI() {
+                    // Badge
+                    const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+                    badgeCarrinho.textContent = totalItens;
+
+                    // Lista no Modal
+                    listaItensVenda.innerHTML = '';
+                    if (carrinho.length === 0) {
+                        listaItensVenda.appendChild(carrinhoVazioMsg);
+                        carrinhoVazioMsg.style.display = 'block';
+                        btnFinalizarVenda.disabled = true;
+                        vendaTotal.textContent = 'R$ 0,00';
+                        return;
+                    }
+                    
+                    carrinhoVazioMsg.style.display = 'none';
+                    let totalValor = 0;
+
+                    carrinho.forEach((item, index) => {
+                        const subtotal = item.quantidade * item.preco;
+                        totalValor += subtotal;
+
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'd-flex justify-content-between align-items-center bg-dark border border-secondary border-opacity-10 p-2 rounded';
+                        itemDiv.innerHTML = `
+                            <div class="d-flex flex-column">
+                                <span class="text-white fw-bold small">${item.nome}</span>
+                                <span class="text-secondary" style="font-size: 11px;">${item.quantidade}x R$ ${item.preco.toFixed(2)}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-info fw-bold small">R$ ${subtotal.toFixed(2)}</span>
+                                <button class="btn btn-sm btn-outline-danger border-0 p-1 btn-remover-item" data-index="${index}">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        `;
+                        listaItensVenda.appendChild(itemDiv);
+                    });
+
+                    vendaTotal.textContent = 'R$ ' + totalValor.toFixed(2).replace('.', ',');
+                    btnFinalizarVenda.disabled = false;
+
+                    // Re-attach listeners de remover
+                    document.querySelectorAll('.btn-remover-item').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index);
+                            carrinho.splice(idx, 1);
+                            atualizarUI();
+                        });
+                    });
+                }
+
+                // --- Finalizar Venda ---
+                btnFinalizarVenda.addEventListener('click', function() {
+                    const clienteId = document.getElementById('vendaCliente').value;
+                    const formaPagamento = document.querySelector('input[name="formaPagamento"]:checked').value;
+
+                    const vendaDTO = {
+                        clienteId: clienteId ? parseInt(clienteId) : null,
+                        formaPagamento: formaPagamento,
+                        itens: carrinho.map(item => ({
+                            produtoId: parseInt(item.id),
+                            quantidade: item.quantidade,
+                            precoUnitario: item.preco
+                        }))
+                    };
+                    
+                    // Enviar para o backend
+                    fetch('/vendas/salvar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]').value
+                        },
+                        body: JSON.stringify(vendaDTO)
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.text();
+                        }
+                        throw new Error('Erro na requisição');
+                    })
+                    .then(msg => {
+                        // Sucesso
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalFinalizarVenda'));
+                        modal.hide();
+                        
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Venda realizada com sucesso.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.reload(); // Recarregar para atualizar estoque
+                        });
+                        
+                        carrinho = [];
+                        atualizarUI();
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: 'Não foi possível finalizar a venda.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                });
+            });
+        </script>
+        
+        <!-- CSRF Token Hidden Input (necessário para o fetch funcionar com Spring Security) -->
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <style>
+            /* Card Styling Premium */
+            .service-card {
+                background-color: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
+            }
+
+            .service-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+                border-color: #0284c7;
+            }
+
+            /* Badge Colors (Soft) */
+            .bg-soft-info { background: rgba(14, 165, 233, 0.15); color: #38bdf8; }
+            .bg-soft-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+            .bg-soft-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+            .bg-soft-secondary { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+            .bg-soft-primary { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+            .bg-soft-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+            .focus-info:focus {
+                border-color: #0ea5e9 !important;
+                box-shadow: 0 0 0 0.25rem rgba(14, 165, 233, 0.25) !important;
+            }
+            .btn-info {
+                background-color: #0ea5e9;
+                border-color: #0ea5e9;
+                color: white;
+            }
+            .btn-info:hover {
+                background-color: #0284c7;
+                border-color: #0284c7;
+            }
+            .text-info {
+                color: #38bdf8 !important;
+            }
+        </style>
+    </div>
+</body>
+</html>

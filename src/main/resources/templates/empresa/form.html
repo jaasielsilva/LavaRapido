@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 th:text="${empresa.id == null ? 'Nova Empresa' : 'Editar Empresa'}">Empresa</h1>
+                    <div class="subtitle">Informações cadastrais</div>
+                </div>
+            </div>
+        </header>
+
+        <form th:action="@{/empresas/salvar}" th:object="${empresa}" method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+            <input type="hidden" th:field="*{id}" />
+            <input type="hidden" th:field="*{logo}" />
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nome" class="form-label">Nome da Empresa</label>
+                    <input type="text" class="form-control" id="nome" th:field="*{nome}" required placeholder="Ex: Lava Jato XPTO">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="cnpj" class="form-label">CNPJ</label>
+                    <input type="text" class="form-control" id="cnpj" th:field="*{cnpj}" required placeholder="00.000.000/0000-00">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="logoFile" class="form-label">Logo da Empresa</label>
+                    <input type="file" class="form-control" id="logoFile" name="logoFile" accept="image/*">
+                    <div class="form-text">Formatos aceitos: PNG, JPG, JPEG.</div>
+                </div>
+                <div class="col-md-6 d-flex align-items-center justify-content-center">
+                    <div th:if="${empresa.logo != null}" class="border p-2 rounded bg-light text-center">
+                        <small class="d-block text-muted mb-1">Logo Atual:</small>
+                        <img th:src="${empresa.logo}" alt="Logo Atual" style="max-height: 80px; max-width: 100%;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3 form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="ativo" th:field="*{ativo}">
+                <label class="form-check-label" for="ativo">Ativo</label>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <a th:href="@{/empresas}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-save"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <!-- Header -->
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Catálogo de Serviços</h1>
+                    <div class="subtitle">Gerencie os serviços oferecidos</div>
+                </div>
+                <a th:href="@{/catalogo/novo}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Novo Serviço
+                </a>
+            </div>
+        </header>
+
+        <!-- Filtros de Categoria (Tabs) -->
+        <div class="mb-5">
+            <ul class="nav nav-pills gap-2" id="categoryTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active rounded-pill px-4" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">Todos</button>
+                </li>
+                <li class="nav-item" th:each="cat : ${todasCategorias}">
+                    <button class="nav-link rounded-pill px-4" 
+                            th:id="${cat.name() + '-tab'}" 
+                            data-bs-toggle="tab" 
+                            th:data-bs-target="'#cat-' + ${cat.name()}" 
+                            type="button" role="tab" 
+                            th:text="${cat.descricao}">
+                        Lavagem
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="tab-content" id="categoryTabsContent">
+            
+            <!-- Tab TODOS -->
+            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                <div th:if="${servicosPorCategoria.empty}" class="text-center py-5">
+                    <i class="fa-solid fa-tags fa-3x mb-3 text-muted"></i>
+                    <h4 class="text-muted">Nenhum serviço encontrado</h4>
+                    <p class="text-secondary mb-4">Cadastre serviços para exibi-los no catálogo.</p>
+                    <a th:href="@{/catalogo/novo}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-plus"></i> Novo Serviço
+                    </a>
+                </div>
+
+                <div th:each="entry : ${servicosPorCategoria}" class="mb-5">
+                    
+                    <!-- Título da Seção -->
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <i class="fa-solid text-primary" 
+                           th:classappend="${entry.key.name() == 'LAVAGEM' ? 'fa-soap' : (entry.key.name() == 'POLIMENTO' ? 'fa-gem' : (entry.key.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
+                        <h4 class="mb-0 fw-bold text-white" th:text="${entry.key.descricao}">Lavagem</h4>
+                        <span class="badge rounded-pill bg-dark border border-secondary text-secondary ms-2" th:text="${entry.value.size()}">3</span>
+                    </div>
+
+                    <!-- Grid de Cards -->
+                    <div class="row g-3">
+                        <div class="col-md-3" th:each="servico : ${entry.value}">
+                            <div class="card h-100 service-card position-relative overflow-hidden d-flex flex-column">
+                                <div class="card-body px-3 py-2 w-100">
+                                    
+                                    <!-- Header: Categoria (Badge) -->
+                                    <div class="mb-1">
+                                        <span class="badge rounded-pill border border-opacity-10" 
+                                              th:classappend="'bg-soft-' + ${servico.categoria.cor}"
+                                              style="font-size: 10px; padding: 4px 8px;"
+                                              th:text="${servico.categoria.descricao}">Lavagem</span>
+                                    </div>
+
+                                    <!-- Título -->
+                                    <h6 class="card-title text-white fw-bold mb-1 text-truncate" th:title="${servico.nome}" th:text="${servico.nome}">Lavagem Simples</h6>
+
+                                    <!-- Descrição -->
+                                    <p class="card-text text-secondary small mb-0 text-truncate" 
+                                       th:if="${servico.descricao}" 
+                                       th:text="${servico.descricao}">Lavagem externa completa</p>
+                                </div>
+                                    
+                                <!-- Footer: Tempo e Preço -->
+                                <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100">
+                                    <!-- Lado Esquerdo: Tempo -->
+                                    <div class="d-flex align-items-center text-secondary small">
+                                        <i class="fa-regular fa-clock me-2" style="font-size: 12px;"></i>
+                                        <span style="font-size: 13px;" th:text="${servico.tempoMinutos} + ' min'">30 min</span>
+                                    </div>
+
+                                    <!-- Lado Direito: Preço -->
+                                    <div class="fw-bold text-info fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 0, 'POINT', 0, 'COMMA')}">R$ 40</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Individuais (Loop) -->
+            <div th:each="cat : ${todasCategorias}" class="tab-pane fade" th:id="'cat-' + ${cat.name()}" role="tabpanel">
+                <div th:if="${servicosPorCategoria.get(cat) != null}" class="mb-5">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <i class="fa-solid text-primary" 
+                           th:classappend="${cat.name() == 'LAVAGEM' ? 'fa-soap' : (cat.name() == 'POLIMENTO' ? 'fa-gem' : (cat.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
+                        <h4 class="mb-0 fw-bold text-white" th:text="${cat.descricao}">Categoria</h4>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3" th:each="servico : ${servicosPorCategoria.get(cat)}">
+                            <div class="card h-100 service-card position-relative overflow-hidden d-flex flex-column">
+                                <div class="card-body px-3 py-2 w-100">
+                                    
+                                    <!-- Header: Categoria (Badge) -->
+                                    <div class="mb-1">
+                                        <span class="badge rounded-pill border border-opacity-10" 
+                                              th:classappend="'bg-soft-' + ${servico.categoria.cor}"
+                                              style="font-size: 10px; padding: 4px 8px;"
+                                              th:text="${servico.categoria.descricao}">Badge</span>
+                                    </div>
+
+                                    <!-- Título -->
+                                    <h6 class="card-title text-white fw-bold mb-1 text-truncate" th:title="${servico.nome}" th:text="${servico.nome}">Nome</h6>
+
+                                    <!-- Descrição -->
+                                    <p class="card-text text-secondary small mb-0 text-truncate" 
+                                       th:if="${servico.descricao}" 
+                                       th:text="${servico.descricao}">Lavagem externa completa</p>
+                                </div>
+                                    
+                                <!-- Footer: Tempo e Preço -->
+                                <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100">
+                                    <!-- Lado Esquerdo: Tempo -->
+                                    <div class="d-flex align-items-center text-secondary small">
+                                        <i class="fa-regular fa-clock me-2" style="font-size: 12px;"></i>
+                                        <span style="font-size: 13px;" th:text="${servico.tempoMinutos} + ' min'">Tempo</span>
+                                    </div>
+
+                                    <!-- Lado Direito: Preço -->
+                                    <div class="fw-bold text-info fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 0, 'POINT', 0, 'COMMA')}">Preço</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${servicosPorCategoria.get(cat) == null}" class="text-center py-5">
+                    <i class="fa-solid fa-tags fa-3x mb-3 text-muted"></i>
+                    <h4 class="text-muted">Nenhum serviço nesta categoria</h4>
+                    <p class="text-secondary">Nenhum serviço cadastrado como <span th:text="${cat.descricao}"></span>.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <style>
+            /* Card Styling Premium */
+            .service-card {
+                background-color: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
+            }
+
+            .service-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+                border-color: #0284c7;
+            }
+
+            /* Badge Colors (Soft) */
+            .bg-soft-info { background: rgba(14, 165, 233, 0.15); color: #38bdf8; }
+            .bg-soft-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+            .bg-soft-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+            .bg-soft-secondary { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+            /* Nav Pills Styling */
+            .nav-pills .nav-link {
+                background: transparent;
+                border: 1px solid #1e293b;
+                color: #94a3b8;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+
+            .nav-pills .nav-link:hover {
+                background: #1e293b;
+                color: white;
+            }
+
+            .nav-pills .nav-link.active {
+                background: #0ea5e9;
+                border-color: #0ea5e9;
+                color: white;
+                box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+            }
+        </style>
+    </div>
+</body>
+</html>

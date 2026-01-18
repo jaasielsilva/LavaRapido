@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Novo Contrato</h1>
+                    <div class="subtitle">Cadastrar Empresa e Administrador Inicial</div>
+                </div>
+            </div>
+        </header>
+
+        <form th:action="@{/empresas/salvar-contrato}" th:object="${contrato}" method="post" enctype="multipart/form-data" class="card p-4 shadow-sm" style="background-color: #0f1623; border: 1px solid #1e293b;">
+            
+            <!-- Seção Empresa -->
+            <h5 class="text-primary mb-3"><i class="fa-solid fa-building me-2"></i>Dados da Empresa</h5>
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <label for="nomeEmpresa" class="form-label text-light">Nome da Empresa</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="nomeEmpresa" th:field="*{nomeEmpresa}" required placeholder="Ex: Lava Jato XPTO">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="cnpj" class="form-label text-light">CNPJ</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="cnpj" th:field="*{cnpj}" required placeholder="00.000.000/0000-00">
+                </div>
+
+                <div class="col-md-12">
+                    <label for="logoFile" class="form-label text-light">Logo</label>
+                    <input type="file" class="form-control bg-dark text-light border-secondary" id="logoFile" name="logoFile" accept="image/*">
+                </div>
+            </div>
+
+            <hr class="border-secondary mb-4">
+
+            <!-- Seção Administrador -->
+            <h5 class="text-primary mb-3"><i class="fa-solid fa-user-shield me-2"></i>Dados do Administrador</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="nomeAdmin" class="form-label text-light">Nome do Admin</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="nomeAdmin" th:field="*{nomeAdmin}" required placeholder="Ex: João Silva">
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label for="emailAdmin" class="form-label text-light">Email (Login)</label>
+                    <input type="email" class="form-control bg-dark text-light border-secondary" id="emailAdmin" th:field="*{emailAdmin}" required placeholder="admin@empresa.com">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="senhaAdmin" class="form-label text-light">Senha Inicial</label>
+                    <input type="password" class="form-control bg-dark text-light border-secondary" id="senhaAdmin" th:field="*{senhaAdmin}" required>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <a th:href="@{/empresas}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fa-solid fa-check-circle"></i> Criar Contrato
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
