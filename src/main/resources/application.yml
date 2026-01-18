@@ -16,3 +16,8 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
   thymeleaf:
     cache: false
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always

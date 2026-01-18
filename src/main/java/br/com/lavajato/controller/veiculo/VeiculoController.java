@@ -4,6 +4,7 @@ import br.com.lavajato.model.veiculo.Veiculo;
 import br.com.lavajato.model.cliente.Cliente;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.veiculo.VeiculoService;
+import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,9 @@ public class VeiculoController {
     
     @Autowired
     private ClienteService clienteService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @GetMapping
     public String listar(
@@ -85,6 +89,10 @@ public class VeiculoController {
     
     @GetMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id) {
+        br.com.lavajato.model.usuario.Usuario usuarioLogado = usuarioService.getUsuarioLogado();
+        if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
+            throw new IllegalStateException("Funcionários não têm permissão para excluir veículos.");
+        }
         veiculoService.excluir(id);
         return "redirect:/veiculos";
     }

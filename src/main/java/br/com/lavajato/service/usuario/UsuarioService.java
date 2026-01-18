@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,16 +41,37 @@ public class UsuarioService {
     public Page<Usuario> listarPaginado(Pageable pageable) {
         Usuario usuario = getUsuarioLogado();
         if (usuario.isMaster()) {
-            return usuarioRepository.findAll(pageable);
+            return usuarioRepository.findAllByAtivoTrue(pageable);
         }
-        return usuarioRepository.findAllByEmpresa(usuario.getEmpresa(), pageable);
+        return usuarioRepository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa(), pageable);
     }
 
     public List<Usuario> listarTodos() {
         return listarPaginado(PageRequest.of(0, Integer.MAX_VALUE)).getContent();
     }
 
+    public List<Usuario> listarInativos() {
+        Usuario usuario = getUsuarioLogado();
+        if (usuario.isMaster()) {
+            return usuarioRepository.findAllByAtivoFalse(PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        }
+        return usuarioRepository.findAllByEmpresaAndAtivoFalse(usuario.getEmpresa(), PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+    }
+
     public Usuario salvar(Usuario usuario) {
+        Usuario logado = getUsuarioLogado();
+        if (usuario.getPerfil() == Perfil.MASTER && (logado == null || !logado.isMaster())) {
+            throw new IllegalStateException("Apenas o usuário MASTER pode atribuir perfil MASTER.");
+        }
+
+        // Check for duplicate email
+        Optional<Usuario> existingUser = usuarioRepository.findByEmail(usuario.getEmail());
+        if (existingUser.isPresent()) {
+            if (usuario.getId() == null || !usuario.getId().equals(existingUser.get().getId())) {
+                throw new IllegalStateException("Já existe um usuário cadastrado com este e-mail.");
+            }
+        }
+
         // Criptografar senha se for nova ou alterada (lógica simplificada: sempre criptografa se vier preenchida)
         // Em um caso real, verificaríamos se a senha mudou.
         // Aqui assumimos que o form envia a senha crua.
@@ -84,7 +106,26 @@ public class UsuarioService {
     }
     
     public void excluir(Long id) {
-        buscarPorId(id).ifPresent(usuarioRepository::delete);
+        Usuario logado = getUsuarioLogado();
+        buscarPorId(id).ifPresent(usuario -> {
+            if (usuario.isMaster()) {
+                throw new IllegalStateException("Usuário MASTER não pode ser excluído.");
+            }
+            if (usuario.getPerfil() == Perfil.ADMIN) {
+                if (usuario.getEmpresa() == null) {
+                    throw new IllegalStateException("Usuário ADMIN precisa estar vinculado a uma empresa.");
+                }
+                long adminsAtivos = usuarioRepository.countByEmpresaAndPerfilAndAtivoTrue(
+                        usuario.getEmpresa(), Perfil.ADMIN);
+                if (adminsAtivos <= 1) {
+                    throw new IllegalStateException("A empresa precisa ter pelo menos um usuário ADMIN ativo.");
+                }
+            }
+            usuario.setAtivo(false);
+            usuario.setDataExclusao(LocalDateTime.now());
+            usuario.setExcluidoPor(logado);
+            usuarioRepository.save(usuario);
+        });
     }
 
     public long contarPorEmpresa(Empresa empresa) {

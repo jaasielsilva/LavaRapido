@@ -22,6 +22,9 @@ public class ClienteController {
     @Autowired
     private EmpresaService empresaService;
 
+    @Autowired
+    private br.com.lavajato.service.usuario.UsuarioService usuarioService;
+
     @GetMapping
     public String listar(@RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "10") int size,
@@ -55,6 +58,10 @@ public class ClienteController {
     
     @GetMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id) {
+        br.com.lavajato.model.usuario.Usuario usuarioLogado = usuarioService.getUsuarioLogado();
+        if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
+            throw new IllegalStateException("Funcionários não têm permissão para excluir clientes.");
+        }
         clienteService.excluir(id);
         return "redirect:/clientes";
     }

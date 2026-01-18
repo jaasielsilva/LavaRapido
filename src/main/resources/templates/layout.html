@@ -51,12 +51,14 @@
                 <span>Serviços Avulsos</span>
             </a>
 
-            <a th:href="@{/produtos}">
+            <a th:href="@{/produtos}"
+               sec:authorize="hasAnyRole('MASTER','ADMIN')">
                 <i class="fa-solid fa-box-open"></i>
                 <span>Produtos</span>
             </a>
             
-            <a th:href="@{/catalogo}">
+            <a th:href="@{/catalogo}"
+               sec:authorize="hasAnyRole('MASTER','ADMIN')">
                 <i class="fa-solid fa-tags"></i>
                 <span>Catálogo</span>
             </a>

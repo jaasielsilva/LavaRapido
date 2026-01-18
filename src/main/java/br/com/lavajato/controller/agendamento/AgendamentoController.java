@@ -4,6 +4,7 @@ import br.com.lavajato.model.agendamento.Agendamento;
 import br.com.lavajato.model.agendamento.StatusAgendamento;
 import br.com.lavajato.service.agendamento.AgendamentoService;
 import br.com.lavajato.service.veiculo.VeiculoService;
+import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,6 +22,9 @@ public class AgendamentoController {
 
     @Autowired
     private VeiculoService veiculoService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @GetMapping
     public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC) Pageable pageable, Model model) {
@@ -51,6 +55,10 @@ public class AgendamentoController {
 
     @GetMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id) {
+        br.com.lavajato.model.usuario.Usuario usuarioLogado = usuarioService.getUsuarioLogado();
+        if (usuarioLogado.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO) {
+            throw new IllegalStateException("Funcionários não têm permissão para excluir agendamentos.");
+        }
         agendamentoService.excluir(id);
         return "redirect:/agendamentos";
     }

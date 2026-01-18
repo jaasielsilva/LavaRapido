@@ -1,6 +1,7 @@
 package br.com.lavajato.repository.usuario;
 
 import br.com.lavajato.model.usuario.Usuario;
+import br.com.lavajato.model.usuario.Perfil;
 import br.com.lavajato.model.empresa.Empresa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,4 +17,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     List<Usuario> findAllByEmpresa(Empresa empresa);
     Page<Usuario> findAllByEmpresa(Empresa empresa, Pageable pageable);
     long countByEmpresa(Empresa empresa);
+    Page<Usuario> findAllByAtivoTrue(Pageable pageable);
+    Page<Usuario> findAllByEmpresaAndAtivoTrue(Empresa empresa, Pageable pageable);
+    long countByEmpresaAndPerfilAndAtivoTrue(Empresa empresa, Perfil perfil);
+    Page<Usuario> findAllByAtivoFalse(Pageable pageable);
+    Page<Usuario> findAllByEmpresaAndAtivoFalse(Empresa empresa, Pageable pageable);
 }

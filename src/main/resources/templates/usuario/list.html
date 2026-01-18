@@ -2,50 +2,204 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout :: layout(~{::div})}">
 <body>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Usuários</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a th:href="@{/usuarios/novo}" class="btn btn-sm btn-outline-primary">Novo Usuário</a>
-        </div>
-    </div>
+    <div>
+        <header>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Usuários</h1>
+                    <div class="subtitle">Gerencie o acesso da sua equipe ao sistema</div>
+                </div>
+                <a th:href="@{/usuarios/novo}" class="btn btn-primary">
+                    <i class="fa-solid fa-user-plus"></i> Novo Usuário
+                </a>
+            </div>
+        </header>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-sm">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Perfil</th>
-                    <th>Ativo</th>
-                    <th>Empresa</th> <!-- Mostrar empresa se for Master -->
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="user : ${usuarios}">
-                    <td th:text="${user.nome}">Nome</td>
-                    <td th:text="${user.email}">Email</td>
-                    <td th:text="${user.perfil}">Perfil</td>
-                    <td th:text="${user.ativo ? 'Sim' : 'Não'}">Sim</td>
-                    <td th:text="${user.empresa != null ? user.empresa.nome : 'N/A'}">Empresa</td>
-                </tr>
-            </tbody>
-        </table>
+        <div th:if="${usuarios.empty}" class="text-center py-5">
+            <i class="fa-solid fa-user-slash fa-3x mb-3 text-muted"></i>
+            <h4 class="text-muted">Nenhum usuário encontrado</h4>
+            <p class="text-secondary mb-4">Cadastre usuários para compartilhar o acesso ao painel.</p>
+            <a th:href="@{/usuarios/novo}" class="btn btn-outline-primary">
+                <i class="fa-solid fa-user-plus"></i> Novo Usuário
+            </a>
+        </div>
+
+        <div th:if="${!usuarios.empty}" class="client-list">
+            <div th:each="user : ${usuarios}" class="client-card">
+                <div class="client-header">
+                    <div class="client-info">
+                        <h3 th:text="${user.nome}">Nome do Usuário</h3>
+                        <div class="client-contact">
+                            <span>
+                                <i class="fa-solid fa-envelope"></i>
+                                <span th:text="${user.email}">email@exemplo.com</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="client-meta text-end">
+                        <div>
+                            <span class="badge"
+                                  th:classappend="${user.ativo} ? ' bg-success' : ' bg-danger'">
+                                <span th:text="${user.ativo ? 'Ativo' : 'Inativo'}">Ativo</span>
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge bg-secondary">
+                                <i class="fa-solid fa-id-badge me-1"></i>
+                                <span th:text="${user.perfil}">PERFIL</span>
+                            </span>
+                        </div>
+                        <div class="mt-2" th:if="${user.empresa != null}">
+                            <small class="text-secondary">
+                                <i class="fa-solid fa-building me-1"></i>
+                                <span th:text="${user.empresa.nome}">Empresa</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                    <a th:href="@{/usuarios/editar/{id}(id=${user.id})}" class="btn btn-sm btn-outline-light">
+                        <i class="fa-solid fa-pen-to-square"></i> Editar
+                    </a>
+                    <a th:href="@{/usuarios/excluir/{id}(id=${user.id})}"
+                       class="btn btn-sm btn-outline-danger btn-excluir-usuario"
+                       th:data-nome="${user.nome}">
+                        <i class="fa-solid fa-trash-can"></i> Excluir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <nav th:if="${usuariosPage != null and usuariosPage.totalPages > 1}">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${usuariosPage.first} ? ' disabled'">
+                    <a class="page-link"
+                       th:href="@{/usuarios(page=${usuariosPage.number - 1},size=${usuariosPage.size})}">Anterior</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link"
+                          th:text="${usuariosPage.number + 1} + ' / ' + ${usuariosPage.totalPages}">1 / 1</span>
+                </li>
+                <li class="page-item" th:classappend="${usuariosPage.last} ? ' disabled'">
+                    <a class="page-link"
+                       th:href="@{/usuarios(page=${usuariosPage.number + 1},size=${usuariosPage.size})}">Próxima</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="mt-5">
+            <h2 class="h5 mb-3">Auditoria - Usuários Inativos/Excluídos</h2>
+
+            <div th:if="${usuariosInativos == null or usuariosInativos.empty}" class="text-center py-4">
+                <i class="fa-solid fa-user-check fa-2x mb-2 text-muted"></i>
+                <div class="text-muted">Nenhum usuário inativo ou excluído.</div>
+            </div>
+
+            <div th:if="${usuariosInativos != null and !usuariosInativos.empty}" class="client-list">
+                <div th:each="user : ${usuariosInativos}" class="client-card">
+                    <div class="client-header">
+                        <div class="client-info">
+                            <h3 th:text="${user.nome}">Nome do Usuário</h3>
+                            <div class="client-contact">
+                                <span>
+                                    <i class="fa-solid fa-envelope"></i>
+                                    <span th:text="${user.email}">email@exemplo.com</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="client-meta text-end">
+                            <div>
+                                <span class="badge bg-danger">
+                                    Inativo
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary">
+                                    <i class="fa-solid fa-id-badge me-1"></i>
+                                    <span th:text="${user.perfil}">PERFIL</span>
+                                </span>
+                            </div>
+                            <div class="mt-2" th:if="${user.empresa != null}">
+                                <small class="text-secondary">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${user.empresa.nome}">Empresa</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="text-secondary small">
+                            <i class="fa-solid fa-user-minus me-1"></i>
+                            <span>Excluído por </span>
+                            <span th:text="${user.excluidoPor != null ? user.excluidoPor.nome : 'N/D'}">Usuário</span>
+                        </div>
+                        <div class="text-secondary small">
+                            <i class="fa-regular fa-clock me-1"></i>
+                            <span th:text="${user.dataExclusao != null ? #temporals.format(user.dataExclusao, 'dd/MM/yyyy HH:mm') : 'Data não informada'}">19/01/2026 14:21</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.btn-excluir-usuario').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var url = this.getAttribute('href');
+                        var nome = this.dataset.nome || 'este usuário';
+                        Swal.fire({
+                            title: 'Deseja excluir?',
+                            text: 'Você está prestes a excluir ' + nome + '.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#6b7280',
+                            confirmButtonText: 'Sim, excluir',
+                            cancelButtonText: 'Cancelar'
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                window.location.href = url;
+                            }
+                        });
+                    });
+                });
+                
+                var usuarioSucesso = /*[[${usuarioSucesso}]]*/ null;
+                var usuarioErro = /*[[${usuarioErro}]]*/ null;
+                if (usuarioSucesso) {
+                    var msg;
+                    if (usuarioSucesso === 'criado') {
+                        msg = 'Usuário criado com sucesso.';
+                    } else if (usuarioSucesso === 'atualizado') {
+                        msg = 'Usuário atualizado com sucesso.';
+                    } else if (usuarioSucesso === 'excluido') {
+                        msg = 'Usuário excluído com sucesso.';
+                    }
+                    if (msg) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: msg,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+                if (usuarioErro) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: usuarioErro,
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        /*]]>*/
+        </script>
     </div>
-    <nav th:if="${usuariosPage != null and usuariosPage.totalPages > 1}">
-        <ul class="pagination">
-            <li class="page-item" th:classappend="${usuariosPage.first} ? ' disabled'">
-                <a class="page-link"
-                   th:href="@{/usuarios(page=${usuariosPage.number - 1},size=${usuariosPage.size})}">Anterior</a>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link"
-                      th:text="${usuariosPage.number + 1} + ' / ' + ${usuariosPage.totalPages}">1 / 1</span>
-            </li>
-            <li class="page-item" th:classappend="${usuariosPage.last} ? ' disabled'">
-                <a class="page-link"
-                   th:href="@{/usuarios(page=${usuariosPage.number + 1},size=${usuariosPage.size})}">Próxima</a>
-            </li>
-        </ul>
-    </nav>
 </body>
 </html>

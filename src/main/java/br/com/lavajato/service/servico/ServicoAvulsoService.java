@@ -30,8 +30,18 @@ public class ServicoAvulsoService {
     }
 
     public ServicoAvulso salvar(ServicoAvulso servicoAvulso) {
+        if (servicoAvulso.getCliente() == null &&
+                (servicoAvulso.getClienteAvulsoNome() == null || servicoAvulso.getClienteAvulsoNome().isBlank())) {
+            throw new IllegalStateException("É obrigatório informar um cliente (cadastrado ou avulso).");
+        }
+
         Usuario usuario = usuarioService.getUsuarioLogado();
         servicoAvulso.setEmpresa(usuario.getEmpresa());
+
+        // Regra de Segurança: FUNCIONARIO não pode alterar preço de serviço tabelado
+        if (usuario.getPerfil() == br.com.lavajato.model.usuario.Perfil.FUNCIONARIO && servicoAvulso.getServico() != null) {
+            servicoAvulso.setValor(servicoAvulso.getServico().getPreco());
+        }
         
         // Define preço e nome baseados no serviço do catálogo, se não vierem
         if (servicoAvulso.getServico() != null) {

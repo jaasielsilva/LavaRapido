@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/servicos-avulsos")
@@ -42,14 +43,28 @@ public class ServicoAvulsoController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute ServicoAvulso servico) {
-        // Se selecionou cliente cadastrado, limpa campos avulsos
+    public String salvar(@ModelAttribute ServicoAvulso servico,
+                         @RequestParam("servico") Long servicoId,
+                         RedirectAttributes redirectAttributes) {
+        catalogoService.buscarPorId(servicoId).ifPresentOrElse(
+                servico::setServico,
+                () -> {
+                    throw new IllegalArgumentException("Serviço selecionado não foi encontrado.");
+                }
+        );
+
         if (servico.getCliente() != null && servico.getCliente().getId() != null) {
             servico.setClienteAvulsoNome(null);
             servico.setClienteAvulsoVeiculo(null);
         }
-        
-        servicoService.salvar(servico);
+
+        try {
+            servicoService.salvar(servico);
+            redirectAttributes.addFlashAttribute("servicoAvulsoSucesso", "cadastrado");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("servicoAvulsoErro", e.getMessage());
+        }
+
         return "redirect:/servicos-avulsos";
     }
 

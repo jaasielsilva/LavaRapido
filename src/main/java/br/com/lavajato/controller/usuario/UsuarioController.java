@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/usuarios")
@@ -30,26 +31,31 @@ public class UsuarioController {
         Page<Usuario> usuariosPage = usuarioService.listarPaginado(pageable);
         model.addAttribute("usuariosPage", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
+        model.addAttribute("usuariosInativos", usuarioService.listarInativos());
         return "usuario/list";
     }  
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         Usuario usuario = usuarioService.buscarPorId(id).orElseThrow(() -> new IllegalArgumentException("Usuário inválido: " + id));
+        Usuario logado = usuarioService.getUsuarioLogado();
         model.addAttribute("usuario", usuario);
         model.addAttribute("perfis", Perfil.values());
-        
-        Usuario logado = usuarioService.getUsuarioLogado();
+        model.addAttribute("isMaster", logado.isMaster());
         if (logado.isMaster()) {
             model.addAttribute("empresas", empresaService.listarTodas());
         }
-        
         return "usuario/form";
     }
 
     @GetMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id) {
-        usuarioService.excluir(id);
+    public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.excluir(id);
+            redirectAttributes.addFlashAttribute("usuarioSucesso", "excluido");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("usuarioErro", e.getMessage());
+        }
         return "redirect:/usuarios";
     }
 
@@ -61,6 +67,7 @@ public class UsuarioController {
         
         model.addAttribute("usuario", usuario);
         model.addAttribute("perfis", Perfil.values());
+        model.addAttribute("isMaster", logado.isMaster());
         
         if (logado.isMaster()) {
             model.addAttribute("empresas", empresaService.listarTodas());
@@ -70,12 +77,17 @@ public class UsuarioController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Usuario usuario) {
+    public String salvar(@ModelAttribute Usuario usuario, RedirectAttributes redirectAttributes) {
         Usuario logado = usuarioService.getUsuarioLogado();
         if (!logado.isMaster()) {
             usuario.setEmpresa(logado.getEmpresa()); // Garante segurança
         }
-        usuarioService.salvar(usuario);
+        try {
+            usuarioService.salvar(usuario);
+            redirectAttributes.addFlashAttribute("usuarioSucesso", usuario.getId() == null ? "criado" : "atualizado");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("usuarioErro", e.getMessage());
+        }
         return "redirect:/usuarios";
     }
 }

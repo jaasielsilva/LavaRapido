@@ -121,7 +121,7 @@
                     </div>
                 </div>
 
-                <div class="card green">
+                <div class="card green" sec:authorize="hasAnyRole('MASTER','ADMIN')">
                     <div class="card-info">
                         <h4>Faturamento Hoje</h4>
                         <span class="number">R$ 110</span> <!-- Hardcoded for now -->

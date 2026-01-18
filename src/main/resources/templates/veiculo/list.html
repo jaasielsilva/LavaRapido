@@ -56,7 +56,8 @@
                     <button type="button" 
                             class="btn btn-sm btn-outline-danger" 
                             title="Excluir"
-                            th:onclick="'confirmarExclusao(' + ${veiculo.id} + ')'">
+                            th:onclick="'confirmarExclusao(' + ${veiculo.id} + ')'"
+                            sec:authorize="hasAnyAuthority('MASTER', 'ADMIN')">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>

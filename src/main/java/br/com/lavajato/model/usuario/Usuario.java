@@ -3,6 +3,7 @@ package br.com.lavajato.model.usuario;
 import br.com.lavajato.model.empresa.Empresa;
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -32,8 +33,14 @@ public class Usuario {
     @JoinColumn(name = "empresa_id")
     private Empresa empresa;
     
-    // Helper para verificar roles
     public boolean isMaster() {
         return Perfil.MASTER.equals(this.perfil);
     }
+    
+    @ManyToOne
+    @JoinColumn(name = "excluido_por_id")
+    private Usuario excluidoPor;
+    
+    @Column(name = "data_exclusao")
+    private LocalDateTime dataExclusao;
 }

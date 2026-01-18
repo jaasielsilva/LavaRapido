@@ -491,6 +491,29 @@
             });
         </script>
         
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+            const produtoSucesso = [[${produtoSucesso}]];
+            const produtoNome = [[${produtoNome}]];
+            if (produtoSucesso) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    let mensagem;
+                    if (produtoSucesso === 'cadastrado') {
+                        mensagem = 'Produto ' + (produtoNome || '') + ' cadastrado com sucesso.';
+                    } else {
+                        mensagem = 'Produto ' + (produtoNome || '') + ' atualizado com sucesso.';
+                    }
+                    Swal.fire({
+                        title: 'Sucesso!',
+                        text: mensagem,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            }
+        /*]]>*/
+        </script>
+        
         <!-- CSRF Token Hidden Input (necessário para o fetch funcionar com Spring Security) -->
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/produtos")
@@ -44,8 +45,11 @@ public class ProdutoController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Produto produto) {
+    public String salvar(@ModelAttribute Produto produto, RedirectAttributes redirectAttributes) {
+        boolean novo = produto.getId() == null;
         service.salvar(produto);
+        redirectAttributes.addFlashAttribute("produtoSucesso", novo ? "cadastrado" : "atualizado");
+        redirectAttributes.addFlashAttribute("produtoNome", produto.getNome());
         return "redirect:/produtos";
     }
 }
