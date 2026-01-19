@@ -63,4 +63,8 @@ public class AgendamentoService {
     public long contarPendentesPorEmpresa(Empresa empresa) {
         return agendamentoRepository.countPendentesByEmpresa(empresa);
     }
+
+    public java.util.List<Agendamento> listarProximos(Empresa empresa, int limite) {
+        return agendamentoRepository.findProximosByEmpresa(empresa, org.springframework.data.domain.PageRequest.of(0, limite)).getContent();
+    }
 }

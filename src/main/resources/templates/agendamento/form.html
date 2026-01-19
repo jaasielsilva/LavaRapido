@@ -12,73 +12,114 @@
             </div>
         </header>
 
-        <form th:action="@{/agendamentos/salvar}" th:object="${agendamento}" method="post" class="card p-4 shadow-sm" style="background-color: #0f1623; border: 1px solid #1e293b;">
+        <form th:action="@{/agendamentos/salvar}" th:object="${agendamento}" method="post" class="service-card p-4 mb-5">
             <input type="hidden" th:field="*{id}" />
             <input type="hidden" th:field="*{status}" th:if="${agendamento.id == null}" /> <!-- Default status for new -->
             
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="veiculo" class="form-label text-light">Veículo</label>
-                    <select class="form-select bg-dark text-light border-secondary" id="veiculo" th:field="*{veiculo}" required>
-                        <option value="">Selecione um veículo...</option>
-                        <option th:each="v : ${veiculos}" 
-                                th:value="${v.id}" 
-                                th:text="${v.modelo + ' - ' + v.placa + ' (' + v.cliente.nome + ')'}">
-                            Civic - ABC-1234 (João)
-                        </option>
-                    </select>
-                </div>
+            <div class="mb-4">
+                <h2 class="h6 text-primary text-uppercase mb-3 fw-bold"><i class="fa-solid fa-car-side me-2"></i>Dados do veículo e cliente</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="veiculo" class="form-label text-light small fw-bold">Veículo</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-car"></i></span>
+                            <select class="form-select bg-dark text-light border-secondary" id="veiculo" th:field="*{veiculo}" required>
+                                <option value="">Selecione um veículo...</option>
+                                <option th:each="v : ${veiculos}" 
+                                        th:value="${v.id}" 
+                                        th:text="${v.modelo + ' - ' + v.placa + ' (' + v.cliente.nome + ')'}">
+                                    Civic - ABC-1234 (João)
+                                </option>
+                            </select>
+                        </div>
+                        <small id="clienteInfo" class="text-info d-block mt-1 ms-1" style="font-size: 0.85em;">
+                            <i class="fa-solid fa-circle-info me-1"></i>Cliente: selecione um veículo
+                        </small>
+                    </div>
 
-                <div class="col-md-6 mb-3">
-                    <label for="data" class="form-label text-light">Data e Hora</label>
-                    <input type="datetime-local" class="form-control bg-dark text-light border-secondary" id="data" th:field="*{data}" required>
+                    <div class="col-md-6 mb-3">
+                        <label for="data" class="form-label text-light small fw-bold">Data e Hora</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-regular fa-calendar"></i></span>
+                            <input type="datetime-local" class="form-control bg-dark text-light border-secondary" id="data" th:field="*{data}" required>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="servicoId" class="form-label text-light">Serviço</label>
-                    <select class="form-select bg-dark text-light border-secondary" id="servicoId" name="servicoId">
-                        <option value="">Selecione um serviço...</option>
-                        <option th:each="s : ${catalogoServicos}"
-                                th:value="${s.id}"
-                                th:text="${s.nome}"
-                                th:data-preco="${s.preco}">
-                            Lavagem Completa
-                        </option>
-                    </select>
+            <div class="mb-4">
+                <h2 class="h6 text-primary text-uppercase mb-3 fw-bold"><i class="fa-solid fa-wrench me-2"></i>Serviço e valor</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="servicoId" class="form-label text-light small fw-bold">Serviço (Catálogo)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-tags"></i></span>
+                            <select class="form-select bg-dark text-light border-secondary" id="servicoId" name="servicoId">
+                                <option value="">Selecione um serviço...</option>
+                                <option th:each="s : ${catalogoServicos}"
+                                        th:value="${s.id}"
+                                        th:text="${s.nome}"
+                                        th:data-preco="${s.preco}">
+                                    Lavagem Completa
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="servicos" class="form-label text-light small fw-bold">Serviços (descrição personalizada)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-pen"></i></span>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" id="servicos" th:field="*{servicos}" placeholder="Ex: Lavagem Completa, Polimento...">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label for="servicos" class="form-label text-light">Serviços (descrição)</label>
-                    <input type="text" class="form-control bg-dark text-light border-secondary" id="servicos" th:field="*{servicos}" placeholder="Ex: Lavagem Completa, Polimento...">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="valorMascara" class="form-label text-light small fw-bold">Valor Total</label>
+                        <input type="hidden" id="valor" th:field="*{valor}">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark text-success border-secondary fw-bold">R$</span>
+                            <input type="text"
+                                   class="form-control bg-dark text-light border-secondary text-end fw-bold fs-5"
+                                   id="valorMascara"
+                                   inputmode="decimal"
+                                   placeholder="0,00">
+                        </div>
+                        <small class="text-secondary d-block mt-1 ms-1" style="font-size: 0.85em;">
+                            Preenchido automaticamente ao selecionar serviço.
+                        </small>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3" th:if="${agendamento.id != null}">
+                        <label for="statusSelect" class="form-label text-light small fw-bold">Status</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-bars-progress"></i></span>
+                            <select class="form-select bg-dark text-light border-secondary" id="statusSelect" th:field="*{status}">
+                                <option th:each="s : ${T(br.com.lavajato.model.agendamento.StatusAgendamento).values()}"
+                                        th:value="${s}" th:text="${s.descricao}">Agendado</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="valor" class="form-label text-light">Valor Total (R$)</label>
-                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" id="valor" th:field="*{valor}" placeholder="0.00">
-                </div>
-                
-                <div class="col-md-4 mb-3" th:if="${agendamento.id != null}">
-                    <label for="statusSelect" class="form-label text-light">Status</label>
-                    <select class="form-select bg-dark text-light border-secondary" id="statusSelect" th:field="*{status}">
-                        <option th:each="s : ${T(br.com.lavajato.model.agendamento.StatusAgendamento).values()}"
-                                th:value="${s}" th:text="${s.descricao}">Agendado</option>
-                    </select>
+            <div class="mb-4">
+                <h2 class="h6 text-primary text-uppercase mb-3 fw-bold"><i class="fa-regular fa-comment-dots me-2"></i>Observações</h2>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-pencil"></i></span>
+                    <textarea class="form-control bg-dark text-light border-secondary" id="observacoes"
+                              th:field="*{observacoes}"
+                              rows="3"
+                              placeholder="Ex: Cliente vai aguardar no local, pagamento em dinheiro, etc."></textarea>
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label for="observacoes" class="form-label text-light">Observações</label>
-                <textarea class="form-control bg-dark text-light border-secondary" id="observacoes" th:field="*{observacoes}" rows="3"></textarea>
-            </div>
-
-            <div class="d-flex gap-2 justify-content-end mt-4">
-                <a th:href="@{/agendamentos}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa-solid fa-save"></i> Salvar
+            <div class="d-flex gap-2 justify-content-end mt-5 pt-3 border-top border-secondary border-opacity-10">
+                <a th:href="@{/agendamentos}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                <button type="submit" class="btn btn-primary px-4 fw-bold">
+                    <i class="fa-solid fa-save me-2"></i>Salvar Agendamento
                 </button>
             </div>
         </form>
@@ -88,7 +129,57 @@
             document.addEventListener('DOMContentLoaded', function () {
                 var servicoSelect = document.getElementById('servicoId');
                 var servicosInput = document.getElementById('servicos');
-                var valorInput = document.getElementById('valor');
+                var valorHidden = document.getElementById('valor');
+                var valorMascara = document.getElementById('valorMascara');
+                var veiculoSelect = document.getElementById('veiculo');
+                var clienteInfo = document.getElementById('clienteInfo');
+
+                function formatarMoeda(valorNumerico) {
+                    if (isNaN(valorNumerico)) {
+                        return '';
+                    }
+                    var negativo = valorNumerico < 0;
+                    valorNumerico = Math.abs(valorNumerico);
+                    var inteiro = Math.floor(valorNumerico);
+                    var centavos = Math.round((valorNumerico - inteiro) * 100);
+                    if (centavos === 100) {
+                        inteiro += 1;
+                        centavos = 0;
+                    }
+                    var inteiroStr = inteiro.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    var centavosStr = centavos.toString().padStart(2, '0');
+                    return (negativo ? '-' : '') + inteiroStr + ',' + centavosStr;
+                }
+
+                function parseMoedaParaNumero(texto) {
+                    if (!texto) {
+                        return null;
+                    }
+                    var limpo = texto.toString().replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
+                    var numero = parseFloat(limpo);
+                    return isNaN(numero) ? null : numero;
+                }
+
+                if (valorHidden && valorMascara && valorHidden.value) {
+                    var numeroInicial = parseFloat(valorHidden.value);
+                    var formatadoInicial = formatarMoeda(numeroInicial);
+                    if (formatadoInicial) {
+                        valorMascara.value = formatadoInicial;
+                    }
+                }
+
+                if (valorMascara && valorHidden) {
+                    valorMascara.addEventListener('blur', function () {
+                        var numero = parseMoedaParaNumero(this.value);
+                        if (numero !== null) {
+                            valorHidden.value = numero.toFixed(2);
+                            this.value = formatarMoeda(numero);
+                        } else {
+                            valorHidden.value = '';
+                            this.value = '';
+                        }
+                    });
+                }
 
                 if (servicoSelect) {
                     servicoSelect.addEventListener('change', function () {
@@ -100,14 +191,82 @@
                             servicosInput.value = nome;
                         }
 
-                        if (preco && valorInput) {
-                            valorInput.value = preco.replace(',', '.');
+                        if (preco && valorHidden && valorMascara) {
+                            var numero = parseMoedaParaNumero(preco);
+                            if (numero === null) {
+                                numero = parseFloat(preco.toString().replace(',', '.'));
+                            }
+                            if (!isNaN(numero)) {
+                                valorHidden.value = numero.toFixed(2);
+                                valorMascara.value = formatarMoeda(numero);
+                            }
                         }
                     });
+                }
+
+                if (veiculoSelect && clienteInfo) {
+                    function atualizarCliente() {
+                        var opt = veiculoSelect.options[veiculoSelect.selectedIndex];
+                        if (opt && opt.text) {
+                            var txt = opt.text;
+                            var ini = txt.indexOf('(');
+                            var fim = txt.lastIndexOf(')');
+                            if (ini !== -1 && fim !== -1 && fim > ini) {
+                                var nome = txt.substring(ini + 1, fim);
+                                clienteInfo.innerHTML = '<i class="fa-solid fa-user me-1"></i>Cliente: <strong>' + nome + '</strong>';
+                                return;
+                            }
+                        }
+                        clienteInfo.innerHTML = '<i class="fa-solid fa-circle-info me-1"></i>Cliente: selecione um veículo';
+                    }
+                    veiculoSelect.addEventListener('change', atualizarCliente);
+                    atualizarCliente();
                 }
             });
         /*]]>*/
         </script>
+
+        <style>
+            /* Estilo Premium para o Formulário (igual ao Service Card) */
+            .service-card {
+                background-color: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Inputs com foco elegante */
+            .form-control:focus, .form-select:focus {
+                background-color: #1e293b;
+                border-color: #0ea5e9;
+                box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25);
+                color: #fff;
+            }
+
+            /* Input Groups */
+            .input-group-text {
+                background-color: #1e293b;
+                border-color: #334155;
+            }
+
+            /* Labels */
+            .form-label {
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                color: #94a3b8 !important; /* Secondary color for labels */
+            }
+
+            /* Botões */
+            .btn-primary {
+                background-color: #0ea5e9;
+                border-color: #0ea5e9;
+            }
+            .btn-primary:hover {
+                background-color: #0284c7;
+                border-color: #0284c7;
+            }
+        </style>
     </div>
 </body>
 </html>

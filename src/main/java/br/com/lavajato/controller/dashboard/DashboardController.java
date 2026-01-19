@@ -102,6 +102,11 @@ public class DashboardController {
             model.addAttribute("faturamentoSubiu", faturamentoVariacao.compareTo(java.math.BigDecimal.ZERO) > 0);
             model.addAttribute("faturamentoCaiu", faturamentoVariacao.compareTo(java.math.BigDecimal.ZERO) < 0);
             model.addAttribute("faturamentoVariacaoAbsoluta", faturamentoVariacao.abs());
+
+            // Próximos Agendamentos
+            java.util.List<br.com.lavajato.model.agendamento.Agendamento> proximosAgendamentos = 
+                    agendamentoService.listarProximos(empresaContexto, 5);
+            model.addAttribute("proximosAgendamentos", proximosAgendamentos);
         }
 
         return "dashboard";

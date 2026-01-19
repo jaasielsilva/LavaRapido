@@ -185,33 +185,25 @@
                     </div>
 
                     <div class="list">
-                        <div class="item">
-                            <div class="item-info">
-                                <strong>Carlos Silva</strong>
-                                <div class="sub-info">Honda Civic - ABC-1234</div>
-                                <div class="service-type">Lavagem Completa, Cristalização</div>
-                            </div>
-                            <div class="item-actions">
-                                <div class="date-info">
-                                    <span>19/01/2026</span>
-                                    <span>14:21</span>
-                                </div>
-                                <span class="price">R$ 350</span>
-                            </div>
+                        <div th:if="${proximosAgendamentos == null or proximosAgendamentos.isEmpty()}" class="text-center py-4">
+                            <span class="text-muted">Nenhum agendamento futuro.</span>
                         </div>
 
-                        <div class="item">
+                        <div class="item" th:each="ag : ${proximosAgendamentos}">
                             <div class="item-info">
-                                <strong>Maria Santos</strong>
-                                <div class="sub-info">BMW X1 - GHI-9012</div>
-                                <div class="service-type">Polimento Técnico</div>
+                                <strong th:text="${ag.veiculo.cliente.nome}">Nome Cliente</strong>
+                                <div class="sub-info">
+                                    <span th:text="${ag.veiculo.modelo}">Modelo</span> - 
+                                    <span th:text="${ag.veiculo.placa}">Placa</span>
+                                </div>
+                                <div class="service-type" th:text="${ag.servicos}">Serviços</div>
                             </div>
                             <div class="item-actions">
                                 <div class="date-info">
-                                    <span>20/01/2026</span>
-                                    <span>14:21</span>
+                                    <span th:text="${#temporals.format(ag.data, 'dd/MM/yyyy')}">Data</span>
+                                    <span th:text="${#temporals.format(ag.data, 'HH:mm')}">Hora</span>
                                 </div>
-                                <span class="price">R$ 350</span>
+                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(ag.valor, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
                             </div>
                         </div>
                     </div>
