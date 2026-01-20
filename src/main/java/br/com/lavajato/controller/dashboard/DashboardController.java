@@ -105,7 +105,7 @@ public class DashboardController {
 
             // Próximos Agendamentos
             java.util.List<br.com.lavajato.model.agendamento.Agendamento> proximosAgendamentos = 
-                    agendamentoService.listarProximos(empresaContexto, 5);
+                    agendamentoService.listarProximos(empresaContexto, 3);
             model.addAttribute("proximosAgendamentos", proximosAgendamentos);
         }
 

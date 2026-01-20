@@ -32,7 +32,7 @@ public class AgendamentoController {
     private ServicoCatalogoService servicoCatalogoService;
 
     @GetMapping
-    public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC) Pageable pageable, Model model) {
+    public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC, size = 12) Pageable pageable, Model model) {
         model.addAttribute("agendamentos", agendamentoService.listarPaginado(pageable));
         return "agendamento/list";
     }

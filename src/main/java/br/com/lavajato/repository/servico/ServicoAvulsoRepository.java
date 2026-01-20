@@ -27,4 +27,6 @@ public interface ServicoAvulsoRepository extends JpaRepository<ServicoAvulso, Lo
 
     @Query("SELECT s FROM ServicoAvulso s WHERE s.empresa = :empresa AND s.dataCriacao BETWEEN :inicio AND :fim ORDER BY s.dataCriacao DESC")
     List<ServicoAvulso> findServicosDoDia(@Param("empresa") Empresa empresa, @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
+
+    List<ServicoAvulso> findByEmpresaAndStatusAndDataConclusaoBetween(Empresa empresa, StatusServico status, LocalDateTime inicio, LocalDateTime fim);
 }

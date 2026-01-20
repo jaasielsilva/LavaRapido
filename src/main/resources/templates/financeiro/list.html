@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div class="container-fluid p-4">
+        <style>
+            /* Reset & Scrollbar */
+            :root {
+                --card-bg: #1e293b;
+                --body-bg: #0f1623;
+                --text-main: #e2e8f0;
+                --text-muted: #94a3b8;
+                --border-color: #334155;
+            }
+
+            /* Force dark background on table interactions */
+            .table {
+                --bs-table-bg: transparent;
+                --bs-table-color: var(--text-main);
+                --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+                --bs-table-hover-color: var(--text-main);
+                color: var(--text-main);
+            }
+            
+            /* Custom Scrollbar */
+            ::-webkit-scrollbar { width: 8px; height: 8px; }
+            ::-webkit-scrollbar-track { background: var(--body-bg); }
+            ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+            /* Page Layout */
+            .page-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                margin-bottom: 2rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            .page-title {
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #fff;
+                margin: 0;
+                letter-spacing: -0.5px;
+            }
+            .page-subtitle {
+                color: var(--text-muted);
+                font-size: 0.9rem;
+                margin-top: 0.5rem;
+            }
+
+            /* Action Buttons */
+            .btn-action {
+                padding: 0.6rem 1.2rem;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 0.9rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: all 0.2s;
+                border: none;
+                cursor: pointer;
+                text-decoration: none;
+            }
+            .btn-primary-custom {
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            }
+            .btn-primary-custom:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+                color: white;
+            }
+            .btn-secondary-custom {
+                background: rgba(255, 255, 255, 0.05);
+                color: var(--text-muted);
+                border: 1px solid var(--border-color);
+            }
+            .btn-secondary-custom:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                border-color: #475569;
+            }
+
+            /* Filters Bar */
+            .filters-container {
+                background: #111827;
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 1rem 1.5rem;
+                margin-bottom: 2rem;
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
+            .filter-label {
+                color: #f59e0b;
+                font-weight: 700;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            /* Custom Selects */
+            .select-wrapper {
+                position: relative;
+            }
+            .custom-select {
+                appearance: none;
+                background-color: #0f1623;
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                color: var(--text-main);
+                padding: 0.6rem 2.5rem 0.6rem 1rem;
+                font-size: 0.9rem;
+                font-weight: 500;
+                min-width: 160px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .custom-select:hover {
+                border-color: #475569;
+            }
+            .custom-select:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            }
+            .select-icon {
+                position: absolute;
+                right: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+                pointer-events: none;
+                font-size: 0.8rem;
+            }
+            .select-prefix {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+                pointer-events: none;
+            }
+            .with-prefix {
+                padding-left: 2.5rem;
+            }
+
+            /* Stats Grid */
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2.5rem;
+            }
+            
+            .stat-card {
+                background: var(--card-bg);
+                border-radius: 16px;
+                padding: 1.5rem;
+                position: relative;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,0.03);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                min-height: 160px;
+                transition: transform 0.2s;
+            }
+            .stat-card:hover {
+                transform: translateY(-4px);
+            }
+
+            /* Card Variants */
+            .card-receita {
+                background: linear-gradient(160deg, rgba(234, 88, 12, 0.1) 0%, #0f1623 100%);
+                border-left: 4px solid #ea580c;
+            }
+            .card-lucro {
+                background: linear-gradient(160deg, rgba(22, 163, 74, 0.1) 0%, #0f1623 100%);
+                border-left: 4px solid #16a34a;
+            }
+            .card-servicos {
+                background: linear-gradient(160deg, rgba(37, 99, 235, 0.1) 0%, #0f1623 100%);
+                border-left: 4px solid #3b82f6;
+            }
+            .card-produtos {
+                background: linear-gradient(160deg, rgba(147, 51, 234, 0.1) 0%, #0f1623 100%);
+                border-left: 4px solid #9333ea;
+            }
+
+            .stat-label {
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.5rem;
+                display: block;
+            }
+            .stat-value {
+                font-size: 2rem;
+                font-weight: 700;
+                color: white;
+                margin-bottom: 0.5rem;
+                line-height: 1.1;
+            }
+            .stat-meta {
+                font-size: 0.8rem;
+                color: #64748b;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+            .stat-icon {
+                position: absolute;
+                top: 1.5rem;
+                right: 1.5rem;
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
+                opacity: 0.8;
+            }
+            
+            /* Icon Colors */
+            .bg-icon-orange { background: rgba(234, 88, 12, 0.15); color: #fb923c; }
+            .bg-icon-green { background: rgba(22, 163, 74, 0.15); color: #4ade80; }
+            .bg-icon-blue { background: rgba(37, 99, 235, 0.15); color: #60a5fa; }
+            .bg-icon-purple { background: rgba(147, 51, 234, 0.15); color: #c084fc; }
+
+            /* Table Section */
+            .table-card {
+                background: #111827;
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); /* White shadow/glow effect */
+                transition: box-shadow 0.3s;
+            }
+            .table-card:hover {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            .table-header {
+                padding: 1.5rem;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: #162032;
+            }
+            .table-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: white;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+            .table-title i { color: #f59e0b; }
+            
+            .badge-period {
+                background: #f59e0b;
+                color: #000;
+                font-weight: 700;
+                padding: 0.35rem 0.8rem;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+            }
+
+            /* Main Table */
+            .custom-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .custom-table th {
+                background: #0f1623;
+                color: var(--text-muted);
+                font-weight: 600;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                padding: 1.2rem 1.5rem;
+                text-align: right;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .custom-table th:first-child {
+                text-align: left;
+                padding-left: 2rem;
+            }
+            .custom-table td {
+                padding: 1.2rem 1.5rem;
+                color: var(--text-main);
+                font-size: 0.9rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+                text-align: right;
+                vertical-align: middle;
+            }
+            .custom-table td:first-child {
+                text-align: left;
+                padding-left: 2rem;
+                color: white;
+                font-weight: 600;
+            }
+            .custom-table tr:last-child td {
+                border-bottom: none;
+            }
+            .custom-table tr:hover td {
+                background-color: rgba(255,255,255,0.02);
+            }
+
+            /* Footer Row */
+            .table-footer td {
+                background: #1e293b;
+                border-top: 2px solid var(--border-color);
+                font-weight: 700;
+                color: white;
+                font-size: 1rem;
+                padding: 1.5rem;
+            }
+            .table-footer td:first-child {
+                color: #f59e0b;
+                text-transform: uppercase;
+            }
+
+            /* Utilities */
+            .text-success-custom { color: #4ade80 !important; }
+            .text-danger-custom { color: #f87171 !important; }
+            .text-warning-custom { color: #fbbf24 !important; }
+            .text-primary-custom { color: #60a5fa !important; }
+            
+            /* Modal Styles */
+            .modal-content {
+                background: #1e293b;
+                border: 1px solid #475569;
+            }
+            .modal-header {
+                border-bottom: 1px solid #334155;
+            }
+            .modal-title {
+                color: white;
+            }
+            .form-label {
+                color: #94a3b8;
+            }
+            .form-control, .form-select {
+                background: #0f1623;
+                border: 1px solid #334155;
+                color: white;
+            }
+            .form-control:focus, .form-select:focus {
+                background: #0f1623;
+                border-color: #3b82f6;
+                color: white;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            }
+            .btn-close-white {
+                filter: invert(1) grayscale(100%) brightness(200%);
+            }
+        </style>
+
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Financeiro</h1>
+                <div class="page-subtitle">Visão geral, balanços e movimentações</div>
+            </div>
+            <div class="d-flex gap-3">
+                <button type="button" class="btn-action btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalNovoLancamento">
+                    <i class="fa-solid fa-plus"></i> Novo Lançamento
+                </button>
+                <a th:href="@{/financeiro/exportar(inicio=${inicio}, fim=${fim})}" class="btn-action btn-secondary-custom">
+                    <i class="fa-solid fa-file-excel"></i> Exportar
+                </a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-container">
+            <div class="filter-label">
+                <i class="fa-solid fa-filter"></i> Filtros
+            </div>
+            
+            <form id="formFiltros" th:action="@{/financeiro}" method="get" class="d-flex gap-3 align-items-center flex-wrap m-0">
+                <div class="select-wrapper">
+                    <i class="fa-regular fa-calendar select-prefix"></i>
+                    <i class="fa-solid fa-chevron-down select-icon"></i>
+                    <select name="periodo" class="custom-select with-prefix" onchange="this.form.submit()">
+                        <option value="3" th:selected="${periodo == 3}">Últimos 3 meses</option>
+                        <option value="6" th:selected="${periodo == 6}">Últimos 6 meses</option>
+                        <option value="12" th:selected="${periodo == 12}">Últimos 12 meses</option>
+                    </select>
+                </div>
+
+                <div class="select-wrapper">
+                    <i class="fa-solid fa-chevron-down select-icon"></i>
+                    <select name="tipo" class="custom-select" onchange="this.form.submit()">
+                        <option value="TODOS" th:selected="${tipo == 'TODOS'}">Todas Movimentações</option>
+                        <option value="ENTRADA" th:selected="${tipo == 'ENTRADA'}">Apenas Entradas</option>
+                        <option value="SAIDA" th:selected="${tipo == 'SAIDA'}">Apenas Saídas</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Cards -->
+        <div class="stats-grid">
+            <div class="stat-card card-receita">
+                <div class="stat-icon bg-icon-orange"><i class="fa-solid fa-sack-dollar"></i></div>
+                <div>
+                    <span class="stat-label">Receita Total</span>
+                    <div class="stat-value" th:text="'R$ ' + ${#numbers.formatDecimal(receitaTotal, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span th:text="'Média: R$ ' + ${#numbers.formatDecimal(mediaMensal, 0, 'POINT', 2, 'COMMA')} + '/mês'">Média: R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card card-lucro">
+                <div class="stat-icon bg-icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div>
+                    <span class="stat-label">Lucro Líquido</span>
+                    <div class="stat-value text-success-custom" th:text="'R$ ' + ${#numbers.formatDecimal(lucroLiquido, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                    <div class="stat-meta">
+                        <i class="fa-solid fa-percent"></i>
+                        <span th:text="'Margem: ' + ${#numbers.formatDecimal(margemLucro, 1, 'POINT', 1, 'COMMA')} + '%'">Margem: 0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card card-servicos">
+                <div class="stat-icon bg-icon-blue"><i class="fa-solid fa-wrench"></i></div>
+                <div>
+                    <span class="stat-label">Serviços</span>
+                    <div class="stat-value text-primary-custom" th:text="${qtdServicos}">0</div>
+                    <div class="stat-meta">
+                        <span th:text="'Gerou: R$ ' + ${#numbers.formatDecimal(receitaServicos, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card card-produtos">
+                <div class="stat-icon bg-icon-purple"><i class="fa-solid fa-box-open"></i></div>
+                <div>
+                    <span class="stat-label">Produtos</span>
+                    <div class="stat-value" style="color: #c084fc;" th:text="${qtdProdutos}">0</div>
+                    <div class="stat-meta">
+                        <span th:text="'Gerou: R$ ' + ${#numbers.formatDecimal(receitaProdutos, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">
+                    <i class="fa-regular fa-file-lines"></i>
+                    Balanço Mensal Detalhado
+                </div>
+                <span class="badge-period" th:text="${periodo} + ' MESES'">12 MESES</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Mês de Referência</th>
+                            <th>Serviços (+)</th>
+                            <th>Produtos (+)</th>
+                            <th>Receita Bruta</th>
+                            <th>Custos (-)</th>
+                            <th>Despesas (-)</th>
+                            <th>Lucro Líquido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${balancoMensal.empty}">
+                            <td colspan="7" class="text-center py-5 text-muted" style="text-align: center;">
+                                <i class="fa-solid fa-inbox fa-2x mb-3 d-block"></i>
+                                Nenhum registro encontrado para o período selecionado.
+                            </td>
+                        </tr>
+                        <tr th:each="item : ${balancoMensal}">
+                            <td style="text-transform: capitalize;" 
+                                th:text="${#strings.capitalize(item.mes.month.getDisplayName(T(java.time.format.TextStyle).FULL, T(java.util.Locale).forLanguageTag('pt-BR')).toLowerCase()) + ' ' + item.mes.year}">
+                                Janeiro 2026
+                            </td>
+                            <td>
+                                <span class="text-muted" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaServicos, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                            </td>
+                            <td>
+                                <span class="text-muted" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                            </td>
+                            <td class="text-warning-custom fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaTotal, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(item.custosProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(item.despesasOperacionais, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-success-custom fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(item.lucroLiquido, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="table-footer" th:if="${!balancoMensal.empty}">
+                        <tr>
+                            <td>TOTAL DO PERÍODO</td>
+                            <td class="text-primary-custom" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.receitaServicos, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-purple-custom" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.receitaProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-warning-custom" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.receitaTotal, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(totalBalanco.custosProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(totalBalanco.despesasOperacionais, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-success-custom" style="font-size: 1.1rem;" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.lucroLiquido, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal Novo Lançamento -->
+        <div class="modal fade" id="modalNovoLancamento" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Novo Lançamento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/financeiro/salvar}" method="post" th:object="${novoLancamento}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-uppercase">Tipo de Movimentação</label>
+                                <select class="form-select" th:field="*{tipo}" required>
+                                    <option value="SAIDA">🔴 Saída (Despesa)</option>
+                                    <option value="ENTRADA">🟢 Entrada (Receita Extra)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-uppercase">Descrição</label>
+                                <input type="text" class="form-control" th:field="*{descricao}" placeholder="Ex: Conta de Luz, Aluguel..." required>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-uppercase">Valor (R$)</label>
+                                    <input type="number" step="0.01" class="form-control" th:field="*{valor}" placeholder="0.00" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-uppercase">Categoria</label>
+                                    <input type="text" class="form-control" th:field="*{categoria}" placeholder="Selecione ou digite..." list="categoriasList">
+                                    <datalist id="categoriasList">
+                                        <option value="Aluguel">
+                                        <option value="Energia Elétrica">
+                                        <option value="Água e Esgoto">
+                                        <option value="Internet/Telefone">
+                                        <option value="Salários">
+                                        <option value="Fornecedores">
+                                        <option value="Manutenção">
+                                        <option value="Marketing">
+                                        <option value="Impostos">
+                                        <option value="Outros">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-uppercase">Data do Lançamento</label>
+                                <input type="datetime-local" class="form-control" th:field="*{data}" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary-custom px-4">Salvar Registro</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Set default date to now
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                const dateInput = document.querySelector('input[type="datetime-local"]');
+                if (dateInput && !dateInput.value) {
+                    dateInput.value = now.toISOString().slice(0, 16);
+                }
+
+                // Currency Mask Logic
+                const moneyInputs = document.querySelectorAll('.money-mask');
+                
+                moneyInputs.forEach(input => {
+                    input.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value === '') {
+                            e.target.value = '';
+                            return;
+                        }
+                        value = (parseInt(value) / 100).toFixed(2) + '';
+                        value = value.replace('.', ',');
+                        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                        e.target.value = 'R$ ' + value;
+                    });
+                });
+
+                // Unmask before submit
+                const form = document.getElementById('formLancamento');
+                if (form) {
+                    form.addEventListener('submit', function() {
+                        moneyInputs.forEach(input => {
+                            let val = input.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+                            input.value = val;
+                        });
+                    });
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

@@ -55,61 +55,90 @@
             </div>
 
             <div th:each="servico : ${servicos}" class="col-md-3">
-                <div class="card servico-avulso-card h-100 position-relative d-flex flex-column">
+                <div class="card h-100 service-card position-relative d-flex flex-column" 
+                     th:classappend="'status-border-' + ${servico.status.cor}">
                     
-                    <!-- Header: Status & Time -->
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge rounded-pill" 
-                              th:classappend="'bg-' + ${servico.status.cor}"
-                              th:text="${servico.status.descricao}"
-                              style="font-size: 10px; padding: 4px 8px;">Em Andamento</span>
-                        <span class="text-secondary small" th:text="${#temporals.format(servico.dataCriacao, 'HH:mm')}">14:56</span>
+                    <!-- Watermark Icon based on status -->
+                    <div class="watermark-wrapper">
+                        <i class="status-icon-watermark fa-solid"
+                           th:classappend="${servico.status.name() == 'EM_FILA' ? 'fa-clock' : 
+                                           (servico.status.name() == 'EM_ANDAMENTO' ? 'fa-spinner' : 
+                                           (servico.status.name() == 'CONCLUIDO' ? 'fa-check-circle' : 'fa-ban'))}"></i>
                     </div>
 
-                    <!-- Info -->
-                    <div class="flex-grow-1 mb-2">
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="fa-solid fa-user text-primary small mt-1"></i>
-                            <div class="w-100">
-                                <div class="text-white fw-bold small text-truncate"
-                                     th:title="${servico.nomeClienteDisplay}"
-                                     th:text="${servico.nomeClienteDisplay}">Nome Cliente</div>
-                                <div class="text-secondary xsmall text-truncate"
-                                     th:title="${servico.veiculoDisplay}"
-                                     th:text="${servico.veiculoDisplay}">Veiculo</div>
+                    <div class="card-body px-3 py-2 w-100 position-relative" style="z-index: 1;">
+                        
+                        <!-- Header: Status e Ações Dropdown -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge rounded-pill border border-opacity-10" 
+                                  th:classappend="'bg-soft-' + ${servico.status.cor}"
+                                  style="font-size: 11px; padding: 5px 10px; font-weight: 600; letter-spacing: 0.5px;"
+                                  th:text="${servico.status.descricao.toUpperCase()}">STATUS</span>
+                            
+                            <!-- Dropdown de Ações -->
+                            <div class="dropdown">
+                                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-sm border-0 mt-1">
+                                    <li th:if="${servico.status.name() == 'EM_FILA'}">
+                                        <a class="dropdown-item text-warning" th:href="@{/servicos-avulsos/status/{id}/EM_ANDAMENTO(id=${servico.id})}">
+                                            <i class="fa-solid fa-play me-2 text-warning" style="width: 20px;"></i>Iniciar
+                                        </a>
+                                    </li>
+                                    <li th:if="${servico.status.name() == 'EM_ANDAMENTO'}">
+                                        <a class="dropdown-item text-success" th:href="@{/servicos-avulsos/status/{id}/CONCLUIDO(id=${servico.id})}">
+                                            <i class="fa-solid fa-check-double me-2 text-success" style="width: 20px;"></i>Concluir
+                                        </a>
+                                    </li>
+                                    <li th:if="${servico.status.name() == 'EM_FILA' or servico.status.name() == 'EM_ANDAMENTO'}">
+                                        <hr class="dropdown-divider bg-secondary opacity-25">
+                                        <a class="dropdown-item text-danger-hover" th:href="@{/servicos-avulsos/status/{id}/CANCELADO(id=${servico.id})}">
+                                            <i class="fa-solid fa-ban me-2 text-danger" style="width: 20px;"></i>Cancelar
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="text-info xsmall fw-bold mt-1 text-truncate"
-                             th:title="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}"
-                             th:text="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}">Lavagem Simples</div>
-                    </div>
 
-                    <!-- Footer: Price & Actions -->
-                    <div class="mt-auto border-top border-secondary border-opacity-10 pt-2">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-secondary small">Valor</span>
-                            <span class="fw-bold text-white price-text"
-                                  th:text="'R$ ' + ${#numbers.formatDecimal(servico.valor != null ? servico.valor : (servico.servico != null ? servico.servico.preco : 0), 0, 'POINT', 0, 'COMMA')}">R$ 40</span>
+                        <!-- Título: Cliente -->
+                        <h6 class="card-title text-white fw-bold mb-1 text-truncate" 
+                            th:title="${servico.nomeClienteDisplay}" 
+                            th:text="${servico.nomeClienteDisplay}"
+                            style="font-size: 1.1rem;">Nome Cliente</h6>
+
+                        <!-- Subtítulo: Veículo -->
+                        <div class="d-flex align-items-center text-secondary small mb-3" th:title="${servico.veiculoDisplay}">
+                            <div class="d-flex align-items-center bg-dark bg-opacity-50 rounded px-2 py-1 border border-secondary border-opacity-25">
+                                <i class="fa-solid fa-car me-2 text-primary" style="font-size: 11px;"></i>
+                                <span class="text-truncate fw-medium text-light" th:text="${servico.veiculoDisplay}">Veiculo</span>
+                            </div>
                         </div>
+
+                        <!-- Descrição: Serviços -->
+                        <div class="mb-2">
+                            <p class="card-text text-secondary small mb-0 text-truncate" 
+                               th:title="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}">
+                               <i class="fa-solid fa-wrench me-1 opacity-50"></i>
+                               <span th:text="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}">Serviço...</span>
+                            </p>
+                        </div>
+                    </div>
                         
-                        <div class="d-flex justify-content-end gap-2">
-                            <a th:if="${servico.status.name() == 'EM_FILA'}"
-                               th:href="@{/servicos-avulsos/status/{id}/EM_ANDAMENTO(id=${servico.id})}"
-                               class="btn btn-sm btn-primary">
-                                <i class="fa-solid fa-play me-1"></i> Iniciar
-                            </a>
+                    <!-- Footer: Data e Preço -->
+                    <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100 position-relative" style="z-index: 1; background: rgba(0,0,0,0.2);">
+                        <!-- Lado Esquerdo: Hora -->
+                        <div class="d-flex align-items-center text-secondary small" 
+                             th:title="${#temporals.format(servico.dataCriacao, 'dd/MM/yyyy HH:mm')}">
+                            <i class="fa-regular fa-clock me-2 text-warning fs-5"></i>
+                            <div class="d-flex flex-column" style="line-height: 1.1;">
+                                <span class="fw-bold text-light" style="font-size: 15px;" th:text="${#temporals.format(servico.dataCriacao, 'HH:mm')}">Hora</span>
+                            </div>
+                        </div>
 
-                            <a th:if="${servico.status.name() == 'EM_ANDAMENTO'}"
-                               th:href="@{/servicos-avulsos/status/{id}/CONCLUIDO(id=${servico.id})}"
-                               class="btn btn-sm btn-success">
-                                <i class="fa-solid fa-check me-1"></i> Concluir
-                            </a>
-
-                            <a th:if="${servico.status.name() == 'EM_FILA' or servico.status.name() == 'EM_ANDAMENTO'}"
-                               th:href="@{/servicos-avulsos/status/{id}/CANCELADO(id=${servico.id})}"
-                               class="btn btn-sm btn-outline-danger">
-                                <i class="fa-solid fa-ban me-1"></i> Cancelar
-                            </a>
+                        <!-- Lado Direito: Preço -->
+                        <div class="badge bg-dark border border-secondary border-opacity-25 text-success fs-6 fw-bold">
+                            <span th:text="'R$ ' + ${#numbers.formatDecimal(servico.valor != null ? servico.valor : (servico.servico != null ? servico.servico.preco : 0), 0, 'POINT', 0, 'COMMA')}">R$ 0</span>
                         </div>
                     </div>
                 </div>
@@ -164,7 +193,7 @@
                             <div class="d-flex flex-column gap-3" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
                                 <div th:each="servico : ${catalogoServicos}" class="position-relative service-option-container">
                                     <input type="radio" class="btn-check" name="servico" th:id="'servico-' + ${servico.id}" th:value="${servico.id}" required autocomplete="off">
-                                    <label class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center p-3 text-start service-card" th:for="'servico-' + ${servico.id}">
+                                    <label class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center p-3 text-start service-option-card" th:for="'servico-' + ${servico.id}">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="service-icon-box" 
                                                  th:classappend="'bg-soft-' + ${servico.categoria.cor}">
@@ -202,30 +231,92 @@
         </div>
 
         <style>
-            /* Cards Serviços Avulsos */
-            .servico-avulso-card {
-                background-color: #111827;
+            /* Card Styling Premium (From Agendamento) */
+            .service-card {
+                background-color: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+
+            .service-card:hover {
+                transform: translateY(-5px) scale(1.02);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+                border-color: #334155;
+                z-index: 10;
+            }
+
+            /* Status Borders & Accents */
+            .status-border-primary { border-left: 5px solid #38bdf8; }
+            .status-border-warning { border-left: 5px solid #fbbf24; }
+            .status-border-success { border-left: 5px solid #4ade80; }
+            .status-border-danger  { border-left: 5px solid #f87171; }
+
+            /* Watermark Icon */
+            .status-icon-watermark {
+                position: absolute;
+                bottom: -20px;
+                right: -20px;
+                font-size: 100px;
+                opacity: 0.03;
+                transform: rotate(-15deg);
+                pointer-events: none;
+                transition: all 0.5s ease;
+                z-index: 0;
+            }
+            
+            .service-card:hover .status-icon-watermark {
+                transform: rotate(0deg) scale(1.1);
+                opacity: 0.08;
+                bottom: -10px;
+                right: -10px;
+            }
+
+            /* Badge Colors */
+            .bg-soft-primary { background: rgba(14, 165, 233, 0.2); color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.1); }
+            .bg-soft-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.1); }
+            .bg-soft-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.1); }
+            .bg-soft-danger  { background: rgba(239, 68, 68, 0.2); color: #f87171; box-shadow: 0 0 10px rgba(248, 113, 113, 0.1); }
+            
+            /* Dropdown refinements */
+            .dropdown-menu {
+                background-color: #1e293b;
                 border: 1px solid #334155;
-                border-radius: 10px;
-                padding: 8px 10px;
-                transition: all 0.2s ease;
+                border-radius: 12px;
+                padding: 6px;
+                min-width: 200px;
+            }
+            
+            .dropdown-item {
+                color: #e2e8f0;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+                border-radius: 8px;
+                transition: background-color 0.2s ease;
+                font-weight: 500;
             }
 
-            .servico-avulso-card:hover {
-                border-color: #0ea5e9;
-                box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.4);
+            .dropdown-item:hover {
+                background-color: #334155;
+                color: #fff;
+                transform: none;
+            }
+            
+            .dropdown-item i {
+                opacity: 0.9;
+                text-align: center;
             }
 
-            .servico-avulso-card .small {
-                font-size: 0.8rem;
+            .dropdown-divider {
+                border-top-color: #475569;
+                margin: 4px 0;
             }
-
-            .servico-avulso-card .xsmall {
-                font-size: 0.7rem;
-            }
-
-            .servico-avulso-card .price-text {
-                font-size: 0.85rem;
+            
+            .text-danger-hover:hover {
+                background-color: rgba(239, 68, 68, 0.15) !important;
+                color: #f87171 !important;
             }
 
             /* Modal Styling Premium */
@@ -268,21 +359,21 @@
                 color: white;
             }
             
-            /* Service Card Styling */
-            .service-card {
+            /* Service Option Card Styling (Modal) */
+            .service-option-card {
                 border-radius: 16px !important;
                 border: 1px solid rgba(255,255,255,0.05) !important;
                 background: rgba(255,255,255,0.02);
                 transition: all 0.2s ease;
             }
             
-            .service-option-container:hover .service-card {
+            .service-option-container:hover .service-option-card {
                 background: rgba(255,255,255,0.05);
                 border-color: rgba(255,255,255,0.1) !important;
                 transform: translateY(-1px);
             }
 
-            .btn-check:checked + .service-card {
+            .btn-check:checked + .service-option-card {
                 background: rgba(14, 165, 233, 0.08);
                 border-color: #0ea5e9 !important;
                 box-shadow: 0 0 0 1px #0ea5e9;
@@ -297,6 +388,7 @@
                 justify-content: center;
                 font-size: 18px;
             }
+
             
             .bg-soft-info { background: rgba(14, 165, 233, 0.15); color: #38bdf8; }
             .bg-soft-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }

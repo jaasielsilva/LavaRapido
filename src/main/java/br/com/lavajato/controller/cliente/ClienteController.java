@@ -29,11 +29,20 @@ public class ClienteController {
     @GetMapping
     public String listar(@RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "10") int size,
+                         @RequestParam(required = false) String busca,
+                         @RequestParam(required = false) boolean fragment,
                          Model model) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Cliente> clientesPage = clienteService.listarPaginado(pageable);
+        Page<Cliente> clientesPage = clienteService.listarPaginado(pageable, busca);
+        
         model.addAttribute("clientesPage", clientesPage);
         model.addAttribute("clientes", clientesPage.getContent());
+        model.addAttribute("busca", busca); // Manter o termo na view
+        
+        if (fragment) {
+            return "cliente/list :: listaClientes";
+        }
+        
         return "cliente/list";
     }
 

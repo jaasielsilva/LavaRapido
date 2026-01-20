@@ -7,6 +7,9 @@ import br.com.lavajato.model.produto.UnidadeMedida;
 import br.com.lavajato.model.usuario.Usuario;
 import br.com.lavajato.repository.produto.ProdutoRepository;
 import br.com.lavajato.service.usuario.UsuarioService;
+import br.com.lavajato.service.financeiro.FinanceiroService;
+import br.com.lavajato.model.financeiro.LancamentoFinanceiro;
+import br.com.lavajato.model.financeiro.TipoLancamento;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +26,9 @@ public class ProdutoService {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private FinanceiroService financeiroService;
+
     public List<Produto> listarAtivos() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         return repository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa());
@@ -32,7 +38,29 @@ public class ProdutoService {
         Usuario usuario = usuarioService.getUsuarioLogado();
         if (produto.getId() == null) {
             produto.setEmpresa(usuario.getEmpresa());
-            return repository.save(produto);
+            Produto salvo = repository.save(produto);
+            
+            // Lançar Despesa de Estoque Inicial no Financeiro
+            if (salvo.getEstoque() != null && salvo.getEstoque() > 0 && 
+                salvo.getPrecoCusto() != null && salvo.getPrecoCusto().compareTo(BigDecimal.ZERO) > 0) {
+                
+                try {
+                    BigDecimal custoTotal = salvo.getPrecoCusto().multiply(new BigDecimal(salvo.getEstoque()));
+                    
+                    LancamentoFinanceiro lancamento = new LancamentoFinanceiro();
+                    lancamento.setTipo(TipoLancamento.SAIDA);
+                    lancamento.setCategoria("Compra de Estoque");
+                    lancamento.setDescricao("Estoque Inicial: " + salvo.getNome());
+                    lancamento.setValor(custoTotal);
+                    lancamento.setData(java.time.LocalDateTime.now());
+                    
+                    financeiroService.salvarLancamento(lancamento, usuario.getEmpresa());
+                } catch (Exception e) {
+                    System.err.println("Erro ao lançar despesa de estoque: " + e.getMessage());
+                    // Não impede o cadastro do produto
+                }
+            }
+            return salvo;
         } else {
             Produto existente = repository.findById(produto.getId())
                     .orElseThrow(() -> new IllegalStateException("Produto não encontrado"));

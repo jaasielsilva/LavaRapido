@@ -25,17 +25,28 @@ public class ClienteService {
     @Autowired
     private UsuarioService usuarioService;
 
-    public Page<Cliente> listarPaginado(Pageable pageable) {
+    public Page<Cliente> listarPaginado(Pageable pageable, String busca) {
         Usuario usuario = usuarioService.getUsuarioLogado();
+        
+        if (busca != null && !busca.trim().isEmpty()) {
+            if (usuario.getPerfil() == Perfil.MASTER) {
+                // Para Master, busca global (simplificado por enquanto, ou restrito à empresa se houver contexto)
+                // Assumindo busca na empresa do master por padrão ou implementar busca global depois
+                return clienteRepository.buscarPorTermo(usuario.getEmpresa(), busca, pageable);
+            } else {
+                return clienteRepository.buscarPorTermo(usuario.getEmpresa(), busca, pageable);
+            }
+        }
+
         if (usuario.getPerfil() == Perfil.MASTER) {
-            return clienteRepository.findAll(pageable);
+            return clienteRepository.findAllByAtivoTrue(pageable);
         } else {
-            return clienteRepository.findAllByEmpresa(usuario.getEmpresa(), pageable);
+            return clienteRepository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa(), pageable);
         }
     }
 
     public List<Cliente> listarTodos() {
-        return listarPaginado(PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        return listarPaginado(PageRequest.of(0, Integer.MAX_VALUE), null).getContent();
     }
 
     public Cliente salvar(Cliente cliente) {
@@ -43,6 +54,7 @@ public class ClienteService {
         
         if (cliente.getId() == null) {
             cliente.setDataCadastro(LocalDate.now());
+            cliente.setAtivo(true);
         }
         
         if (usuario.getPerfil() != Perfil.MASTER) {
@@ -54,18 +66,23 @@ public class ClienteService {
     
     public Optional<Cliente> buscarPorId(Long id) {
         Usuario usuario = usuarioService.getUsuarioLogado();
+        // Permite buscar inativos se necessário, mas por padrão foca na consistência
+        // Se for edição, precisamos buscar mesmo se inativo? Geralmente não edita excluido.
         if (usuario.getPerfil() == Perfil.MASTER) {
-            return clienteRepository.findById(id);
+            return clienteRepository.findById(id).filter(Cliente::isAtivo);
         } else {
-            return clienteRepository.findByIdAndEmpresa(id, usuario.getEmpresa());
+            return clienteRepository.findByIdAndEmpresaAndAtivoTrue(id, usuario.getEmpresa());
         }
     }
 
     public void excluir(Long id) {
-        buscarPorId(id).ifPresent(clienteRepository::delete);
+        buscarPorId(id).ifPresent(cliente -> {
+            cliente.setAtivo(false);
+            clienteRepository.save(cliente);
+        });
     }
 
     public long contarPorEmpresa(Empresa empresa) {
-        return clienteRepository.countByEmpresa(empresa);
+        return clienteRepository.countByEmpresaAndAtivoTrue(empresa);
     }
 }

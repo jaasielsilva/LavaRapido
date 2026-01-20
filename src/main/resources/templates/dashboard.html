@@ -175,6 +175,12 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="box-footer text-center mt-3 border-top pt-3 border-secondary border-opacity-10">
+                        <a th:href="@{/servicos-avulsos}" class="text-info text-decoration-none small fw-bold">
+                            Ver todos os serviços <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- PRÓXIMOS AGENDAMENTOS -->
@@ -206,6 +212,12 @@
                                 <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(ag.valor, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="box-footer text-center mt-3 border-top pt-3 border-secondary border-opacity-10">
+                        <a th:href="@{/agendamentos}" class="text-info text-decoration-none small fw-bold">
+                            Ver todos os agendamentos <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
                 </div>
             </div>

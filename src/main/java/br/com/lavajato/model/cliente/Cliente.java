@@ -33,4 +33,7 @@ public class Cliente {
     
     @OneToMany(mappedBy = "cliente")
     private List<Veiculo> veiculos = new ArrayList<>();
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean ativo = true;
 }

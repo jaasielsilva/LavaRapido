@@ -62,36 +62,72 @@
                     <!-- Grid de Cards -->
                     <div class="row g-3">
                         <div class="col-md-3" th:each="servico : ${entry.value}">
-                            <div class="card h-100 service-card position-relative overflow-hidden d-flex flex-column">
-                                <div class="card-body px-3 py-2 w-100">
+                            <div class="card h-100 service-card position-relative d-flex flex-column" 
+                                 th:classappend="'status-border-' + ${servico.categoria.cor}">
+                                
+                                <!-- Watermark Icon based on category -->
+                                <div class="watermark-wrapper">
+                                    <i class="status-icon-watermark fa-solid"
+                                       th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : 
+                                                       (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : 
+                                                       (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
+                                </div>
+
+                                <div class="card-body px-3 py-2 w-100 position-relative" style="z-index: 1;">
                                     
-                                    <!-- Header: Categoria (Badge) -->
-                                    <div class="mb-1">
+                                    <!-- Header: Categoria e Dropdown -->
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
                                         <span class="badge rounded-pill border border-opacity-10" 
                                               th:classappend="'bg-soft-' + ${servico.categoria.cor}"
-                                              style="font-size: 10px; padding: 4px 8px;"
-                                              th:text="${servico.categoria.descricao}">Lavagem</span>
+                                              style="font-size: 11px; padding: 5px 10px; font-weight: 600; letter-spacing: 0.5px;"
+                                              th:text="${servico.categoria.descricao.toUpperCase()}">LAVAGEM</span>
+                                        
+                                        <!-- Dropdown de Ações -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-sm border-0 mt-1">
+                                                <li><a class="dropdown-item" th:href="@{/catalogo/editar/{id}(id=${servico.id})}"><i class="fa-solid fa-pen me-2 text-primary" style="width: 20px;"></i>Editar</a></li>
+                                                <li sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                                                    <hr class="dropdown-divider bg-secondary opacity-25">
+                                                    <button class="dropdown-item text-danger-hover" type="button" 
+                                                            th:onclick="'confirmarExclusao(' + ${servico.id} + ')'">
+                                                        <i class="fa-solid fa-trash me-2 text-danger" style="width: 20px;"></i>Excluir
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
 
                                     <!-- Título -->
-                                    <h6 class="card-title text-white fw-bold mb-1 text-truncate" th:title="${servico.nome}" th:text="${servico.nome}">Lavagem Simples</h6>
+                                    <h6 class="card-title text-white fw-bold mb-1 text-truncate" 
+                                        th:title="${servico.nome}" 
+                                        th:text="${servico.nome}"
+                                        style="font-size: 1.1rem;">Lavagem Simples</h6>
 
                                     <!-- Descrição -->
-                                    <p class="card-text text-secondary small mb-0 text-truncate" 
+                                    <p class="card-text text-secondary small mb-2 text-truncate" 
                                        th:if="${servico.descricao}" 
+                                       th:title="${servico.descricao}"
                                        th:text="${servico.descricao}">Lavagem externa completa</p>
                                 </div>
                                     
                                 <!-- Footer: Tempo e Preço -->
-                                <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100">
+                                <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100 position-relative" style="z-index: 1; background: rgba(0,0,0,0.2);">
                                     <!-- Lado Esquerdo: Tempo -->
-                                    <div class="d-flex align-items-center text-secondary small">
-                                        <i class="fa-regular fa-clock me-2" style="font-size: 12px;"></i>
-                                        <span style="font-size: 13px;" th:text="${servico.tempoMinutos} + ' min'">30 min</span>
+                                    <div class="d-flex align-items-center text-secondary small" 
+                                         th:title="${servico.tempoMinutos} + ' minutos estimados'">
+                                        <i class="fa-regular fa-clock me-2 text-warning fs-5"></i>
+                                        <div class="d-flex flex-column" style="line-height: 1.1;">
+                                            <span class="fw-bold text-light" style="font-size: 14px;" th:text="${servico.tempoMinutos} + ' min'">30 min</span>
+                                        </div>
                                     </div>
 
                                     <!-- Lado Direito: Preço -->
-                                    <div class="fw-bold text-info fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 0, 'POINT', 0, 'COMMA')}">R$ 40</div>
+                                    <div class="badge bg-dark border border-secondary border-opacity-25 text-success fs-6 fw-bold">
+                                        <span th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 0, 'POINT', 0, 'COMMA')}">R$ 40</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -110,36 +146,71 @@
 
                     <div class="row g-3">
                         <div class="col-md-3" th:each="servico : ${servicosPorCategoria.get(cat)}">
-                            <div class="card h-100 service-card position-relative overflow-hidden d-flex flex-column">
-                                <div class="card-body px-3 py-2 w-100">
+                            <div class="card h-100 service-card position-relative d-flex flex-column" 
+                                 th:classappend="'status-border-' + ${servico.categoria.cor}">
+                                
+                                <!-- Watermark Icon based on category -->
+                                <div class="watermark-wrapper">
+                                    <i class="status-icon-watermark fa-solid"
+                                       th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : 
+                                                       (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : 
+                                                       (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
+                                </div>
+
+                                <div class="card-body px-3 py-2 w-100 position-relative" style="z-index: 1;">
                                     
-                                    <!-- Header: Categoria (Badge) -->
-                                    <div class="mb-1">
+                                    <!-- Header: Categoria e Dropdown -->
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
                                         <span class="badge rounded-pill border border-opacity-10" 
                                               th:classappend="'bg-soft-' + ${servico.categoria.cor}"
-                                              style="font-size: 10px; padding: 4px 8px;"
-                                              th:text="${servico.categoria.descricao}">Badge</span>
+                                              style="font-size: 11px; padding: 5px 10px; font-weight: 600; letter-spacing: 0.5px;"
+                                              th:text="${servico.categoria.descricao.toUpperCase()}">Badge</span>
+                                        
+                                        <!-- Dropdown de Ações -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-sm border-0 mt-1">
+                                                <li><a class="dropdown-item" th:href="@{/catalogo/editar/{id}(id=${servico.id})}"><i class="fa-solid fa-pen me-2 text-primary" style="width: 20px;"></i>Editar</a></li>
+                                                <li sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                                                    <hr class="dropdown-divider bg-secondary opacity-25">
+                                                    <button class="dropdown-item text-danger-hover" type="button" 
+                                                            th:onclick="'confirmarExclusao(' + ${servico.id} + ')'">
+                                                        <i class="fa-solid fa-trash me-2 text-danger" style="width: 20px;"></i>Excluir
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
 
                                     <!-- Título -->
-                                    <h6 class="card-title text-white fw-bold mb-1 text-truncate" th:title="${servico.nome}" th:text="${servico.nome}">Nome</h6>
+                                    <h6 class="card-title text-white fw-bold mb-1 text-truncate" 
+                                        th:title="${servico.nome}" 
+                                        th:text="${servico.nome}">Nome</h6>
 
                                     <!-- Descrição -->
-                                    <p class="card-text text-secondary small mb-0 text-truncate" 
+                                    <p class="card-text text-secondary small mb-2 text-truncate" 
                                        th:if="${servico.descricao}" 
+                                       th:title="${servico.descricao}"
                                        th:text="${servico.descricao}">Lavagem externa completa</p>
                                 </div>
                                     
                                 <!-- Footer: Tempo e Preço -->
-                                <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100">
+                                <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100 position-relative" style="z-index: 1; background: rgba(0,0,0,0.2);">
                                     <!-- Lado Esquerdo: Tempo -->
-                                    <div class="d-flex align-items-center text-secondary small">
-                                        <i class="fa-regular fa-clock me-2" style="font-size: 12px;"></i>
-                                        <span style="font-size: 13px;" th:text="${servico.tempoMinutos} + ' min'">Tempo</span>
+                                    <div class="d-flex align-items-center text-secondary small" 
+                                         th:title="${servico.tempoMinutos} + ' minutos estimados'">
+                                        <i class="fa-regular fa-clock me-2 text-warning fs-5"></i>
+                                        <div class="d-flex flex-column" style="line-height: 1.1;">
+                                            <span class="fw-bold text-light" style="font-size: 14px;" th:text="${servico.tempoMinutos} + ' min'">Tempo</span>
+                                        </div>
                                     </div>
 
                                     <!-- Lado Direito: Preço -->
-                                    <div class="fw-bold text-info fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 0, 'POINT', 0, 'COMMA')}">Preço</div>
+                                    <div class="badge bg-dark border border-secondary border-opacity-25 text-success fs-6 fw-bold">
+                                        <span th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 0, 'POINT', 0, 'COMMA')}">Preço</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -155,18 +226,87 @@
         </div>
 
         <style>
-            /* Card Styling Premium */
+            /* Card Styling Premium (From Agendamento) */
             .service-card {
                 background-color: #0f1623;
                 border: 1px solid #1e293b;
-                border-radius: 12px;
-                transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
+                border-radius: 16px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             }
 
             .service-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-                border-color: #0284c7;
+                transform: translateY(-5px) scale(1.02);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+                border-color: #334155;
+                z-index: 10;
+            }
+
+            /* Status Borders & Accents */
+            .status-border-info { border-left: 5px solid #38bdf8; }
+            .status-border-warning { border-left: 5px solid #fbbf24; }
+            .status-border-success { border-left: 5px solid #4ade80; }
+            .status-border-secondary { border-left: 5px solid #94a3b8; }
+            
+            /* Watermark Icon */
+            .status-icon-watermark {
+                position: absolute;
+                bottom: -20px;
+                right: -20px;
+                font-size: 100px;
+                opacity: 0.03;
+                transform: rotate(-15deg);
+                pointer-events: none;
+                transition: all 0.5s ease;
+                z-index: 0;
+            }
+            
+            .service-card:hover .status-icon-watermark {
+                transform: rotate(0deg) scale(1.1);
+                opacity: 0.08;
+                bottom: -10px;
+                right: -10px;
+            }
+
+            /* Dropdown refinements */
+            .dropdown-menu {
+                background-color: #1e293b;
+                border: 1px solid #334155;
+                border-radius: 12px;
+                padding: 6px;
+                min-width: 180px;
+            }
+            
+            .dropdown-item {
+                color: #e2e8f0;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+                border-radius: 8px;
+                transition: background-color 0.2s ease;
+                font-weight: 500;
+            }
+
+            .dropdown-item:hover {
+                background-color: #334155;
+                color: #fff;
+                transform: none;
+            }
+            
+            .dropdown-item i {
+                opacity: 0.9;
+                text-align: center;
+                width: 20px;
+            }
+
+            .dropdown-divider {
+                border-top-color: #475569;
+                margin: 4px 0;
+            }
+            
+            .text-danger-hover:hover {
+                background-color: rgba(239, 68, 68, 0.15) !important;
+                color: #f87171 !important;
             }
 
             /* Badge Colors (Soft) */

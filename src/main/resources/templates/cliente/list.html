@@ -15,19 +15,25 @@
             </div>
             
             <div class="search-bar mb-4">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Buscar por nome, telefone ou placa...">
+                <div class="d-flex w-100 align-items-center position-relative">
+                    <i class="fa-solid fa-magnifying-glass me-2 text-secondary"></i>
+                    <input type="text" id="inputBusca" class="bg-transparent border-0 text-white w-100" 
+                           style="outline: none;" placeholder="Buscar por nome, telefone ou placa..."
+                           th:value="${busca}" autocomplete="off">
+                    <div id="loadingSearch" class="spinner-border text-primary spinner-border-sm position-absolute end-0 me-2 d-none" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <div th:if="${clientes.empty}" class="text-center py-5">
-            <i class="fa-solid fa-users-slash fa-3x mb-3 text-muted"></i>
-            <h4 class="text-muted">Nenhum cliente encontrado</h4>
-            <p class="text-secondary mb-4">Cadastre seu primeiro cliente para começar.</p>
-            <a th:href="@{/clientes/novo}" class="btn btn-outline-primary">
-                <i class="fa-solid fa-plus"></i> Novo Cliente
-            </a>
-        </div>
+        <div id="clientesWrapper">
+            <div id="clientesContainer" th:fragment="listaClientes">
+                <div th:if="${clientes.empty}" class="text-center py-5">
+                    <i class="fa-solid fa-users-slash fa-3x mb-3 text-muted"></i>
+                    <h4 class="text-muted">Nenhum cliente encontrado</h4>
+                    <p class="text-secondary mb-4">Tente buscar com outros termos ou cadastre um novo.</p>
+                </div>
 
         <div th:if="${!clientes.empty}" class="client-list">
             <div th:each="cliente : ${clientes}" class="client-card">
@@ -86,22 +92,30 @@
                 </div>
             </div>
         </div>
-        <nav th:if="${!clientes.empty and clientesPage != null and clientesPage.totalPages > 1}">
-            <ul class="pagination">
+        <nav th:if="${!clientes.empty and clientesPage != null and clientesPage.totalPages > 1}" aria-label="Navegação de páginas">
+            <ul class="pagination justify-content-center">
                 <li class="page-item" th:classappend="${clientesPage.first} ? ' disabled'">
                     <a class="page-link"
-                       th:href="@{/clientes(page=${clientesPage.number - 1},size=${clientesPage.size})}">Anterior</a>
+                       th:href="@{/clientes(page=${clientesPage.number - 1},size=${clientesPage.size},busca=${busca})}"
+                       aria-label="Anterior">
+                        <i class="fa-solid fa-chevron-left"></i> Anterior
+                    </a>
                 </li>
                 <li class="page-item disabled">
                     <span class="page-link"
-                          th:text="${clientesPage.number + 1} + ' / ' + ${clientesPage.totalPages}">1 / 1</span>
+                          th:text="'Página ' + (${clientesPage.number + 1}) + ' de ' + ${clientesPage.totalPages}">1 de 1</span>
                 </li>
                 <li class="page-item" th:classappend="${clientesPage.last} ? ' disabled'">
                     <a class="page-link"
-                       th:href="@{/clientes(page=${clientesPage.number + 1},size=${clientesPage.size})}">Próxima</a>
+                       th:href="@{/clientes(page=${clientesPage.number + 1},size=${clientesPage.size},busca=${busca})}"
+                       aria-label="Próxima">
+                        Próxima <i class="fa-solid fa-chevron-right"></i>
+                    </a>
                 </li>
             </ul>
         </nav>
+    </div>
+</div>
 
         <div class="modal fade" id="modalAdicionarVeiculo" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -213,6 +227,40 @@
                         text: clienteErro,
                         icon: 'warning',
                         confirmButtonText: 'OK'
+                    });
+                }
+
+                // Lógica de Busca Instantânea
+                const inputBusca = document.getElementById('inputBusca');
+                const loadingSearch = document.getElementById('loadingSearch');
+                let debounceTimer;
+
+                if (inputBusca) {
+                    inputBusca.addEventListener('input', function() {
+                        const termo = this.value;
+                        
+                        clearTimeout(debounceTimer);
+                        loadingSearch.classList.remove('d-none');
+
+                        debounceTimer = setTimeout(() => {
+                            fetch(`/clientes?busca=${encodeURIComponent(termo)}&fragment=true`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(response => response.text())
+                            .then(html => {
+                                const currentContainer = document.getElementById('clientesContainer');
+                                if (currentContainer) {
+                                    currentContainer.outerHTML = html;
+                                }
+                                loadingSearch.classList.add('d-none');
+                            })
+                            .catch(err => {
+                                console.error('Erro na busca:', err);
+                                loadingSearch.classList.add('d-none');
+                            });
+                        }, 400); // 400ms delay
                     });
                 }
             });

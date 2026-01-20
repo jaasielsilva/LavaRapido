@@ -556,7 +556,94 @@
             .text-info {
                 color: #38bdf8 !important;
             }
+
+            /* Dark Theme Form Styles */
+            .modal-content {
+                background: #1e293b;
+                border: 1px solid #475569;
+            }
+            .modal-header {
+                border-bottom: 1px solid #334155;
+            }
+            .form-label {
+                color: #94a3b8;
+            }
+            .form-control, .form-select {
+                background: #0f1623;
+                border: 1px solid #334155;
+                color: white;
+            }
+            .form-control:focus, .form-select:focus {
+                background: #0f1623;
+                border-color: #3b82f6;
+                color: white;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            }
+            .btn-close-white {
+                filter: invert(1) grayscale(100%) brightness(200%);
+            }
+            .btn-primary-custom {
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                border: none;
+            }
+            .btn-primary-custom:hover {
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+                color: white;
+            }
+            .btn-secondary-custom {
+                background: rgba(255, 255, 255, 0.05);
+                color: #94a3b8;
+                border: 1px solid #334155;
+            }
+            .btn-secondary-custom:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
         </style>
+        
+        <!-- Mask Script -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Currency Mask Logic
+                const moneyInputs = document.querySelectorAll('.money-mask');
+                
+                moneyInputs.forEach(input => {
+                    input.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value === '') {
+                            e.target.value = '';
+                            return;
+                        }
+                        value = (parseInt(value) / 100).toFixed(2) + '';
+                        value = value.replace('.', ',');
+                        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                        e.target.value = 'R$ ' + value;
+                    });
+                    
+                    // Format on load if value exists
+                    if (input.value) {
+                        let val = parseFloat(input.value);
+                        if (!isNaN(val)) {
+                             let formatted = val.toFixed(2).replace('.', ',');
+                             formatted = formatted.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                             input.value = 'R$ ' + formatted;
+                        }
+                    }
+                });
+
+                // Unmask before submit
+                const form = document.getElementById('formProduto');
+                if (form) {
+                    form.addEventListener('submit', function() {
+                        moneyInputs.forEach(input => {
+                            let val = input.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+                            input.value = val;
+                        });
+                    });
+                }
+            });
+        </script>
     </div>
 </body>
 </html>

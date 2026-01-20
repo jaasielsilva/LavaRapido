@@ -51,6 +51,12 @@
                 <span>Serviços Avulsos</span>
             </a>
 
+            <a th:href="@{/financeiro}"
+               sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Financeiro</span>
+            </a>
+
             <a th:href="@{/produtos}"
                sec:authorize="hasAnyRole('MASTER','ADMIN')">
                 <i class="fa-solid fa-box-open"></i>
