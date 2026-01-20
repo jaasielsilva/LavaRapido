@@ -2,36 +2,410 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Lava-Jato SaaS</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
-        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { width: 100%; max-width: 400px; padding: 20px; border-radius: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Override body defaults for split screen */
+        body {
+            background-color: var(--bg-body);
+            display: block; /* Reset flex from style.css if present */
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* LEFT SIDE - FORM */
+        .login-sidebar {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px 60px;
+            position: relative;
+            z-index: 10;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), #0284c7);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+        }
+
+        .brand-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.1;
+        }
+
+        .brand-text span {
+            display: block;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        .welcome-text h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .welcome-text p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .login-form .form-label {
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-group-text {
+            background-color: var(--bg-item);
+            border: 1px solid var(--border-color);
+            border-right: none;
+            color: var(--text-secondary);
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .form-control {
+            background-color: var(--bg-item);
+            border: 1px solid var(--border-color);
+            border-left: none;
+            color: white;
+            padding: 12px 15px;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background-color: var(--bg-item);
+            border-color: var(--primary-color);
+            color: white;
+            box-shadow: none;
+        }
+        
+        .input-group:focus-within .input-group-text {
+             border-color: var(--primary-color);
+        }
+
+        .form-check-input {
+            background-color: var(--bg-item);
+            border-color: var(--border-color);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-check-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .forgot-password {
+            color: var(--primary-color);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot-password:hover {
+            color: #38bdf8;
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            background: linear-gradient(90deg, var(--primary-color), #0284c7);
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+            background: linear-gradient(90deg, #0ea5e9, #0369a1);
+            color: white;
+        }
+
+        .copyright {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        /* RIGHT SIDE - HERO */
+        .login-hero {
+            flex: 1;
+            background-color: #0b121f;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            overflow: hidden;
+        }
+
+        /* Abstract Background Pattern */
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(2, 132, 199, 0.1) 0%, transparent 40%);
+        }
+        
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 50px;
+            color: #38bdf8;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: 18px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .feature-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .login-hero {
+                display: none;
+            }
+            .login-sidebar {
+                max-width: 100%;
+                border-right: none;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="login-card">
-    <h3 class="text-center mb-4">Login</h3>
-    <div th:if="${param.error}" class="alert alert-danger">
-        Usuário ou senha inválidos.
-    </div>
-    <div th:if="${param.logout}" class="alert alert-success">
-        Você saiu do sistema.
-    </div>
-    
-    <form th:action="@{/login}" method="post">
-        <div class="mb-3">
-            <label for="username" class="form-label">Email</label>
-            <input type="email" class="form-control" id="username" name="username" required autofocus>
+    <div class="login-wrapper">
+        <!-- Lado Esquerdo: Formulário -->
+        <div class="login-sidebar">
+            <div class="login-header">
+                <a href="#" class="brand-logo">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-car"></i>
+                    </div>
+                    <div class="brand-text">
+                        Lava Jato
+                        <span>Management SaaS</span>
+                    </div>
+                </a>
+                
+                <div class="welcome-text">
+                    <h2>Bem-vindo de volta!</h2>
+                    <p>Entre com suas credenciais para acessar o painel.</p>
+                </div>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center mb-4" role="alert" 
+                 style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5;">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>
+                <div>Usuário ou senha inválidos.</div>
+            </div>
+            
+            <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center mb-4" role="alert"
+                 style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); color: #86efac;">
+                <i class="fa-solid fa-check-circle me-2"></i>
+                <div>Você saiu do sistema com segurança.</div>
+            </div>
+
+            <form th:action="@{/login}" method="post" class="login-form">
+                <div class="mb-4">
+                    <label for="username" class="form-label">E-mail</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
+                        <input type="email" class="form-control" id="username" name="username" placeholder="seu@email.com" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label for="password" class="form-label mb-0">Senha</label>
+                        <a href="#" class="forgot-password">Esqueceu a senha?</a>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember-me">
+                    <label class="form-check-label" for="remember-me">Lembrar-me neste dispositivo</label>
+                </div>
+
+                <button type="submit" class="btn btn-login">
+                    Acessar Painel <i class="fa-solid fa-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <div class="copyright">
+                &copy; 2025 Lava Jato SaaS. Todos os direitos reservados.
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Senha</label>
-            <input type="password" class="form-control" id="password" name="password" required>
+
+        <!-- Lado Direito: Hero / Destaque -->
+        <div class="login-hero">
+            <div class="hero-bg"></div>
+            
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-star"></i> Versão Premium 1.0
+                </div>
+                
+                <h1 class="hero-title">
+                    Gerencie seu Lava Jato com inteligência e controle total.
+                </h1>
+                
+                <p class="hero-description">
+                    A solução completa para agendamentos, controle financeiro, gestão de clientes e comissões. Tudo em um só lugar.
+                </p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                        <span>Dashboard Financeiro</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                        <span>Agendamento Inteligente</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fa-solid fa-users"></i></div>
+                        <span>CRM de Clientes</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+                        <span>Acesso Mobile</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Entrar</button>
-    </form>
-</div>
+    </div>
 
 </body>
 </html>

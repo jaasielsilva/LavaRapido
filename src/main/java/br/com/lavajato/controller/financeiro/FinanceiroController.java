@@ -56,7 +56,7 @@ public class FinanceiroController {
         }
 
         // Dados para o Gráfico/Tabela (Balanço Mensal)
-        List<br.com.lavajato.dto.BalancoMensalDTO> balancoMensal = financeiroService.gerarBalancoMensal(empresa, inicio, fim);
+        List<br.com.lavajato.dto.BalancoMensalDTO> balancoMensal = financeiroService.gerarBalancoMensal(empresa, inicio, fim, tipo);
         model.addAttribute("balancoMensal", balancoMensal);
         
         // Calcular Total do Balanço para a linha TOTAL
@@ -71,7 +71,7 @@ public class FinanceiroController {
         model.addAttribute("totalBalanco", totalBalanco);
 
         // Dados para os Cards (Resumo do Período)
-        java.util.Map<String, Object> resumo = financeiroService.calcularResumoFinanceiro(empresa, inicio, fim);
+        java.util.Map<String, Object> resumo = financeiroService.calcularResumoFinanceiro(empresa, inicio, fim, tipo);
         model.addAllAttributes(resumo);
 
         model.addAttribute("inicio", inicio);

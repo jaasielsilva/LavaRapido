@@ -15,14 +15,24 @@ import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface VeiculoRepository extends JpaRepository<Veiculo, Long> {
-    List<Veiculo> findAllByClienteEmpresa(Empresa empresa);
-    Page<Veiculo> findAllByClienteEmpresa(Empresa empresa, Pageable pageable);
-    Optional<Veiculo> findByIdAndClienteEmpresa(Long id, Empresa empresa);
-    long countByClienteEmpresa(Empresa empresa);
+    
+    // Find all Active
+    List<Veiculo> findAllByAtivoTrue();
+    Page<Veiculo> findAllByAtivoTrue(Pageable pageable);
 
-    @Query("SELECT v FROM Veiculo v WHERE v.cliente.empresa = :empresa AND (LOWER(v.placa) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.modelo) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.cliente.nome) LIKE LOWER(CONCAT('%', :busca, '%')))")
+    // Filter by Empresa + Active
+    List<Veiculo> findAllByClienteEmpresaAndAtivoTrue(Empresa empresa);
+    Page<Veiculo> findAllByClienteEmpresaAndAtivoTrue(Empresa empresa, Pageable pageable);
+    
+    // Find by ID + Active (for Details/Edit)
+    Optional<Veiculo> findByIdAndAtivoTrue(Long id);
+    Optional<Veiculo> findByIdAndClienteEmpresaAndAtivoTrue(Long id, Empresa empresa);
+    
+    long countByClienteEmpresaAndAtivoTrue(Empresa empresa);
+
+    @Query("SELECT v FROM Veiculo v WHERE v.ativo = true AND v.cliente.empresa = :empresa AND (LOWER(v.placa) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.modelo) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.cliente.nome) LIKE LOWER(CONCAT('%', :busca, '%')))")
     Page<Veiculo> buscarPorEmpresa(@Param("empresa") Empresa empresa, @Param("busca") String busca, Pageable pageable);
 
-    @Query("SELECT v FROM Veiculo v WHERE LOWER(v.placa) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.modelo) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.cliente.nome) LIKE LOWER(CONCAT('%', :busca, '%'))")
+    @Query("SELECT v FROM Veiculo v WHERE v.ativo = true AND (LOWER(v.placa) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.modelo) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(v.cliente.nome) LIKE LOWER(CONCAT('%', :busca, '%')))")
     Page<Veiculo> buscarTodos(@Param("busca") String busca, Pageable pageable);
 }

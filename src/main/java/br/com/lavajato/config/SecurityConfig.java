@@ -39,6 +39,11 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
+            )
+            .rememberMe(remember -> remember
+                .key("lavajatoSaaSKey")
+                .tokenValiditySeconds(86400 * 7) // 7 dias
+                .rememberMeParameter("remember-me")
             );
 
         return http.build();

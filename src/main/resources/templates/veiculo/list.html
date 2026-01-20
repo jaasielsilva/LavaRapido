@@ -69,6 +69,18 @@
                             th:text="${veiculo.modelo}"
                             style="font-size: 1.2rem;">Modelo</h6>
 
+                        <!-- Info: Cor & Ano -->
+                        <div class="d-flex align-items-center text-secondary small mb-2 gap-3">
+                            <span th:if="${veiculo.cor != null && !veiculo.cor.isEmpty()}">
+                                <i class="fa-solid fa-palette me-1 text-secondary opacity-75"></i> 
+                                <span th:text="${veiculo.cor}">Cor</span>
+                            </span>
+                            <span th:if="${veiculo.ano != null}">
+                                <i class="fa-regular fa-calendar me-1 text-secondary opacity-75"></i> 
+                                <span th:text="${veiculo.ano}">Ano</span>
+                            </span>
+                        </div>
+
                         <!-- Subtitle: Cliente -->
                         <div class="d-flex align-items-center text-secondary small mb-3">
                             <i class="fa-solid fa-user me-2 text-primary" style="font-size: 11px;"></i>

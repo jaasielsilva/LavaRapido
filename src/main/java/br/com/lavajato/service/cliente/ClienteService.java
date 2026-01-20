@@ -46,7 +46,12 @@ public class ClienteService {
     }
 
     public List<Cliente> listarTodos() {
-        return listarPaginado(PageRequest.of(0, Integer.MAX_VALUE), null).getContent();
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        if (usuario.getPerfil() == Perfil.MASTER) {
+            return clienteRepository.findAllByAtivoTrue();
+        } else {
+            return clienteRepository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa());
+        }
     }
 
     public Cliente salvar(Cliente cliente) {

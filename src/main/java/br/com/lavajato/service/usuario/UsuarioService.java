@@ -47,7 +47,11 @@ public class UsuarioService {
     }
 
     public List<Usuario> listarTodos() {
-        return listarPaginado(PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        Usuario usuario = getUsuarioLogado();
+        if (usuario.isMaster()) {
+            return usuarioRepository.findAllByAtivoTrue();
+        }
+        return usuarioRepository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa());
     }
 
     public List<Usuario> listarInativos() {

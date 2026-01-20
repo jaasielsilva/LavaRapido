@@ -34,9 +34,9 @@ public class VeiculoService {
         
         if (busca == null || busca.trim().isEmpty()) {
             if (usuario.getPerfil() == Perfil.MASTER) {
-                return veiculoRepository.findAll(pageable);
+                return veiculoRepository.findAllByAtivoTrue(pageable);
             } else {
-                return veiculoRepository.findAllByClienteEmpresa(usuario.getEmpresa(), pageable);
+                return veiculoRepository.findAllByClienteEmpresaAndAtivoTrue(usuario.getEmpresa(), pageable);
             }
         } else {
             if (usuario.getPerfil() == Perfil.MASTER) {
@@ -52,7 +52,12 @@ public class VeiculoService {
     }
 
     public List<Veiculo> listarTodos() {
-        return listarPaginado(PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        if (usuario.getPerfil() == Perfil.MASTER) {
+            return veiculoRepository.findAllByAtivoTrue();
+        } else {
+            return veiculoRepository.findAllByClienteEmpresaAndAtivoTrue(usuario.getEmpresa());
+        }
     }
 
     public Veiculo salvar(Veiculo veiculo) {
@@ -83,14 +88,17 @@ public class VeiculoService {
     public Optional<Veiculo> buscarPorId(Long id) {
         Usuario usuario = usuarioService.getUsuarioLogado();
         if (usuario.getPerfil() == Perfil.MASTER) {
-            return veiculoRepository.findById(id);
+            return veiculoRepository.findByIdAndAtivoTrue(id);
         } else {
-            return veiculoRepository.findByIdAndClienteEmpresa(id, usuario.getEmpresa());
+            return veiculoRepository.findByIdAndClienteEmpresaAndAtivoTrue(id, usuario.getEmpresa());
         }
     }
     
     public void excluir(Long id) {
-        buscarPorId(id).ifPresent(veiculoRepository::delete);
+        buscarPorId(id).ifPresent(veiculo -> {
+            veiculo.setAtivo(false);
+            veiculoRepository.save(veiculo);
+        });
     }
 
     public long contarTodos() {
@@ -98,6 +106,6 @@ public class VeiculoService {
     }
 
     public long contarPorEmpresa(Empresa empresa) {
-        return veiculoRepository.countByClienteEmpresa(empresa);
+        return veiculoRepository.countByClienteEmpresaAndAtivoTrue(empresa);
     }
 }

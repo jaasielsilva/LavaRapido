@@ -31,4 +31,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     
     // Para MASTER listar todos ativos
     Page<Cliente> findAllByAtivoTrue(Pageable pageable);
+    
+    // Direct List methods to avoid pagination overhead for dropdowns
+    List<Cliente> findAllByAtivoTrue();
 }

@@ -15,6 +15,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
 import org.springframework.data.domain.Sort;
 
 @Controller
@@ -49,15 +51,20 @@ public class VeiculoController {
 
     @GetMapping("/novo")
     public String novo(@RequestParam(required = false) Long clienteId, Model model) {
-        Veiculo veiculo = new Veiculo();
-        
-        if (clienteId != null) {
-            clienteService.buscarPorId(clienteId).ifPresent(veiculo::setCliente);
+        try {
+            Veiculo veiculo = new Veiculo();
+            
+            if (clienteId != null) {
+                clienteService.buscarPorId(clienteId).ifPresent(veiculo::setCliente);
+            }
+            
+            model.addAttribute("veiculo", veiculo);
+            model.addAttribute("clientes", clienteService.listarTodos());
+            return "veiculo/form";
+        } catch (Exception e) {
+            model.addAttribute("erroGlobal", "Erro ao carregar formulário: " + e.getMessage());
+            return "redirect:/veiculos";
         }
-        
-        model.addAttribute("veiculo", veiculo);
-        model.addAttribute("clientes", clienteService.listarTodos());
-        return "veiculo/form";
     }
 
     @PostMapping(value = "/salvar", headers = "X-Requested-With=XMLHttpRequest")
@@ -75,16 +82,39 @@ public class VeiculoController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Veiculo veiculo) {
-        veiculoService.salvar(veiculo);
-        return "redirect:/clientes"; // Redireciona para clientes para ver o veículo adicionado no card
+    public String salvar(@Valid @ModelAttribute("veiculo") Veiculo veiculo, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            // Importante: Recarregar listas auxiliares (clientes) para o dropdown
+            model.addAttribute("clientes", clienteService.listarTodos());
+            return "veiculo/form";
+        }
+        
+        try {
+            veiculoService.salvar(veiculo);
+            redirectAttributes.addFlashAttribute("veiculoSucesso", "salvo");
+            return "redirect:/veiculos";
+        } catch (IllegalStateException e) {
+            // Adiciona o erro global e recarrega listas
+            model.addAttribute("erroGlobal", e.getMessage());
+            model.addAttribute("clientes", clienteService.listarTodos());
+            return "veiculo/form";
+        }
     }
 
     @GetMapping("/editar/{id}")
-    public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("veiculo", veiculoService.buscarPorId(id).orElseThrow());
-        model.addAttribute("clientes", clienteService.listarTodos());
-        return "veiculo/form";
+    public String editar(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Veiculo veiculo = veiculoService.buscarPorId(id).orElseThrow(() -> new IllegalArgumentException("Veículo não encontrado ou você não tem permissão para acessá-lo."));
+            model.addAttribute("veiculo", veiculo);
+            model.addAttribute("clientes", clienteService.listarTodos());
+            return "veiculo/form";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("veiculoErro", e.getMessage());
+            return "redirect:/veiculos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("veiculoErro", "Erro ao carregar veículo: " + e.getMessage());
+            return "redirect:/veiculos";
+        }
     }
     
     @GetMapping("/excluir/{id}")

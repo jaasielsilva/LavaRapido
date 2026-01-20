@@ -22,4 +22,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     long countByEmpresaAndPerfilAndAtivoTrue(Empresa empresa, Perfil perfil);
     Page<Usuario> findAllByAtivoFalse(Pageable pageable);
     Page<Usuario> findAllByEmpresaAndAtivoFalse(Empresa empresa, Pageable pageable);
+    
+    // Direct List methods
+    List<Usuario> findAllByAtivoTrue();
+    List<Usuario> findAllByEmpresaAndAtivoTrue(Empresa empresa);
 }

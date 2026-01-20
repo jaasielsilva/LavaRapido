@@ -41,38 +41,41 @@ public class FinanceiroService {
     @Autowired
     private ServicoAvulsoRepository servicoAvulsoRepository;
 
-    public Map<String, Object> calcularResumoFinanceiro(Empresa empresa, LocalDate inicio, LocalDate fim) {
+    public Map<String, Object> calcularResumoFinanceiro(Empresa empresa, LocalDate inicio, LocalDate fim, String tipoFiltro) {
         LocalDateTime dataInicio = inicio.atStartOfDay();
         LocalDateTime dataFim = fim.atTime(LocalTime.MAX);
 
+        boolean considerarEntradas = tipoFiltro == null || tipoFiltro.equals("TODOS") || tipoFiltro.equals("ENTRADA");
+        boolean considerarSaidas = tipoFiltro == null || tipoFiltro.equals("TODOS") || tipoFiltro.equals("SAIDA");
+
         // Buscar dados brutos
-        List<Venda> vendas = vendaRepository.findByEmpresaAndDataVendaBetween(empresa, dataInicio, dataFim);
-        List<ServicoAvulso> servicos = servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, dataInicio, dataFim);
+        List<Venda> vendas = considerarEntradas ? vendaRepository.findByEmpresaAndDataVendaBetween(empresa, dataInicio, dataFim) : Collections.emptyList();
+        List<ServicoAvulso> servicos = considerarEntradas ? servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, dataInicio, dataFim) : Collections.emptyList();
         List<LancamentoFinanceiro> lancamentos = lancamentoRepository.findByEmpresaAndDataBetween(empresa, dataInicio, dataFim);
 
         // 1. Receita Total
         BigDecimal receitaVendas = vendas.stream().map(Venda::getValorTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal receitaServicos = servicos.stream().map(ServicoAvulso::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal receitasExtras = lancamentos.stream()
+        BigDecimal receitasExtras = considerarEntradas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
                 .map(LancamentoFinanceiro::getValor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
         
         BigDecimal receitaTotal = receitaVendas.add(receitaServicos).add(receitasExtras);
 
         // 2. Custos e Despesas
-        BigDecimal custoProdutos = vendas.stream()
+        BigDecimal custoProdutos = considerarSaidas ? vendas.stream()
                 .flatMap(v -> v.getItens().stream())
                 .map(item -> {
                     BigDecimal custoUnitario = item.getProduto().getPrecoCusto() != null ? item.getProduto().getPrecoCusto() : BigDecimal.ZERO;
                     return custoUnitario.multiply(new BigDecimal(item.getQuantidade()));
                 })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
-        BigDecimal despesasOperacionais = lancamentos.stream()
+        BigDecimal despesasOperacionais = considerarSaidas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
                 .map(LancamentoFinanceiro::getValor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
         // 3. Lucro Líquido
         BigDecimal lucroLiquido = receitaTotal.subtract(custoProdutos).subtract(despesasOperacionais);
@@ -100,43 +103,46 @@ public class FinanceiroService {
         return resumo;
     }
 
-    public List<BalancoMensalDTO> gerarBalancoMensal(Empresa empresa, LocalDate inicio, LocalDate fim) {
+    public List<BalancoMensalDTO> gerarBalancoMensal(Empresa empresa, LocalDate inicio, LocalDate fim, String tipoFiltro) {
         // Gera lista de meses
         List<BalancoMensalDTO> balanco = new ArrayList<>();
         YearMonth current = YearMonth.from(inicio);
         YearMonth end = YearMonth.from(fim);
+
+        boolean considerarEntradas = tipoFiltro == null || tipoFiltro.equals("TODOS") || tipoFiltro.equals("ENTRADA");
+        boolean considerarSaidas = tipoFiltro == null || tipoFiltro.equals("TODOS") || tipoFiltro.equals("SAIDA");
 
         while (!current.isAfter(end)) {
             LocalDateTime mesInicio = current.atDay(1).atStartOfDay();
             LocalDateTime mesFim = current.atEndOfMonth().atTime(LocalTime.MAX);
 
             // Fetch dados do mês
-            List<Venda> vendasMes = vendaRepository.findByEmpresaAndDataVendaBetween(empresa, mesInicio, mesFim);
-            List<ServicoAvulso> servicosMes = servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, mesInicio, mesFim);
+            List<Venda> vendasMes = considerarEntradas ? vendaRepository.findByEmpresaAndDataVendaBetween(empresa, mesInicio, mesFim) : Collections.emptyList();
+            List<ServicoAvulso> servicosMes = considerarEntradas ? servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, mesInicio, mesFim) : Collections.emptyList();
             List<LancamentoFinanceiro> lancamentosMes = lancamentoRepository.findByEmpresaAndDataBetween(empresa, mesInicio, mesFim);
 
             // Cálculos
             BigDecimal recServicos = servicosMes.stream().map(ServicoAvulso::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal recProdutos = vendasMes.stream().map(Venda::getValorTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal recExtras = lancamentosMes.stream()
+            BigDecimal recExtras = considerarEntradas ? lancamentosMes.stream()
                     .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
                     .map(LancamentoFinanceiro::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
             
             BigDecimal recTotal = recServicos.add(recProdutos).add(recExtras);
 
-            BigDecimal custoProd = vendasMes.stream()
+            BigDecimal custoProd = considerarSaidas ? vendasMes.stream()
                 .flatMap(v -> v.getItens().stream())
                 .map(item -> {
                     BigDecimal custoUnitario = item.getProduto().getPrecoCusto() != null ? item.getProduto().getPrecoCusto() : BigDecimal.ZERO;
                     return custoUnitario.multiply(new BigDecimal(item.getQuantidade()));
                 })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
-            BigDecimal despOp = lancamentosMes.stream()
+            BigDecimal despOp = considerarSaidas ? lancamentosMes.stream()
                     .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
                     .map(LancamentoFinanceiro::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
             BigDecimal lucro = recTotal.subtract(custoProd).subtract(despOp);
 

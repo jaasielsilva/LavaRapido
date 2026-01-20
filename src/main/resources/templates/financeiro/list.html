@@ -500,10 +500,10 @@
                                 Janeiro 2026
                             </td>
                             <td>
-                                <span class="text-muted" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaServicos, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                <span class="text-primary-custom fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaServicos, 1, 'POINT', 2, 'COMMA')}">0,00</span>
                             </td>
                             <td>
-                                <span class="text-muted" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                <span class="text-white" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</span>
                             </td>
                             <td class="text-warning-custom fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaTotal, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(item.custosProdutos, 1, 'POINT', 2, 'COMMA')}">0,00</td>
