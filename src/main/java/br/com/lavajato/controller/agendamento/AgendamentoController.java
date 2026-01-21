@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +34,31 @@ public class AgendamentoController {
     private ServicoCatalogoService servicoCatalogoService;
 
     @GetMapping
-    public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC, size = 12) Pageable pageable, Model model) {
-        model.addAttribute("agendamentos", agendamentoService.listarPaginado(pageable));
+    public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC, size = 20) Pageable pageable,
+                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                         @RequestParam(required = false) StatusAgendamento status,
+                         @RequestParam(required = false) String busca,
+                         Model model) {
+        
+        // Padrão: Se não houver filtros, assume o dia de hoje (Foco Operacional)
+        // Exceto se o usuário limpar explicitamente (mas por enquanto, vamos assumir que null = hoje no carregamento inicial)
+        // Para permitir "Ver Tudo", o usuário teria que selecionar datas muito amplas, ou podemos adicionar um flag.
+        // Mas para simplificar e atender "dia a dia", default = hoje.
+        if (dataInicio == null && dataFim == null && status == null && busca == null) {
+            dataInicio = LocalDate.now();
+            dataFim = LocalDate.now();
+        }
+
+        model.addAttribute("agendamentos", agendamentoService.filtrar(dataInicio, dataFim, status, busca, pageable));
+        model.addAttribute("resumo", agendamentoService.obterResumoDoDia());
+        
+        model.addAttribute("dataInicio", dataInicio);
+        model.addAttribute("dataFim", dataFim);
+        model.addAttribute("status", status);
+        model.addAttribute("busca", busca);
+        model.addAttribute("todosStatus", StatusAgendamento.values());
+        
         return "agendamento/list";
     }
 
@@ -47,14 +72,37 @@ public class AgendamentoController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Agendamento agendamento,
-                         @RequestParam(name = "servicoId", required = false) Long servicoId) {
+                         @RequestParam(name = "veiculoId", required = false) Long veiculoId,
+                         @RequestParam(name = "servicoId", required = false) Long servicoId,
+                         org.springframework.validation.BindingResult result,
+                         RedirectAttributes redirectAttributes) {
+        
+        // Vincular Veículo Manualmente
+        if (veiculoId != null) {
+            veiculoService.buscarPorId(veiculoId).ifPresent(agendamento::setVeiculo);
+        }
+
+        // Validação Manual básica se necessário (pois o BindingResult pode ter erros no campo 'veiculo' que era nulo antes)
+        if (agendamento.getVeiculo() == null) {
+             // Se ainda for nulo, é erro
+             redirectAttributes.addFlashAttribute("erro", "Veículo é obrigatório.");
+             return "redirect:/agendamentos/novo";
+        }
+
         if (servicoId != null) {
             servicoCatalogoService.buscarPorId(servicoId).ifPresent(servico -> {
                 agendamento.setServicos(servico.getNome());
                 agendamento.setValor(servico.getPreco());
             });
         }
-        agendamentoService.salvar(agendamento);
+        
+        try {
+            agendamentoService.salvar(agendamento);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao salvar agendamento: " + e.getMessage());
+            return "redirect:/agendamentos/novo";
+        }
+        
         return "redirect:/agendamentos";
     }
 

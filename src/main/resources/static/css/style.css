@@ -166,6 +166,7 @@ body {
     font-size: 13px;
     color: var(--text-secondary);
     border: 1px solid #1e293b;
+    text-align: center;
 }
 
 .version strong {

@@ -31,27 +31,10 @@ public class Veiculo {
     @NotNull(message = "O cliente é obrigatório")
     @ManyToOne(optional = false)
     @JoinColumn(name = "cliente_id")
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private Cliente cliente;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean ativo = true;
-
-    // Explicit Getters and Setters to ensure Thymeleaf binding works correctly
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getPlaca() { return placa; }
-    public void setPlaca(String placa) { this.placa = placa; }
-
-    public String getModelo() { return modelo; }
-    public void setModelo(String modelo) { this.modelo = modelo; }
-
-    public String getCor() { return cor; }
-    public void setCor(String cor) { this.cor = cor; }
-
-    public Integer getAno() { return ano; }
-    public void setAno(Integer ano) { this.ano = ano; }
-
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
 }

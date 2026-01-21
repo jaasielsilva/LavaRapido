@@ -12,6 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -22,6 +27,37 @@ public class AgendamentoService {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    public Page<Agendamento> filtrar(LocalDate dataInicio, LocalDate dataFim, StatusAgendamento status, String busca, Pageable pageable) {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        
+        LocalDateTime inicio = dataInicio != null ? dataInicio.atStartOfDay() : null;
+        LocalDateTime fim = dataFim != null ? dataFim.atTime(LocalTime.MAX) : null;
+
+        if (usuario.isMaster()) {
+            // Simplificação: Master vê tudo sem filtro por enquanto, ou teria que ter query global
+            return agendamentoRepository.findAll(pageable); 
+        }
+        
+        return agendamentoRepository.findComFiltros(usuario.getEmpresa(), inicio, fim, status, busca, pageable);
+    }
+
+    public Map<String, Object> obterResumoDoDia() {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        Empresa empresa = usuario.getEmpresa();
+        
+        if (empresa == null) return new HashMap<>(); // Safety
+
+        LocalDateTime inicioDia = LocalDate.now().atStartOfDay();
+        LocalDateTime fimDia = LocalDate.now().atTime(LocalTime.MAX);
+
+        Map<String, Object> resumo = new HashMap<>();
+        resumo.put("totalHoje", agendamentoRepository.countByEmpresaAndDataBetween(empresa, inicioDia, fimDia));
+        resumo.put("emAndamento", agendamentoRepository.countByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.EM_ANDAMENTO, inicioDia, fimDia));
+        resumo.put("faturamentoHoje", agendamentoRepository.sumValorByEmpresaAndDataBetween(empresa, inicioDia, fimDia));
+        
+        return resumo;
+    }
 
     public Page<Agendamento> listarPaginado(Pageable pageable) {
         Usuario usuario = usuarioService.getUsuarioLogado();

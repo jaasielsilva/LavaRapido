@@ -31,6 +31,8 @@ public class Cliente {
     @JoinColumn(name = "empresa_id")
     private Empresa empresa;
     
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "cliente")
     private List<Veiculo> veiculos = new ArrayList<>();
 

@@ -25,6 +25,8 @@ public class Agendamento {
     @Column(nullable = false)
     private StatusAgendamento status = StatusAgendamento.AGENDADO;
 
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     @ManyToOne(optional = false)
     @JoinColumn(name = "veiculo_id")
     private Veiculo veiculo;

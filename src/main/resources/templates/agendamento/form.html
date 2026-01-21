@@ -23,11 +23,12 @@
                         <label for="veiculo" class="form-label text-light small fw-bold">Veículo</label>
                         <div class="input-group">
                             <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-car"></i></span>
-                            <select class="form-select bg-dark text-light border-secondary" id="veiculo" th:field="*{veiculo}" required>
+                            <select class="form-select bg-dark text-light border-secondary" id="veiculo" name="veiculoId" required>
                                 <option value="">Selecione um veículo...</option>
                                 <option th:each="v : ${veiculos}" 
                                         th:value="${v.id}" 
-                                        th:text="${v.modelo + ' - ' + v.placa + ' (' + v.cliente.nome + ')'}">
+                                        th:text="${v.modelo + ' - ' + v.placa + ' (' + v.cliente.nome + ')'}"
+                                        th:selected="${agendamento.veiculo != null && agendamento.veiculo.id == v.id}">
                                     Civic - ABC-1234 (João)
                                 </option>
                             </select>

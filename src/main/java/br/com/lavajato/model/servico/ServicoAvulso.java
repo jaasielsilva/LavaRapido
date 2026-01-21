@@ -34,6 +34,8 @@ public class ServicoAvulso {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "servico_id")
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private Servico servico;
 
     // Campos históricos para garantir que o preço não mude se o catálogo mudar
@@ -43,6 +45,8 @@ public class ServicoAvulso {
     // Cliente Cadastrado (Opcional)
     @ManyToOne
     @JoinColumn(name = "cliente_id")
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
     private Cliente cliente;
 
     // Cliente Avulso (Opcional)

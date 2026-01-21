@@ -25,4 +25,26 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
 
     @Query("SELECT a FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status IN ('AGENDADO') AND a.data >= CURRENT_TIMESTAMP ORDER BY a.data ASC")
     Page<Agendamento> findProximosByEmpresa(@Param("empresa") Empresa empresa, Pageable pageable);
+
+    @Query("SELECT a FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa " +
+            "AND (:dataInicio IS NULL OR a.data >= :dataInicio) " +
+            "AND (:dataFim IS NULL OR a.data <= :dataFim) " +
+            "AND (:status IS NULL OR a.status = :status) " +
+            "AND (:busca IS NULL OR lower(a.veiculo.cliente.nome) LIKE lower(concat('%', :busca, '%')) OR lower(a.veiculo.placa) LIKE lower(concat('%', :busca, '%'))) " +
+            "ORDER BY a.data ASC")
+    Page<Agendamento> findComFiltros(@Param("empresa") Empresa empresa,
+                                     @Param("dataInicio") java.time.LocalDateTime dataInicio,
+                                     @Param("dataFim") java.time.LocalDateTime dataFim,
+                                     @Param("status") br.com.lavajato.model.agendamento.StatusAgendamento status,
+                                     @Param("busca") String busca,
+                                     Pageable pageable);
+
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.data BETWEEN :inicio AND :fim")
+    long countByEmpresaAndDataBetween(@Param("empresa") Empresa empresa, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
+
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status = :status AND a.data BETWEEN :inicio AND :fim")
+    long countByEmpresaAndStatusAndDataBetween(@Param("empresa") Empresa empresa, @Param("status") br.com.lavajato.model.agendamento.StatusAgendamento status, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
+
+    @Query("SELECT COALESCE(SUM(a.valor), 0) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status <> 'CANCELADO' AND a.data BETWEEN :inicio AND :fim")
+    java.math.BigDecimal sumValorByEmpresaAndDataBetween(@Param("empresa") Empresa empresa, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
 }

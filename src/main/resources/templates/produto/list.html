@@ -69,69 +69,102 @@
             </select>
         </div>
 
-        <!-- Grid de Produtos -->
-        <div th:if="${produtos.empty}" class="text-center py-5">
-            <i class="fa-solid fa-box-open fa-3x mb-3 text-muted"></i>
-            <h4 class="text-muted">Nenhum produto encontrado</h4>
-            <p class="text-secondary mb-4">Cadastre seus produtos para gerenciar o estoque.</p>
-            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
-                <i class="fa-solid fa-plus"></i> Novo Produto
-            </button>
-        </div>
-
-        <div th:if="${!produtos.empty}" class="row g-3">
-            <div class="col-md-3" th:each="produto : ${produtos}">
-                <div class="card h-100 service-card position-relative overflow-hidden d-flex flex-column">
-                    <div class="card-body px-3 py-2 w-100">
-                        
-                        <!-- Header: Categoria e Edit -->
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <span class="badge rounded-pill border border-opacity-10" 
-                                  th:classappend="'bg-soft-' + ${produto.categoria.cor}"
-                                  style="font-size: 10px; padding: 4px 8px;"
-                                  th:text="${produto.categoria.descricao}">Categoria</span>
-                            <a href="#" 
-                               class="text-secondary small btn-edit-produto"
-                               th:data-id="${produto.id}"
-                               th:data-nome="${produto.nome}"
-                               th:data-descricao="${produto.descricao}"
-                               th:data-preco-venda="${produto.precoVenda}"
-                               th:data-preco-custo="${produto.precoCusto}"
-                               th:data-estoque="${produto.estoque}"
-                               th:data-estoque-minimo="${produto.estoqueMinimo}"
-                               th:data-categoria="${produto.categoria}"
-                               th:data-unidade="${produto.unidade}">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
-                        </div>
-
-                        <!-- Info Produto -->
-                        <h6 class="card-title text-white fw-bold mb-1 text-truncate" th:title="${produto.nome}" th:text="${produto.nome}">Nome do Produto</h6>
-                        <p class="card-text text-secondary small mb-2 text-truncate" th:title="${produto.descricao}" th:text="${produto.descricao}">Descrição do produto</p>
-                        
-                        <!-- Preço -->
-                        <div class="fs-5 fw-bold text-info mb-2" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
-                        
-                        <!-- Estoque e Stepper -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-secondary" style="font-size: 11px;" th:text="'Estoque: ' + ${produto.estoque} + ' ' + ${produto.unidade.sigla}">Estoque: 15 un</small>
-                            <div class="input-group input-group-sm w-auto bg-dark border border-secondary rounded overflow-hidden">
-                                <button class="btn btn-sm btn-dark border-0 text-secondary px-1 btn-qtd-menos" type="button"><i class="fa-solid fa-minus" style="font-size: 9px;"></i></button>
-                                <input type="text" class="form-control bg-dark text-white text-center border-0 p-0 input-qtd" value="1" style="width: 25px; height: 20px; font-size: 11px;" readonly>
-                                <button class="btn btn-sm btn-dark border-0 text-secondary px-1 btn-qtd-mais" type="button"><i class="fa-solid fa-plus" style="font-size: 9px;"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botão Adicionar -->
-                    <button class="btn btn-info w-100 rounded-0 rounded-bottom py-1 fw-bold mt-auto btn-add-carrinho" 
-                            style="font-size: 12px;"
-                            th:data-id="${produto.id}"
-                            th:data-nome="${produto.nome}"
-                            th:data-preco="${produto.precoVenda}">
-                        <i class="fa-solid fa-cart-plus me-2"></i> Adicionar
-                    </button>
-                </div>
+        <!-- Tabela de Produtos -->
+        <div class="card d-block w-100 border border-secondary border-opacity-10 bg-dark-subtle overflow-hidden" style="background-color: #0b121f !important;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.03);">
+                    <thead style="background-color: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <tr>
+                            <th scope="col" class="py-4 ps-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Produto</th>
+                            <th scope="col" class="py-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Categoria</th>
+                            <th scope="col" class="py-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Preço</th>
+                            <th scope="col" class="py-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Estoque</th>
+                            <th scope="col" class="py-4 text-end pe-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        <tr th:if="${produtos.empty}">
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <div class="mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-dark border border-secondary border-opacity-25" style="width: 64px; height: 64px;">
+                                        <i class="fa-solid fa-box-open fa-lg text-secondary"></i>
+                                    </div>
+                                    <h6 class="text-white mb-1">Nenhum produto encontrado</h6>
+                                    <p class="text-secondary small mb-0">Comece adicionando itens ao seu estoque.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:each="produto : ${produtos}" style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-3 shadow-sm" 
+                                         style="width: 42px; height: 42px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-box text-info opacity-75"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-white mb-1" th:text="${produto.nome}" style="font-size: 0.95rem;">Nome</div>
+                                        <div class="small text-secondary text-truncate" style="max-width: 250px; font-size: 0.8rem;" th:text="${produto.descricao}">Descrição</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <span class="badge rounded-pill border border-opacity-10 fw-semibold px-3 py-2" 
+                                      th:classappend="'bg-soft-' + ${produto.categoria.cor}"
+                                      style="font-size: 0.7rem; letter-spacing: 0.5px;"
+                                      th:text="${produto.categoria.descricao}">Categoria</span>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-white" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                    <span class="text-secondary opacity-50" style="font-size: 0.75rem;" th:if="${produto.precoCusto != null}" th:text="'Custo: R$ ' + ${#numbers.formatDecimal(produto.precoCusto, 0, 'POINT', 2, 'COMMA')}"></span>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="fw-bold text-white" th:text="${produto.estoque}">0</div>
+                                        <div class="text-secondary" style="font-size: 0.7rem;" th:text="${produto.unidade.sigla}">UN</div>
+                                    </div>
+                                    <span class="badge bg-soft-warning border border-warning border-opacity-25 text-warning rounded-pill px-2 py-1" 
+                                          th:if="${produto.estoque <= produto.estoqueMinimo}"
+                                          style="font-size: 0.65rem;">
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> BAIXO
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4 py-3">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <!-- Botão Adicionar ao Carrinho -->
+                                    <button class="btn btn-icon btn-ghost-info btn-add-carrinho rounded-2"
+                                            title="Adicionar ao Carrinho"
+                                            th:data-id="${produto.id}"
+                                            th:data-nome="${produto.nome}"
+                                            th:data-preco="${produto.precoVenda}"
+                                            style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(14, 165, 233, 0.2); background: rgba(14, 165, 233, 0.05);">
+                                        <i class="fa-solid fa-cart-plus text-info" style="font-size: 0.9rem;"></i>
+                                        <input type="hidden" class="input-qtd" value="1">
+                                    </button>
+                                    
+                                    <!-- Botão Editar -->
+                                    <button class="btn btn-icon btn-ghost-secondary btn-edit-produto rounded-2"
+                                       title="Editar"
+                                       th:data-id="${produto.id}"
+                                       th:data-nome="${produto.nome}"
+                                       th:data-descricao="${produto.descricao}"
+                                       th:data-preco-venda="${produto.precoVenda}"
+                                       th:data-preco-custo="${produto.precoCusto}"
+                                       th:data-estoque="${produto.estoque}"
+                                       th:data-estoque-minimo="${produto.estoqueMinimo}"
+                                       th:data-categoria="${produto.categoria}"
+                                       th:data-unidade="${produto.unidade}"
+                                       style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(148, 163, 184, 0.2); background: rgba(148, 163, 184, 0.05);">
+                                        <i class="fa-solid fa-pen text-secondary" style="font-size: 0.9rem;"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -350,10 +383,9 @@
                         const nome = this.dataset.nome;
                         const preco = parseFloat(this.dataset.preco);
                         
-                        // Pegar quantidade do input vizinho
-                        const cardBody = this.closest('.card').querySelector('.card-body');
-                        const qtdInput = cardBody.querySelector('.input-qtd');
-                        const quantidade = parseInt(qtdInput.value);
+                        // Default to 1 if input not found (for table view)
+                        const qtdInput = this.querySelector('.input-qtd');
+                        const quantidade = qtdInput ? parseInt(qtdInput.value) : 1;
 
                         // Verificar se já existe
                         const itemExistente = carrinho.find(item => item.id === id);
@@ -365,17 +397,15 @@
 
                         atualizarUI();
                         
-                        // Resetar input
-                        qtdInput.value = 1;
-
                         // Feedback visual (Toast ou SweetAlert seria melhor, mas aqui simples)
-                        const originalText = this.innerHTML;
-                        this.innerHTML = '<i class="fa-solid fa-check me-2"></i> Adicionado!';
-                        this.classList.replace('btn-info', 'btn-success');
-                        setTimeout(() => {
-                            this.innerHTML = originalText;
-                            this.classList.replace('btn-success', 'btn-info');
-                        }, 1000);
+                        const originalHtml = this.innerHTML;
+                        const icon = this.querySelector('i');
+                        if(icon) {
+                            icon.className = 'fa-solid fa-check text-success';
+                            setTimeout(() => {
+                                icon.className = 'fa-solid fa-cart-plus';
+                            }, 1000);
+                        }
                     });
                 });
 

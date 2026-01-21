@@ -3,159 +3,216 @@
       th:replace="~{layout :: layout(~{::div})}">
 <body>
     <div>
-        <header>
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1>Agendamentos</h1>
-                    <div class="subtitle">Gerencie os serviços agendados</div>
-                </div>
-                <a th:href="@{/agendamentos/novo}" class="btn btn-primary">
-                    <i class="fa-solid fa-plus"></i> Novo Agendamento
-                </a>
+        <!-- Header Section -->
+        <header class="mb-4 d-flex justify-content-between align-items-end">
+            <div>
+                <h1>Agendamentos</h1>
+                <div class="subtitle">Gestão operacional do dia</div>
             </div>
+            <a th:href="@{/agendamentos/novo}" class="btn btn-primary d-flex align-items-center gap-2 px-4">
+                <i class="fa-solid fa-plus"></i> Novo Agendamento
+            </a>
         </header>
 
-        <div th:if="${agendamentos.empty}" class="text-center py-5">
-            <i class="fa-solid fa-calendar-xmark fa-3x mb-3 text-muted"></i>
-            <h4 class="text-muted">Nenhum agendamento encontrado</h4>
-            <a th:href="@{/agendamentos/novo}" class="btn btn-outline-primary mt-3">
-                <i class="fa-solid fa-plus"></i> Agendar Serviço
-            </a>
+        <!-- Summary Cards (Premium Style) -->
+        <div class="cards mb-5">
+            <div class="card blue">
+                <div class="card-info">
+                    <div>
+                        <h4>AGENDAMENTOS HOJE</h4>
+                        <div class="number" th:text="${resumo.totalHoje}">0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Total previsto</span>
+                    </div>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-calendar-day"></i>
+                </div>
+            </div>
+
+            <div class="card orange">
+                <div class="card-info">
+                    <div>
+                        <h4>EM ANDAMENTO</h4>
+                        <div class="number" th:text="${resumo.emAndamento}">0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Veículos no pátio</span>
+                    </div>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-bars-progress"></i>
+                </div>
+            </div>
+
+            <div class="card green">
+                <div class="card-info">
+                    <div>
+                        <h4>FATURAMENTO (EST.)</h4>
+                        <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo.faturamentoHoje, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="up"><i class="fa-solid fa-arrow-trend-up"></i> Hoje</span>
+                    </div>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                </div>
+            </div>
         </div>
 
-        <!-- Grid de Cards -->
-        <div th:unless="${agendamentos.empty}" class="row g-3">
-            <div class="col-md-3" th:each="agendamento : ${agendamentos}">
-                <div class="card h-100 service-card position-relative d-flex flex-column" 
-                     th:classappend="'status-border-' + ${agendamento.status.cor}">
-                    
-                    <!-- Watermark Icon based on status -->
-                    <i class="status-icon-watermark fa-solid"
-                       th:classappend="${agendamento.status.name() == 'AGENDADO' ? 'fa-calendar-check' : 
-                                       (agendamento.status.name() == 'EM_ANDAMENTO' ? 'fa-spinner' : 
-                                       (agendamento.status.name() == 'CONCLUIDO' ? 'fa-check-circle' : 'fa-ban'))}"></i>
+        <!-- Filter Bar (Clean Integration) -->
+        <div class="mb-4">
+            <form th:action="@{/agendamentos}" method="get" class="filter-bar">
+                <div class="filter-group">
+                    <label>Período</label>
+                    <div class="d-flex gap-2">
+                        <input type="date" name="dataInicio" th:value="${dataInicio}" class="form-control-dark" placeholder="Início">
+                        <span class="text-muted align-self-center">-</span>
+                        <input type="date" name="dataFim" th:value="${dataFim}" class="form-control-dark" placeholder="Fim">
+                    </div>
+                </div>
 
-                    <div class="card-body px-3 py-2 w-100 position-relative" style="z-index: 1;">
-                        
-                        <!-- Header: Status e Ações Dropdown -->
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge rounded-pill border border-opacity-10" 
-                                  th:classappend="'bg-soft-' + ${agendamento.status.cor}"
-                                  style="font-size: 11px; padding: 5px 10px; font-weight: 600; letter-spacing: 0.5px;"
-                                  th:text="${agendamento.status.descricao.toUpperCase()}">STATUS</span>
-                            
-                            <!-- Dropdown de Ações -->
-                            <div class="dropdown">
-                                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border-0">
-                                    <li><a class="dropdown-item" th:href="@{/agendamentos/editar/{id}(id=${agendamento.id})}"><i class="fa-solid fa-pen me-2"></i>Editar</a></li>
-                                    
-                                    <li th:if="${agendamento.status.name() == 'AGENDADO'}">
-                                        <a class="dropdown-item text-warning" th:href="@{/agendamentos/status/{id}/EM_ANDAMENTO(id=${agendamento.id})}"><i class="fa-solid fa-play me-2"></i>Iniciar Serviço</a>
-                                    </li>
-                                    <li th:if="${agendamento.status.name() == 'EM_ANDAMENTO'}">
-                                        <a class="dropdown-item text-success" th:href="@{/agendamentos/status/{id}/CONCLUIDO(id=${agendamento.id})}"><i class="fa-solid fa-check-double me-2"></i>Concluir Serviço</a>
-                                    </li>
-                                    <li th:if="${agendamento.status.name() == 'AGENDADO' or agendamento.status.name() == 'EM_ANDAMENTO'}">
-                                        <hr class="dropdown-divider bg-secondary opacity-25">
-                                        <a class="dropdown-item text-danger" th:href="@{/agendamentos/status/{id}/CANCELADO(id=${agendamento.id})}"><i class="fa-solid fa-ban me-2"></i>Cancelar</a>
-                                    </li>
-                                    
-                                    <li><hr class="dropdown-divider bg-secondary opacity-25"></li>
-                                    <li sec:authorize="hasAnyRole('MASTER','ADMIN')">
-                                        <button class="dropdown-item text-danger" type="button" 
-                                                th:onclick="'confirmarExclusaoAgendamento(' + ${agendamento.id} + ')'">
-                                            <i class="fa-solid fa-trash me-2"></i>Excluir Registro
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select name="status" class="form-select-dark">
+                        <option value="">Todos os Status</option>
+                        <option th:each="s : ${todosStatus}" 
+                                th:value="${s}" 
+                                th:text="${s.descricao}"
+                                th:selected="${s == status}"></option>
+                    </select>
+                </div>
 
-                        <!-- Título: Cliente -->
-                        <h6 class="card-title text-white fw-bold mb-1 text-truncate" 
-                            th:title="${agendamento.veiculo.cliente.nome}" 
-                            th:text="${agendamento.veiculo.cliente.nome}"
-                            style="font-size: 1.1rem;">Nome Cliente</h6>
+                <div class="filter-group flex-grow-1">
+                    <label>Buscar</label>
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="busca" th:value="${busca}" class="form-control-dark ps-5" placeholder="Buscar por cliente ou placa...">
+                    </div>
+                </div>
 
-                        <!-- Subtítulo: Veículo -->
-                        <div class="d-flex align-items-center text-secondary small mb-3" th:title="${agendamento.veiculo.modelo + ' - ' + agendamento.veiculo.placa}">
-                            <div class="d-flex align-items-center bg-dark bg-opacity-50 rounded px-2 py-1 border border-secondary border-opacity-25">
-                                <i class="fa-solid fa-car me-2 text-primary" style="font-size: 11px;"></i>
-                                <span class="text-truncate fw-medium text-light" th:text="${agendamento.veiculo.modelo}">Modelo</span>
-                                <span class="mx-1 text-secondary opacity-50">|</span>
-                                <span class="text-truncate text-info font-monospace" th:text="${agendamento.veiculo.placa}">Placa</span>
-                            </div>
-                        </div>
+                <div class="filter-actions d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-icon">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+                    <a th:href="@{/agendamentos}" class="btn btn-outline-secondary btn-icon" title="Limpar Filtros">
+                        <i class="fa-solid fa-eraser"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
 
-                        <!-- Descrição: Serviços -->
-                        <div class="mb-2">
-                            <p class="card-text text-secondary small mb-0 text-truncate" 
-                               th:title="${agendamento.servicos}">
-                               <i class="fa-solid fa-wrench me-1 opacity-50"></i>
-                               <span th:text="${agendamento.servicos}">Serviços...</span>
-                            </p>
+        <!-- List View (Floating Items) -->
+        <div class="list-container">
+            <div th:if="${agendamentos.empty}" class="empty-state">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                </div>
+                <h3>Nenhum agendamento encontrado</h3>
+                <p>Ajuste os filtros ou crie um novo agendamento para começar.</p>
+            </div>
+
+            <div th:each="agendamento : ${agendamentos}" class="item-row">
+                <!-- Time & Status Stripe -->
+                <div class="item-time">
+                    <span class="time" th:text="${#temporals.format(agendamento.data, 'HH:mm')}">10:00</span>
+                    <span class="date" th:text="${#temporals.format(agendamento.data, 'dd/MM')}">20/01</span>
+                </div>
+
+                <!-- Vehicle & Client Info -->
+                <div class="item-main">
+                    <div class="vehicle-icon-wrapper">
+                        <i class="fa-solid fa-car"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="primary-text" th:text="${agendamento.veiculo.cliente.nome}">Nome Cliente</div>
+                        <div class="secondary-text">
+                            <span class="plate-badge" th:text="${agendamento.veiculo.placa}">ABC-1234</span>
+                            <span th:text="${agendamento.veiculo.modelo}">Modelo Veículo</span>
                         </div>
                     </div>
-                        
-                    <!-- Footer: Data e Preço -->
-                    <div class="px-3 py-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center mt-auto w-100 position-relative" style="z-index: 1; background: rgba(0,0,0,0.2);">
-                        <!-- Lado Esquerdo: Data -->
-                        <div class="d-flex align-items-center text-secondary small" 
-                             th:title="${#temporals.format(agendamento.data, 'dd/MM/yyyy HH:mm')}">
-                            <i class="fa-regular fa-clock me-2 text-warning fs-5"></i>
-                            <div class="d-flex flex-column" style="line-height: 1.1;">
-                                <span class="fw-bold text-light" style="font-size: 15px;" th:text="${#temporals.format(agendamento.data, 'dd/MM')}">Data</span>
-                                <span style="font-size: 12px; opacity: 0.9;" th:if="${agendamento.data}" th:text="${#temporals.format(agendamento.data, 'HH:mm')}">Hora</span>
-                            </div>
-                        </div>
+                </div>
 
-                        <!-- Lado Direito: Preço -->
-                        <div class="badge bg-dark border border-secondary border-opacity-25 text-success fs-6 fw-bold">
-                            <span th:text="'R$ ' + ${#numbers.formatDecimal(agendamento.valor, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
-                        </div>
+                <!-- Services -->
+                <div class="item-services">
+                    <div class="service-label">SERVIÇO</div>
+                    <div class="service-text text-truncate" th:title="${agendamento.servicos}" th:text="${agendamento.servicos}">Lavagem Completa</div>
+                </div>
+
+                <!-- Status Badge -->
+                <div class="item-status">
+                    <span class="badge-status" 
+                          th:classappend="${agendamento.status.name() == 'AGENDADO' ? 'status-blue' : 
+                                          (agendamento.status.name() == 'EM_ANDAMENTO' ? 'status-orange' : 
+                                          (agendamento.status.name() == 'CONCLUIDO' ? 'status-green' : 'status-red'))}"
+                          th:text="${agendamento.status.descricao}">Agendado</span>
+                </div>
+
+                <!-- Price & Actions -->
+                <div class="item-end">
+                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(agendamento.valor, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
+                    
+                    <div class="dropdown">
+                        <button class="btn-action-trigger" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg">
+                            <li><a class="dropdown-item" th:href="@{/agendamentos/editar/{id}(id=${agendamento.id})}"><i class="fa-solid fa-pen me-2"></i> Editar</a></li>
+                            
+                            <li th:if="${agendamento.status.name() == 'AGENDADO'}">
+                                <a class="dropdown-item text-warning" th:href="@{/agendamentos/status/{id}/EM_ANDAMENTO(id=${agendamento.id})}"><i class="fa-solid fa-play me-2"></i> Iniciar</a>
+                            </li>
+                            <li th:if="${agendamento.status.name() == 'EM_ANDAMENTO'}">
+                                <a class="dropdown-item text-success" th:href="@{/agendamentos/status/{id}/CONCLUIDO(id=${agendamento.id})}"><i class="fa-solid fa-check-double me-2"></i> Concluir</a>
+                            </li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <li sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                                <button class="dropdown-item text-danger" type="button" th:onclick="'confirmarExclusaoAgendamento(' + ${agendamento.id} + ')'">
+                                    <i class="fa-solid fa-trash me-2"></i> Excluir
+                                </button>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- Pagination -->
-        <nav th:if="${agendamentos.totalPages > 1}" class="mt-4" aria-label="Navegação de páginas">
-            <ul class="pagination justify-content-center">
-                <li class="page-item" th:classappend="${agendamentos.first} ? ' disabled'">
-                    <a class="page-link" 
-                       th:href="@{/agendamentos(page=${agendamentos.number - 1},size=${agendamentos.size})}"
-                       aria-label="Anterior">
-                        <i class="fa-solid fa-chevron-left"></i> Anterior
-                    </a>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link" 
-                          th:text="'Página ' + (${agendamentos.number + 1}) + ' de ' + ${agendamentos.totalPages}">1 de 1</span>
-                </li>
-                <li class="page-item" th:classappend="${agendamentos.last} ? ' disabled'">
-                    <a class="page-link" 
-                       th:href="@{/agendamentos(page=${agendamentos.number + 1},size=${agendamentos.size})}"
-                       aria-label="Próxima">
-                        Próxima <i class="fa-solid fa-chevron-right"></i>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-
+        <div class="mt-4 d-flex justify-content-center" th:if="${agendamentos.totalPages > 1}">
+            <nav>
+                <ul class="pagination pagination-dark">
+                    <li class="page-item" th:classappend="${agendamentos.first} ? ' disabled'">
+                        <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number - 1}, dataInicio=${dataInicio}, dataFim=${dataFim}, status=${status}, busca=${busca})}">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="${agendamentos.number + 1}">1</span>
+                    </li>
+                    <li class="page-item" th:classappend="${agendamentos.last} ? ' disabled'">
+                        <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number + 1}, dataInicio=${dataInicio}, dataFim=${dataFim}, status=${status}, busca=${busca})}">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
         <script th:inline="javascript">
         /*<![CDATA[*/
             function confirmarExclusaoAgendamento(id) {
                 Swal.fire({
-                    title: 'Tem certeza?',
-                    text: 'Você não poderá reverter isso!',
+                    title: 'Excluir?',
+                    text: 'Esta ação é irreversível.',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Sim, excluir!',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#334155',
+                    confirmButtonText: 'Sim, excluir',
                     cancelButtonText: 'Cancelar',
                     background: '#0f1623',
                     color: '#fff'
@@ -165,156 +222,269 @@
                     }
                 });
             }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                var agendamentoSucesso = /*[[${agendamentoSucesso}]]*/ null;
-                var agendamentoErro = /*[[${agendamentoErro}]]*/ null;
-
-                if (agendamentoSucesso) {
-                    var msgSucesso;
-                    if (agendamentoSucesso === 'excluido') {
-                        msgSucesso = 'Agendamento excluído com sucesso.';
-                    }
-                    if (msgSucesso) {
-                        Swal.fire({
-                            title: 'Sucesso!',
-                            text: msgSucesso,
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                }
-
-                if (agendamentoErro) {
-                    Swal.fire({
-                        title: 'Atenção',
-                        text: agendamentoErro,
-                        icon: 'warning',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
         /*]]>*/
         </script>
 
         <style>
-            /* Card Styling Premium */
-            .service-card {
+            /* Filter Bar Styles */
+            .filter-bar {
+                display: flex;
+                gap: 20px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+                background: transparent;
+            }
+            
+            .filter-group label {
+                display: block;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--text-secondary);
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .form-control-dark, .form-select-dark {
                 background-color: #0f1623;
                 border: 1px solid #1e293b;
-                border-radius: 16px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                overflow: hidden;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                color: white;
+                padding: 10px 15px;
+                border-radius: 10px;
+                font-size: 14px;
+                transition: all 0.2s;
+                width: 100%;
+            }
+            
+            .form-control-dark:focus, .form-select-dark:focus {
+                border-color: var(--primary-color);
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            }
+            
+            .search-input-wrapper {
+                position: relative;
+            }
+            
+            .search-input-wrapper i {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-secondary);
+            }
+            
+            .btn-icon {
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
             }
 
-            .service-card:hover {
-                transform: translateY(-5px) scale(1.02);
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            /* Item Row Styles (The List) */
+            .list-container {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .item-row {
+                background: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                padding: 15px 25px;
+                display: flex;
+                align-items: center;
+                gap: 30px;
+                transition: all 0.2s ease;
+                position: relative;
+            }
+            
+            .item-row:hover {
+                transform: translateY(-2px);
                 border-color: #334155;
+                box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
                 z-index: 10;
             }
-
-            /* Status Borders & Accents */
-            .status-border-primary { border-left: 5px solid #38bdf8; }
-            .status-border-warning { border-left: 5px solid #fbbf24; }
-            .status-border-success { border-left: 5px solid #4ade80; }
-            .status-border-danger  { border-left: 5px solid #f87171; }
-
-            /* Watermark Icon */
-            .status-icon-watermark {
-                position: absolute;
-                bottom: -20px;
-                right: -20px;
-                font-size: 100px;
-                opacity: 0.03;
-                transform: rotate(-15deg);
-                pointer-events: none;
-                transition: all 0.5s ease;
-                z-index: 0;
+            
+            .item-time {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-width: 60px;
+                border-right: 1px solid rgba(255,255,255,0.05);
+                padding-right: 20px;
             }
             
-            .service-card:hover .status-icon-watermark {
-                transform: rotate(0deg) scale(1.1);
-                opacity: 0.08;
-                bottom: -10px;
-                right: -10px;
+            .item-time .time {
+                font-size: 18px;
+                font-weight: 700;
+                color: white;
             }
-
-            /* Badge Colors (Aligned with Enum cor property) */
-            .bg-soft-primary { background: rgba(14, 165, 233, 0.2); color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.1); }
-            .bg-soft-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.1); }
-            .bg-soft-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.1); }
-            .bg-soft-danger  { background: rgba(239, 68, 68, 0.2); color: #f87171; box-shadow: 0 0 10px rgba(248, 113, 113, 0.1); }
             
-            /* Dropdown refinements - Clean & Light */
-            .dropdown-menu {
-                background-color: #1e293b;
-                border: 1px solid #334155;
+            .item-time .date {
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+            
+            .item-main {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                flex: 2;
+            }
+            
+            .vehicle-icon-wrapper {
+                width: 45px;
+                height: 45px;
+                background: rgba(255, 255, 255, 0.03);
                 border-radius: 12px;
-                padding: 6px;
-                min-width: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-secondary);
+                font-size: 18px;
             }
             
-            .dropdown-item {
-                color: #e2e8f0;
-                padding: 10px 16px;
-                font-size: 0.9rem;
-                border-radius: 8px;
-                transition: background-color 0.2s ease;
-                font-weight: 500;
-            }
-
-            .dropdown-item:hover {
-                background-color: #334155;
-                color: #fff;
-                transform: none; /* Removed translation for stability */
+            .info-content .primary-text {
+                font-weight: 600;
+                color: white;
+                font-size: 15px;
+                margin-bottom: 2px;
             }
             
-            .dropdown-item i {
-                opacity: 0.9;
+            .plate-badge {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 12px;
+                color: #cbd5e1;
+                margin-right: 6px;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+            
+            .secondary-text {
+                font-size: 13px;
+                color: var(--text-secondary);
+            }
+            
+            .item-services {
+                flex: 2;
+                min-width: 0; /* Prevent flex overflow */
+            }
+            
+            .service-label {
+                font-size: 10px;
+                text-transform: uppercase;
+                color: #475569;
+                font-weight: 700;
+                margin-bottom: 2px;
+            }
+            
+            .service-text {
+                color: #cbd5e1;
+                font-size: 14px;
+            }
+            
+            .item-status {
+                flex: 1;
                 text-align: center;
             }
+            
+            .badge-status {
+                display: inline-block;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .status-blue { background: rgba(14, 165, 233, 0.15); color: #38bdf8; }
+            .status-orange { background: rgba(249, 115, 22, 0.15); color: #fbbf24; }
+            .status-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+            .status-red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+            
+            .item-end {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                padding-left: 20px;
+                border-left: 1px solid rgba(255,255,255,0.05);
+            }
+            
+            .price-tag {
+                font-weight: 700;
+                color: #4ade80;
+                font-size: 16px;
+                white-space: nowrap;
+            }
+            
+            .btn-action-trigger {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background: transparent;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
+            
+            .btn-action-trigger:hover, .btn-action-trigger[aria-expanded="true"] {
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+            }
 
-            .dropdown-divider {
-                border-top-color: #475569;
-                margin: 4px 0;
+            /* Empty State */
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                background: #0f1623;
+                border-radius: 20px;
+                border: 1px dashed #334155;
             }
             
-            /* Custom hover for danger items */
-            .text-danger-hover:hover {
-                background-color: rgba(239, 68, 68, 0.15) !important;
-                color: #f87171 !important;
-            }
-
-            /* Pagination Styling */
-            .pagination {
-                gap: 5px;
-            }
-            
-            .page-link {
-                background-color: #0f1623;
-                border: 1px solid #334155;
-                color: #94a3b8;
-                border-radius: 8px;
-                padding: 8px 16px;
-                font-weight: 500;
-                transition: all 0.2s ease;
-            }
-            
-            .page-link:hover {
-                background-color: #1e293b;
-                border-color: #38bdf8; /* Primary Color */
-                color: #38bdf8;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            }
-            
-            .page-item.disabled .page-link {
-                background-color: #0f1623;
-                border-color: #1e293b;
+            .empty-state .icon-circle {
+                width: 80px;
+                height: 80px;
+                background: rgba(30, 41, 59, 0.5);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 32px;
                 color: #475569;
-                pointer-events: none;
+            }
+            
+            .empty-state h3 {
+                color: white;
+                font-size: 18px;
+                margin-bottom: 8px;
+            }
+            
+            .empty-state p {
+                color: var(--text-secondary);
+                font-size: 14px;
+            }
+
+            /* Pagination overrides */
+            .pagination-dark .page-link {
+                background: #0f1623;
+                border-color: #1e293b;
+                color: var(--text-secondary);
+            }
+            
+            .pagination-dark .page-link:hover {
+                background: #1e293b;
+                color: white;
             }
         </style>
     </div>
