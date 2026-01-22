@@ -405,7 +405,7 @@
                 <div class="item-end">
                     <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(servico.valor, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
                     
-                    <div class="dropdown">
+                    <div class="dropdown" th:if="${servico.status.name() != 'CANCELADO'}">
                         <button class="btn-action-trigger" type="button" data-bs-toggle="dropdown">
                             <i class="fa-solid fa-ellipsis"></i>
                         </button>
@@ -415,6 +415,9 @@
                             </li>
                             <li th:if="${servico.status.name() == 'EM_ANDAMENTO'}">
                                 <a class="dropdown-item text-success" th:href="@{/servicos-avulsos/status/{id}/CONCLUIDO(id=${servico.id})}"><i class="fa-solid fa-check-double me-2"></i> Concluir</a>
+                            </li>
+                            <li th:if="${servico.status.name() == 'CONCLUIDO'}">
+                                <a class="dropdown-item text-warning" th:href="@{/servicos-avulsos/status/{id}/EM_ANDAMENTO(id=${servico.id})}"><i class="fa-solid fa-rotate-left me-2"></i> Reabrir</a>
                             </li>
                             <li th:if="${servico.status.name() == 'EM_FILA' or servico.status.name() == 'EM_ANDAMENTO'}">
                                 <hr class="dropdown-divider">
