@@ -2,6 +2,8 @@ package br.com.lavajato.repository.produto;
 
 import br.com.lavajato.model.empresa.Empresa;
 import br.com.lavajato.model.produto.Produto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,6 +14,8 @@ import java.util.List;
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findAllByEmpresaAndAtivoTrue(Empresa empresa);
+
+    Page<Produto> findAllByEmpresaAndAtivoTrue(Empresa empresa, Pageable pageable);
     
     long countByEmpresaAndAtivoTrue(Empresa empresa);
     

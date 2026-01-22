@@ -7,6 +7,8 @@ import br.com.lavajato.model.venda.FormaPagamento;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.produto.ProdutoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +28,8 @@ public class ProdutoController {
     private ClienteService clienteService;
 
     @GetMapping
-    public String listar(Model model) {
-        model.addAttribute("produtos", service.listarAtivos());
+    public String listar(Model model, @PageableDefault(size = 5) Pageable pageable) {
+        model.addAttribute("produtos", service.listarAtivos(pageable));
         model.addAttribute("totalProdutos", service.contarProdutos());
         model.addAttribute("estoqueBaixo", service.contarEstoqueBaixo());
         model.addAttribute("valorEstoque", service.calcularValorEstoque());

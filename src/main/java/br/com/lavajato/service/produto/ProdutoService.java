@@ -11,6 +11,8 @@ import br.com.lavajato.service.financeiro.FinanceiroService;
 import br.com.lavajato.model.financeiro.LancamentoFinanceiro;
 import br.com.lavajato.model.financeiro.TipoLancamento;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +34,11 @@ public class ProdutoService {
     public List<Produto> listarAtivos() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         return repository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa());
+    }
+
+    public Page<Produto> listarAtivos(Pageable pageable) {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        return repository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa(), pageable);
     }
 
     public Produto salvar(Produto produto) {

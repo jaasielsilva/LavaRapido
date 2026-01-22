@@ -143,14 +143,17 @@ body {
 }
 
 .menu a:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.05);
+    color: #38bdf8;
+    background-color: rgba(56, 189, 248, 0.1);
+    box-shadow: inset 4px 0 0 0 #38bdf8;
+    transform: translateX(4px);
 }
 
 .menu a.active {
-    background: linear-gradient(90deg, #0ea5e9, #0284c7);
-    color: white;
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.2), rgba(56, 189, 248, 0.05));
+    color: #38bdf8;
+    box-shadow: inset 4px 0 0 0 #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.1);
 }
 
 .logout-link:hover {

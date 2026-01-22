@@ -161,8 +161,13 @@
                             <div class="item-info">
                                 <strong th:text="${s.nomeClienteDisplay}">Nome do Cliente</strong>
                                 <div class="sub-info" th:text="${s.veiculoDisplay}">Modelo - Placa</div>
-                                <div class="service-type"
-                                     th:text="${s.servico != null ? s.servico.nome : s.nomeServicoHistorico}">Tipo de serviço</div>
+                                <div class="service-type">
+                                    <span th:text="${s.servico != null ? s.servico.nome : s.nomeServicoHistorico}">Tipo de serviço</span>
+                                    <span class="text-warning ms-1" th:if="${s.servico != null}" style="font-size: 11px;">
+                                        <i class="fa-regular fa-clock"></i>
+                                        <span th:text="${s.servico.tempoMinutos} + 'm'">30m</span>
+                                    </span>
+                                </div>
                             </div>
                             <div class="item-actions">
                                 <span class="badge"

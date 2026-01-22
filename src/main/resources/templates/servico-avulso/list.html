@@ -25,11 +25,35 @@
                 position: relative;
             }
             
+            /* Default Hover: Blue (Matches Agendamentos) */
             .item-row:hover {
                 transform: translateY(-2px);
-                border-color: #334155;
-                box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+                border-color: #38bdf8 !important; /* Azul */
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
                 z-index: 10;
+            }
+
+            /* Estado Atrasado: Vermelho Pulsante no Hover */
+            .item-row.atrasado:hover {
+                border-color: #ef4444 !important; /* Vermelho */
+                animation: pulse-red 1.5s infinite;
+            }
+            
+            /* Visual indication for delayed items (optional) */
+            .item-row.atrasado {
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+
+            @keyframes pulse-red {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+                }
+                70% {
+                    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+                }
             }
             
             /* Time Section */
@@ -345,7 +369,11 @@
                 <p>Clique em "Nova OS" para registrar um serviço.</p>
             </div>
 
-            <div th:each="servico : ${servicos}" class="item-row">
+            <div th:each="servico : ${servicos}" class="item-row"
+                 th:data-inicio="${#temporals.format(servico.dataInicio, 'yyyy-MM-dd''T''HH:mm:ss')}"
+                 th:data-conclusao="${servico.dataConclusao != null ? #temporals.format(servico.dataConclusao, 'yyyy-MM-dd''T''HH:mm:ss') : ''}"
+                 th:data-tempo-estimado="${servico.servico != null ? servico.servico.tempoMinutos : 0}"
+                 th:data-status="${servico.status.name()}">
                 <!-- Time -->
                 <div class="item-time">
                     <span class="time" th:text="${#temporals.format(servico.dataCriacao, 'HH:mm')}">10:00</span>
@@ -368,7 +396,13 @@
                 <!-- Services -->
                 <div class="item-services">
                     <div class="service-label">SERVIÇO</div>
-                    <div class="service-text text-truncate" th:text="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}">Lavagem Completa</div>
+                    <div class="service-text text-truncate">
+                        <span th:text="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}">Lavagem Completa</span>
+                        <span class="text-warning ms-1" th:if="${servico.servico != null}" style="font-size: 11px;">
+                             <i class="fa-regular fa-clock"></i>
+                             <span th:text="${servico.servico.tempoMinutos} + 'm'">30m</span>
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Execution Time (New) -->
@@ -430,5 +464,64 @@
         </div>
 
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function atualizarStatusTempo() {
+                const now = new Date();
+                const items = document.querySelectorAll('.item-row');
+                
+                items.forEach(item => {
+                    const status = item.getAttribute('data-status');
+                    
+                    // Se não for EM_ANDAMENTO nem CONCLUIDO, reseta estilos de tempo e sai
+                    if (status !== 'EM_ANDAMENTO' && status !== 'CONCLUIDO') {
+                        item.classList.remove('atrasado', 'em-prazo');
+                        return;
+                    }
+                    
+                    const dataInicioStr = item.getAttribute('data-inicio');
+                    const tempoEstimado = parseInt(item.getAttribute('data-tempo-estimado') || 0);
+                    
+                    if (!dataInicioStr || tempoEstimado <= 0) {
+                         item.classList.add('em-prazo'); 
+                         item.classList.remove('atrasado');
+                         return;
+                    }
+                    
+                    const dataInicio = new Date(dataInicioStr);
+                    let diffMs = 0;
+                    
+                    if (status === 'CONCLUIDO') {
+                        const dataConclusaoStr = item.getAttribute('data-conclusao');
+                        if (dataConclusaoStr) {
+                            const dataConclusao = new Date(dataConclusaoStr);
+                            diffMs = dataConclusao - dataInicio;
+                        } else {
+                            // Fallback se por acaso não tiver data de conclusão
+                            diffMs = now - dataInicio;
+                        }
+                    } else {
+                        // EM_ANDAMENTO
+                        diffMs = now - dataInicio;
+                    }
+                    
+                    const diffMinutes = diffMs / (1000 * 60);
+                    
+                    if (diffMinutes > tempoEstimado) {
+                        item.classList.add('atrasado');
+                        item.classList.remove('em-prazo');
+                    } else {
+                        item.classList.add('em-prazo');
+                        item.classList.remove('atrasado');
+                    }
+                });
+            }
+            
+            // Atualiza imediatamente e a cada 30 segundos
+            atualizarStatusTempo();
+            setInterval(atualizarStatusTempo, 30000);
+        });
+    </script>
 </body>
 </html>

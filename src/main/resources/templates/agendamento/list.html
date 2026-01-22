@@ -3,6 +3,88 @@
       th:replace="~{layout :: layout(~{::div})}">
 <body>
     <div>
+        <style>
+            /* Layout & Common */
+            .list-container {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            /* Item Row - Floating Style */
+            .item-row {
+                background: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                padding: 15px 25px;
+                display: grid;
+                grid-template-columns: 80px 2fr 1.5fr 1.5fr 1fr 140px;
+                align-items: center;
+                gap: 20px;
+                transition: all 0.2s ease;
+                position: relative;
+            }
+            
+            /* Hover Effect (Blue Border) */
+            .item-row:hover {
+                transform: translateY(-2px);
+                border-color: #38bdf8 !important; /* Azul */
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+                z-index: 10;
+            }
+            
+            /* Time Section */
+            .item-time {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                border-right: 1px solid rgba(255,255,255,0.05);
+                padding-right: 20px;
+            }
+            
+            .item-time .time { font-size: 18px; font-weight: 700; color: white; }
+            .item-time .date { font-size: 12px; color: var(--text-secondary); }
+            
+            /* Main Info (Vehicle/Client) */
+            .item-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+            
+            .vehicle-icon-wrapper {
+                width: 45px; height: 45px;
+                background: rgba(56, 189, 248, 0.1);
+                border-radius: 12px;
+                display: flex; align-items: center; justify-content: center;
+                color: #38bdf8; font-size: 18px;
+            }
+            
+            .info-content { min-width: 0; }
+            .primary-text { font-weight: 600; color: white; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .secondary-text { font-size: 13px; color: var(--text-secondary); display: flex; gap: 8px; align-items: center; }
+            .plate-badge { background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 4px; font-family: monospace; letter-spacing: 0.5px; }
+
+            /* Services */
+            .item-services { min-width: 0; }
+            .service-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 4px; }
+            .service-text { color: #e2e8f0; font-size: 14px; }
+
+            /* Status */
+            .item-status { display: flex; justify-content: center; }
+            .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+            
+            .status-blue { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2); }
+            .status-orange { background: rgba(249, 115, 22, 0.1); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.2); }
+            .status-green { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+            .status-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+            /* End Section */
+            .item-end { display: flex; align-items: center; justify-content: flex-end; gap: 20px; }
+            .price-tag { font-weight: 700; color: #fff; font-size: 16px; }
+            
+            .btn-action-trigger {
+                width: 36px; height: 36px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary);
+                transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+            }
+            .btn-action-trigger:hover, .dropdown.show .btn-action-trigger { background: rgba(255, 255, 255, 0.05); color: white; }
+        </style>
         <!-- Header Section -->
         <header class="mb-4 d-flex justify-content-between align-items-end">
             <div>
