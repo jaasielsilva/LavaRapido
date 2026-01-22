@@ -85,8 +85,8 @@ public class AgendamentoController {
         // Validação Manual básica se necessário (pois o BindingResult pode ter erros no campo 'veiculo' que era nulo antes)
         if (agendamento.getVeiculo() == null) {
              // Se ainda for nulo, é erro
-             redirectAttributes.addFlashAttribute("erro", "Veículo é obrigatório.");
-             return "redirect:/agendamentos/novo";
+             redirectAttributes.addFlashAttribute("agendamentoErro", "Veículo é obrigatório.");
+             return (agendamento.getId() != null) ? "redirect:/agendamentos/editar/" + agendamento.getId() : "redirect:/agendamentos/novo";
         }
 
         if (servicoId != null) {
@@ -97,10 +97,12 @@ public class AgendamentoController {
         }
         
         try {
+            boolean isNovo = agendamento.getId() == null;
             agendamentoService.salvar(agendamento);
+            redirectAttributes.addFlashAttribute("agendamentoSucesso", isNovo ? "criado" : "atualizado");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao salvar agendamento: " + e.getMessage());
-            return "redirect:/agendamentos/novo";
+            redirectAttributes.addFlashAttribute("agendamentoErro", "Erro ao salvar agendamento: " + e.getMessage());
+            return (agendamento.getId() != null) ? "redirect:/agendamentos/editar/" + agendamento.getId() : "redirect:/agendamentos/novo";
         }
         
         return "redirect:/agendamentos";

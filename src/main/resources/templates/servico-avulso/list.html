@@ -17,9 +17,10 @@
                 border: 1px solid #1e293b;
                 border-radius: 16px;
                 padding: 15px 25px;
-                display: flex;
+                display: grid;
+                grid-template-columns: 80px 2fr 1.5fr 1.5fr 1fr 140px;
                 align-items: center;
-                gap: 30px;
+                gap: 20px;
                 transition: all 0.2s ease;
                 position: relative;
             }
@@ -36,7 +37,6 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                min-width: 60px;
                 border-right: 1px solid rgba(255,255,255,0.05);
                 padding-right: 20px;
             }
@@ -57,7 +57,7 @@
                 display: flex;
                 align-items: center;
                 gap: 15px;
-                flex: 2;
+                min-width: 0;
             }
             
             .vehicle-icon-wrapper {
@@ -97,7 +97,6 @@
             
             /* Services Section */
             .item-services {
-                flex: 2;
                 min-width: 0;
             }
             
@@ -242,9 +241,9 @@
                 <h1>Abrir OS</h1>
                 <div class="subtitle">Gestão de serviços avulsos (Balcão)</div>
             </div>
-            <button class="btn btn-primary d-flex align-items-center gap-2 px-4" data-bs-toggle="modal" data-bs-target="#modalNovoServico">
+            <a th:href="@{/servicos-avulsos/novo}" class="btn btn-primary d-flex align-items-center gap-2 px-4">
                 <i class="fa-solid fa-plus"></i> Nova OS
-            </button>
+            </a>
         </header>
 
         <!-- Feedback -->
@@ -256,6 +255,37 @@
             Ordem de Serviço registrada com sucesso.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        
+        <!-- Script para abrir WhatsApp ao concluir -->
+        <script th:if="${conclusaoServicoId != null}" th:inline="javascript">
+            document.addEventListener("DOMContentLoaded", function() {
+                // Encontrar o link do WhatsApp para o serviço concluído
+                var link = "https://wa.me/?text="; // Fallback
+                
+                /*[# th:each="s : ${servicos}"]*/
+                /*[# th:if="${s.id == conclusaoServicoId}"]*/
+                    link = /*[[${s.linkWhatsapp}]]*/ '';
+                /*[/]*/
+                /*[/]*/
+                
+                Swal.fire({
+                    title: 'Serviço Concluído!',
+                    text: 'Deseja enviar o comprovante via WhatsApp?',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: '#25D366',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: '<i class="fa-brands fa-whatsapp"></i> Enviar Agora',
+                    cancelButtonText: 'Não, obrigado',
+                    background: '#0f1623',
+                    color: '#fff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open(link, '_blank');
+                    }
+                });
+            });
+        </script>
 
         <!-- Summary Cards (Premium Style) -->
         <div class="cards mb-5">
@@ -341,6 +371,27 @@
                     <div class="service-text text-truncate" th:text="${servico.servico != null ? servico.servico.nome : servico.nomeServicoHistorico}">Lavagem Completa</div>
                 </div>
 
+                <!-- Execution Time (New) -->
+                <div class="item-execution" style="min-width: 0;">
+                    <div th:if="${servico.dataInicio != null}">
+                        <div class="service-label">INÍCIO</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-white fw-bold" th:text="${#temporals.format(servico.dataInicio, 'HH:mm')}">10:00</span>
+                            <span class="badge bg-dark border border-secondary text-secondary" 
+                                  th:if="${servico.dataConclusao != null}" 
+                                  th:title="'Duração Total'"
+                                  style="font-size: 10px;">
+                                <i class="fa-solid fa-stopwatch me-1"></i>
+                                <span th:text="${servico.duracaoFormatada}">45m</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div th:if="${servico.dataInicio == null}">
+                        <div class="service-label">AGUARDANDO</div>
+                        <span class="text-secondary small">-</span>
+                    </div>
+                </div>
+
                 <!-- Status Badge -->
                 <div class="item-status">
                     <span class="badge-status" 
@@ -375,90 +426,6 @@
             </div>
         </div>
 
-        <!-- MODAL NOVO SERVIÇO -->
-        <div class="modal fade" id="modalNovoServico" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="background-color: #0f1623; border: 1px solid #1e293b; color: white;">
-                    <div class="modal-header border-secondary">
-                        <h5 class="modal-title fw-bold">Registrar Nova OS</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form th:action="@{/servicos-avulsos/salvar}" th:object="${novoServico}" method="post">
-                        <div class="modal-body">
-                            
-                            <!-- Tabs Cliente -->
-                            <ul class="nav nav-pills nav-fill mb-3 gap-2 p-1 bg-dark rounded" id="pills-tab" role="tablist" style="border: 1px solid #334155;">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active rounded py-2" id="pills-cadastrado-tab" data-bs-toggle="pill" data-bs-target="#pills-cadastrado" type="button" role="tab" aria-selected="true">Cliente Cadastrado</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded py-2" id="pills-avulso-tab" data-bs-toggle="pill" data-bs-target="#pills-avulso" type="button" role="tab" aria-selected="false">Cliente Avulso</button>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content mb-4" id="pills-tabContent">
-                                <!-- Cliente Cadastrado -->
-                                <div class="tab-pane fade show active" id="pills-cadastrado" role="tabpanel">
-                                    <label class="form-label text-light fw-bold">Cliente</label>
-                                    <select class="form-select bg-dark text-light border-secondary" th:field="*{cliente}">
-                                        <option value="">Selecione um cliente...</option>
-                                        <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}">Carlos Silva</option>
-                                    </select>
-                                </div>
-                                <!-- Cliente Avulso -->
-                                <div class="tab-pane fade" id="pills-avulso" role="tabpanel">
-                                    <div class="mb-3">
-                                        <label class="form-label text-light fw-bold">Nome do Cliente</label>
-                                        <input type="text" class="form-control bg-dark text-light border-secondary" th:field="*{clienteAvulsoNome}" placeholder="Ex: Cliente Balcão">
-                                    </div>
-                                    <div>
-                                        <label class="form-label text-light fw-bold">Veículo (Modelo - Placa)</label>
-                                        <input type="text" class="form-control bg-dark text-light border-secondary" th:field="*{clienteAvulsoVeiculo}" placeholder="Ex: Fiat Argo - XYZ-9999">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Lista de Serviços (Radio) - Estilo Premium -->
-                            <label class="form-label text-light fw-bold mb-3">Selecione o Serviço</label>
-                            <div class="d-flex flex-column gap-3" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
-                                <div th:each="servico : ${catalogoServicos}" class="position-relative service-option-container">
-                                    <input type="radio" class="btn-check" name="servico" th:id="'servico-' + ${servico.id}" th:value="${servico.id}" required autocomplete="off">
-                                    <label class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center p-3 text-start service-option-card" th:for="'servico-' + ${servico.id}">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="service-icon-box" 
-                                                 th:classappend="'bg-soft-' + ${servico.categoria.cor}">
-                                                <i class="fa-solid" 
-                                                   th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-white fs-6 mb-1" th:text="${servico.nome}">Lavagem Completa</div>
-                                                <div class="small text-muted d-flex align-items-center gap-2">
-                                                    <span><i class="fa-regular fa-clock me-1"></i><span th:text="${servico.tempoMinutos} + ' min'">60 min</span></span>
-                                                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="font-size: 10px;" th:text="${servico.categoria.descricao}">Lavagem</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="fw-bold text-info fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 0, 'COMMA')}">R$ 70</div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mt-3" sec:authorize="hasAnyRole('MASTER','ADMIN')">
-                                <label class="form-label text-light fw-bold">Valor Personalizado (Opcional)</label>
-                                <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" th:field="*{valor}" placeholder="Deixe em branco para usar o preço do catálogo">
-                                <div class="form-text text-muted">Se preenchido, substitui o preço padrão do serviço.</div>
-                            </div>
-
-                        </div>
-                        <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
-                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-lg hover-scale">
-                                <i class="fa-solid fa-check me-2"></i>Registrar OS
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 </html>

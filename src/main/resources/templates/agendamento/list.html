@@ -49,7 +49,7 @@
             <div class="card green">
                 <div class="card-info">
                     <div>
-                        <h4>FATURAMENTO (EST.)</h4>
+                        <h4>FATURAMENTO  PREVISTO HOJE</h4>
                         <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo.faturamentoHoje, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
                     </div>
                     <div class="stat">
@@ -204,6 +204,43 @@
         
         <script th:inline="javascript">
         /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function() {
+                var agendamentoSucesso = /*[[${agendamentoSucesso}]]*/ null;
+                var agendamentoErro = /*[[${agendamentoErro}]]*/ null;
+
+                if (agendamentoSucesso) {
+                    let msg;
+                    if (agendamentoSucesso === 'criado') {
+                        msg = 'Agendamento criado com sucesso.';
+                    } else if (agendamentoSucesso === 'atualizado') {
+                        msg = 'Agendamento atualizado com sucesso.';
+                    } else if (agendamentoSucesso === 'excluido') {
+                        msg = 'Agendamento excluído com sucesso.';
+                    }
+                    if (msg) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: msg,
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            background: '#0f1623',
+                            color: '#fff'
+                        });
+                    }
+                }
+
+                if (agendamentoErro) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: agendamentoErro,
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                        background: '#0f1623',
+                        color: '#fff'
+                    });
+                }
+            });
+
             function confirmarExclusaoAgendamento(id) {
                 Swal.fire({
                     title: 'Excluir?',

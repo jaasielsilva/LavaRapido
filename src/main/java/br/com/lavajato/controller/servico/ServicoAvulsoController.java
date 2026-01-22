@@ -1,15 +1,19 @@
 package br.com.lavajato.controller.servico;
 
 import br.com.lavajato.model.servico.ServicoAvulso;
+import br.com.lavajato.model.servico.Servico;
 import br.com.lavajato.model.servico.StatusServico;
 import br.com.lavajato.service.servico.ServicoCatalogoService;
 import br.com.lavajato.service.servico.ServicoAvulsoService;
 import br.com.lavajato.service.cliente.ClienteService;
+import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/servicos-avulsos")
@@ -24,8 +28,22 @@ public class ServicoAvulsoController {
     @Autowired
     private ServicoCatalogoService catalogoService;
 
+    @Autowired
+    private UsuarioService usuarioService;
+
     @GetMapping
     public String listar(Model model) {
+        // Inicializar serviços padrão se vazio (Fallback)
+        var servicosAtivos = catalogoService.listarAtivos();
+        if (servicosAtivos.isEmpty()) {
+            try {
+                catalogoService.inicializarServicosPadrao(usuarioService.getUsuarioLogado().getEmpresa());
+                servicosAtivos = catalogoService.listarAtivos();
+            } catch (Exception e) {
+                // Log error silently or handle
+            }
+        }
+
         // Métricas
         model.addAttribute("emFila", servicoService.contarEmFila());
         model.addAttribute("concluidosHoje", servicoService.contarConcluidosHoje());
@@ -36,10 +54,28 @@ public class ServicoAvulsoController {
         
         // Para o Modal
         model.addAttribute("novoServico", new ServicoAvulso());
-        model.addAttribute("clientes", clienteService.listarTodos());
-        model.addAttribute("catalogoServicos", catalogoService.listarAtivos()); // Carrega do banco
+        // Clientes carregados via AJAX (Select2)
+        model.addAttribute("catalogoServicos", servicosAtivos);
 
         return "servico-avulso/list";
+    }
+
+    @GetMapping("/novo")
+    public String novo(Model model) {
+        // Inicializar serviços padrão se vazio (Fallback)
+        var servicosAtivos = catalogoService.listarAtivos();
+        if (servicosAtivos.isEmpty()) {
+            try {
+                catalogoService.inicializarServicosPadrao(usuarioService.getUsuarioLogado().getEmpresa());
+                servicosAtivos = catalogoService.listarAtivos();
+            } catch (Exception e) {
+                // Log error silently
+            }
+        }
+
+        model.addAttribute("novoServico", new ServicoAvulso());
+        model.addAttribute("catalogoServicos", servicosAtivos);
+        return "servico-avulso/form";
     }
 
     @PostMapping("/salvar")
@@ -69,8 +105,11 @@ public class ServicoAvulsoController {
     }
 
     @GetMapping("/status/{id}/{status}")
-    public String alterarStatus(@PathVariable Long id, @PathVariable StatusServico status) {
+    public String alterarStatus(@PathVariable Long id, @PathVariable StatusServico status, RedirectAttributes redirectAttributes) {
         servicoService.alterarStatus(id, status);
+        if (status == StatusServico.CONCLUIDO) {
+            redirectAttributes.addFlashAttribute("conclusaoServicoId", id);
+        }
         return "redirect:/servicos-avulsos";
     }
 }

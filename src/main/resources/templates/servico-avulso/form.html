@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <!-- Dependencies -->
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        
+        <style>
+            .form-section-card {
+                background: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                padding: 24px;
+                height: 100%;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: white;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .section-title i {
+                color: #38bdf8;
+            }
+
+            /* Service Cards Grid */
+            .services-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 16px;
+                max-height: 500px;
+                overflow-y: auto;
+                padding-right: 5px;
+            }
+
+            .service-radio-card {
+                position: relative;
+                cursor: pointer;
+            }
+
+            .service-radio-card input {
+                position: absolute;
+                opacity: 0;
+            }
+
+            .service-card-content {
+                background: #1e293b;
+                border: 2px solid transparent;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                transition: all 0.2s;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .service-radio-card input:checked + .service-card-content {
+                background: rgba(14, 165, 233, 0.1);
+                border-color: #38bdf8;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.2);
+            }
+            
+            .service-radio-card:hover .service-card-content {
+                border-color: #334155;
+            }
+
+            .service-icon-lg {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            /* Custom Scrollbar */
+            .services-grid::-webkit-scrollbar {
+                width: 6px;
+            }
+            .services-grid::-webkit-scrollbar-track {
+                background: #0f1623;
+            }
+            .services-grid::-webkit-scrollbar-thumb {
+                background: #334155;
+                border-radius: 10px;
+            }
+
+            /* Client Search */
+            .search-result-item {
+                background: #1e293b;
+                border-bottom: 1px solid #334155;
+                padding: 12px 16px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .search-result-item:hover {
+                background: #334155;
+            }
+            .search-result-item:last-child {
+                border-bottom: none;
+            }
+            
+            /* Toggle Tabs */
+            .toggle-tabs {
+                background: #0f1623;
+                border: 1px solid #334155;
+                border-radius: 50rem;
+                padding: 4px;
+                display: inline-flex;
+                gap: 4px;
+                margin-bottom: 20px;
+            }
+            .toggle-tab-btn {
+                border: none;
+                background: transparent;
+                color: #94a3b8;
+                padding: 8px 20px;
+                border-radius: 50rem;
+                font-size: 0.9rem;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+            .toggle-tab-btn.active {
+                background: #38bdf8;
+                color: #0f1623;
+                box-shadow: 0 4px 6px -1px rgba(56, 189, 248, 0.2);
+            }
+            .toggle-tab-btn:hover:not(.active) {
+                color: white;
+            }
+        </style>
+
+        <header class="mb-4 d-flex align-items-center gap-3">
+            <a th:href="@{/servicos-avulsos}" class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="mb-0">Nova Ordem de Serviço</h1>
+                <div class="text-secondary">Registrar entrada de veículo</div>
+            </div>
+        </header>
+
+        <form th:action="@{/servicos-avulsos/salvar}" th:object="${novoServico}" method="post" id="formNovaOS">
+            <div class="row g-4">
+                
+                <!-- Left Column: Client -->
+                <div class="col-lg-5">
+                    <div class="form-section-card">
+                        <div class="section-title">
+                            <i class="fa-solid fa-user-tag"></i>
+                            Identificação do Cliente
+                        </div>
+
+                        <!-- Toggle Tabs (Substituted the ugly switch) -->
+                        <div class="w-100 d-flex justify-content-center">
+                            <div class="toggle-tabs">
+                                <button type="button" class="toggle-tab-btn active" id="btnTabBuscar">
+                                    <i class="fa-solid fa-magnifying-glass me-2"></i>Buscar
+                                </button>
+                                <button type="button" class="toggle-tab-btn" id="btnTabAvulso">
+                                    <i class="fa-solid fa-pen-to-square me-2"></i>Avulso
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden Switch for Logic Compatibility -->
+                        <input type="checkbox" id="toggleAvulso" class="d-none">
+
+                        <!-- Search Section -->
+                        <div id="sectionBuscaCliente">
+                            <label class="form-label text-muted small uppercase fw-bold">Buscar Cliente</label>
+                            <div class="position-relative">
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <input type="text" id="inputBuscaCliente" class="form-control bg-dark text-light border-secondary" 
+                                           placeholder="Nome ou Placa..." autocomplete="off">
+                                </div>
+                                <!-- Results Dropdown -->
+                                <div id="listaResultados" class="position-absolute w-100 shadow-lg mt-1 rounded overflow-hidden" 
+                                     style="display:none; z-index: 100; max-height: 300px; overflow-y: auto; background: #1e293b; border: 1px solid #475569;">
+                                </div>
+                            </div>
+
+                            <!-- Selected Client Card -->
+                            <div id="clienteSelecionadoCard" class="mt-3 p-4 bg-soft-primary rounded-3 border border-primary d-none flex-column align-items-center text-center">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
+                                    <i class="fa-solid fa-user-check"></i>
+                                </div>
+                                <h4 class="fw-bold text-white mb-1" id="selectedClienteNome">Nome do Cliente</h4>
+                                <div class="text-info mb-3" id="selectedClienteVeiculo">Veículo - Placa</div>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" id="btnRemoverCliente">
+                                    <i class="fa-solid fa-times me-2"></i>Trocar Cliente
+                                </button>
+                            </div>
+                            
+                            <!-- Hidden Field -->
+                            <input type="hidden" id="clienteIdHidden" th:field="*{cliente}">
+                        </div>
+
+                        <!-- Avulso Fields -->
+                        <div id="sectionClienteAvulso" class="d-none">
+                            <div class="alert alert-dark border-secondary d-flex align-items-center gap-3 mb-4">
+                                <i class="fa-solid fa-info-circle text-info"></i>
+                                <div class="small text-muted">Preencha os dados abaixo para clientes eventuais que não possuem cadastro.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Nome do Cliente</label>
+                                <input type="text" class="form-control form-control-lg bg-dark text-light border-secondary" 
+                                       th:field="*{clienteAvulsoNome}" placeholder="Ex: Cliente Balcão">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Veículo (Modelo - Placa)</label>
+                                <input type="text" class="form-control form-control-lg bg-dark text-light border-secondary" 
+                                       th:field="*{clienteAvulsoVeiculo}" placeholder="Ex: Fiat Argo - XYZ-9999">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Services & Payment -->
+                <div class="col-lg-7">
+                    <div class="form-section-card d-flex flex-column">
+                        <div class="section-title">
+                            <i class="fa-solid fa-list-check"></i>
+                            Selecione o Serviço
+                        </div>
+
+                        <!-- Services Grid -->
+                        <div class="flex-grow-1 mb-4">
+                            <div th:if="${catalogoServicos.empty}" class="alert alert-warning d-flex align-items-center gap-3 p-4">
+                                <i class="fa-solid fa-triangle-exclamation fs-3"></i>
+                                <div>
+                                    <h5 class="alert-heading fw-bold mb-1">Catálogo Vazio</h5>
+                                    <p class="mb-0">Cadastre serviços no menu "Serviços > Catálogo" para continuar.</p>
+                                </div>
+                            </div>
+
+                            <div th:unless="${catalogoServicos.empty}" class="services-grid">
+                                <label th:each="servico : ${catalogoServicos}" class="service-radio-card">
+                                    <input type="radio" name="servico" th:value="${servico.id}" required>
+                                    <div class="service-card-content">
+                                        <div class="service-icon-lg" th:classappend="'bg-soft-' + ${servico.categoria.cor}">
+                                            <i class="fa-solid" th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
+                                        </div>
+                                        <div class="fw-bold text-white" th:text="${servico.nome}">Lavagem</div>
+                                        <div class="small text-muted" th:text="${servico.tempoMinutos} + ' min'">30 min</div>
+                                        <div class="fw-bold text-success fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 0, 'COMMA')}">R$ 50</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Price Override -->
+                        <div class="pt-4 border-top border-secondary" sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-grow-1">
+                                    <label class="form-label text-muted small uppercase fw-bold mb-1">Valor Personalizado (Opcional)</label>
+                                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" 
+                                           th:field="*{valor}" placeholder="Preço do catálogo">
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale">
+                                        <i class="fa-solid fa-check me-2"></i>Registrar OS
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3" sec:authorize="!hasAnyRole('MASTER','ADMIN')">
+                             <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale w-100">
+                                <i class="fa-solid fa-check me-2"></i>Registrar OS
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <script>
+            $(document).ready(function() {
+                const $inputBusca = $('#inputBuscaCliente');
+                const $listaResultados = $('#listaResultados');
+                const $clienteIdHidden = $('#clienteIdHidden');
+                const $clienteSelecionadoCard = $('#clienteSelecionadoCard');
+                const $sectionBusca = $('#sectionBuscaCliente');
+                const $toggleAvulso = $('#toggleAvulso');
+                const $sectionAvulso = $('#sectionClienteAvulso');
+                const $selectedClienteNome = $('#selectedClienteNome');
+                const $selectedClienteVeiculo = $('#selectedClienteVeiculo');
+                
+                // Tabs Logic
+                $('#btnTabBuscar').click(function() {
+                    $(this).addClass('active');
+                    $('#btnTabAvulso').removeClass('active');
+                    $toggleAvulso.prop('checked', false).trigger('change');
+                });
+
+                $('#btnTabAvulso').click(function() {
+                    $(this).addClass('active');
+                    $('#btnTabBuscar').removeClass('active');
+                    $toggleAvulso.prop('checked', true).trigger('change');
+                });
+
+                // Debounce
+                function debounce(func, wait) {
+                    let timeout;
+                    return function(...args) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(this, args), wait);
+                    };
+                }
+
+                // Search Logic
+                $inputBusca.on('input', debounce(function() {
+                    const termo = $(this).val();
+                    if (termo.length < 2) {
+                        $listaResultados.hide();
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/clientes/api/buscar',
+                        data: { termo: termo },
+                        success: function(data) {
+                            $listaResultados.empty();
+                            if (data.length === 0) {
+                                $listaResultados.append('<div class="search-result-item text-muted">Nenhum cliente encontrado</div>');
+                            } else {
+                                data.forEach(cliente => {
+                                    const veiculoInfo = cliente.text.split(' - ')[1] || 'Sem veículo';
+                                    const item = $(`
+                                        <div class="search-result-item d-flex align-items-center gap-3">
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                <i class="fa-solid fa-user text-white small"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-light">${cliente.nome}</div>
+                                                <div class="small text-muted">${veiculoInfo}</div>
+                                            </div>
+                                        </div>
+                                    `);
+                                    
+                                    item.on('click', function() {
+                                        selecionarCliente(cliente, veiculoInfo);
+                                    });
+                                    
+                                    $listaResultados.append(item);
+                                });
+                            }
+                            $listaResultados.show();
+                        },
+                        error: function() { console.error("Erro na busca"); }
+                    });
+                }, 300));
+
+                function selecionarCliente(cliente, veiculoInfo) {
+                    $clienteIdHidden.val(cliente.id);
+                    $selectedClienteNome.text(cliente.nome);
+                    $selectedClienteVeiculo.text(veiculoInfo);
+                    
+                    $inputBusca.closest('.input-group').addClass('d-none');
+                    $clienteSelecionadoCard.removeClass('d-none').addClass('d-flex');
+                    $listaResultados.hide();
+                    $inputBusca.val('');
+                }
+
+                $('#btnRemoverCliente').on('click', function() {
+                    $clienteIdHidden.val('');
+                    $inputBusca.closest('.input-group').removeClass('d-none');
+                    $clienteSelecionadoCard.addClass('d-none').removeClass('d-flex');
+                    $inputBusca.focus();
+                });
+
+                // Toggle Avulso
+                $toggleAvulso.on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $sectionAvulso.removeClass('d-none');
+                        $sectionBusca.addClass('d-none');
+                        // Reset selection
+                        $clienteIdHidden.val('');
+                        $inputBusca.closest('.input-group').removeClass('d-none');
+                        $clienteSelecionadoCard.addClass('d-none').removeClass('d-flex');
+                    } else {
+                        $sectionAvulso.addClass('d-none');
+                        $sectionBusca.removeClass('d-none');
+                    }
+                });
+
+                // Close search on click outside
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('#sectionBuscaCliente').length) {
+                        $listaResultados.hide();
+                    }
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>

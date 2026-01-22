@@ -4,6 +4,12 @@ import br.com.lavajato.model.cliente.Cliente;
 import br.com.lavajato.model.cliente.Cliente;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.empresa.EmpresaService;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +50,21 @@ public class ClienteController {
         }
         
         return "cliente/list";
+    }
+
+    @GetMapping("/api/buscar")
+    @ResponseBody
+    public List<Map<String, Object>> buscarClientesAPI(@RequestParam String termo) {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Cliente> page = clienteService.listarPaginado(pageable, termo);
+        
+        return page.getContent().stream().map(c -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", c.getId());
+            map.put("text", c.getNome() + (c.getVeiculos().isEmpty() ? "" : " - " + c.getVeiculos().get(0).getPlaca())); // Formato para Select2
+            map.put("nome", c.getNome());
+            return map;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/novo")

@@ -62,8 +62,17 @@ public class ServicoAvulsoService {
         repository.findById(id).ifPresent(s -> {
             if (s.getEmpresa().getId().equals(usuario.getEmpresa().getId())) {
                 s.setStatus(novoStatus);
+                if (novoStatus == StatusServico.EM_ANDAMENTO && s.getDataInicio() == null) {
+                    s.setDataInicio(LocalDateTime.now());
+                }
                 if (novoStatus == StatusServico.CONCLUIDO) {
                     s.setDataConclusao(LocalDateTime.now());
+                    // Se não tiver dataInicio (ex: pulou de fila direto pra concluído), define como agora ou criação?
+                    // Melhor definir como agora ou criação pra não quebrar cálculo, mas ideal é ter fluxo.
+                    // Vamos assumir que se dataInicio for null, define igual a conclusao (duração 0) ou dataCriacao.
+                    if (s.getDataInicio() == null) {
+                        s.setDataInicio(s.getDataCriacao());
+                    }
                 }
                 repository.save(s);
             }

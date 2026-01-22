@@ -128,6 +128,18 @@
         <script th:inline="javascript">
         /*<![CDATA[*/
             document.addEventListener('DOMContentLoaded', function () {
+                var agendamentoErro = /*[[${agendamentoErro}]]*/ null;
+                if (agendamentoErro) {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: agendamentoErro,
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                        background: '#0f1623',
+                        color: '#fff'
+                    });
+                }
+
                 var servicoSelect = document.getElementById('servicoId');
                 var servicosInput = document.getElementById('servicos');
                 var valorHidden = document.getElementById('valor');
