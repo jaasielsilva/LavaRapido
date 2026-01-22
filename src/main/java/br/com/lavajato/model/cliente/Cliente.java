@@ -38,4 +38,7 @@ public class Cliente {
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean ativo = true;
+
+    @Column(nullable = false, columnDefinition = "INTEGER DEFAULT 0")
+    private Integer quantidadeLavagens = 0;
 }

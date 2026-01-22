@@ -38,4 +38,7 @@ public class Agendamento {
 
     @Column(columnDefinition = "TEXT")
     private String observacoes;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean usoFidelidade = false;
 }

@@ -49,7 +49,7 @@
             <div class="card green">
                 <div class="card-info">
                     <h4>Valor em Estoque</h4>
-                    <span class="number" th:text="'R$ ' + ${#numbers.formatDecimal(valorEstoque, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                    <span class="number" th:text="'R$ ' + ${#numbers.formatDecimal(valorEstoque != null ? valorEstoque : 0, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
                 </div>
                 <div class="icon-box">
                     <i class="fa-solid fa-dollar-sign"></i>
@@ -115,7 +115,7 @@
                             </td>
                             <td class="py-3">
                                 <div class="d-flex flex-column">
-                                    <span class="fw-bold text-white" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                    <span class="fw-bold text-white" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda != null ? produto.precoVenda : 0, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
                                     <span class="text-secondary opacity-50" style="font-size: 0.75rem;" th:if="${produto.precoCusto != null}" th:text="'Custo: R$ ' + ${#numbers.formatDecimal(produto.precoCusto, 0, 'POINT', 2, 'COMMA')}"></span>
                                 </div>
                             </td>

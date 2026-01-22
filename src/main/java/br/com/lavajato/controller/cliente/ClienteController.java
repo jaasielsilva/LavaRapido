@@ -63,6 +63,7 @@ public class ClienteController {
             map.put("id", c.getId());
             map.put("text", c.getNome() + (c.getVeiculos().isEmpty() ? "" : " - " + c.getVeiculos().get(0).getPlaca())); // Formato para Select2
             map.put("nome", c.getNome());
+            map.put("quantidadeLavagens", c.getQuantidadeLavagens());
             return map;
         }).collect(Collectors.toList());
     }

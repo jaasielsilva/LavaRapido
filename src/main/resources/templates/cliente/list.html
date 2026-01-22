@@ -52,6 +52,12 @@
                             <div class="client-meta">
                                 Cliente desde <span
                                     th:text="${#temporals.format(cliente.dataCadastro, 'dd/MM/yyyy')}">Data</span>
+                                <div class="mt-1">
+                                    <span class="badge" th:classappend="${cliente.quantidadeLavagens != null and cliente.quantidadeLavagens >= 10 ? 'bg-success' : 'bg-info'}">
+                                        <i class="fa-solid fa-star"></i>
+                                        Fidelidade: <span th:text="${cliente.quantidadeLavagens != null ? cliente.quantidadeLavagens : 0}">0</span>/10
+                                    </span>
+                                </div>
                                 <div class="d-flex justify-content-end mt-2 gap-2">
                                     <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}"
                                         class="btn btn-sm btn-outline-light" title="Editar cliente">

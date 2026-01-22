@@ -239,6 +239,22 @@
                             Selecione o Serviço
                         </div>
 
+                        <!-- Loyalty Section -->
+                        <div id="divFidelidadeAvulso" class="mb-4 p-3 border border-success rounded bg-success bg-opacity-10" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-success fw-bold mb-1"><i class="fa-solid fa-gift me-2"></i>Fidelidade Disponível!</h6>
+                                    <small class="text-success-emphasis">Cliente possui <span id="spanPontosAvulso">0</span>/10 pontos</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="usoFidelidade" th:field="*{usoFidelidade}">
+                                    <label class="form-check-label text-light fw-bold" for="usoFidelidade">
+                                        Usar Grátis
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Services Grid -->
                         <div class="flex-grow-1 mb-4">
                             <div th:if="${catalogoServicos.empty}" class="alert alert-warning d-flex align-items-center gap-3 p-4">
@@ -301,6 +317,42 @@
                 const $sectionAvulso = $('#sectionClienteAvulso');
                 const $selectedClienteNome = $('#selectedClienteNome');
                 const $selectedClienteVeiculo = $('#selectedClienteVeiculo');
+                
+                // Fidelidade Logic
+                const $divFidelidade = $('#divFidelidadeAvulso');
+                const $spanPontos = $('#spanPontosAvulso');
+                const $checkFidelidade = $('#usoFidelidade');
+                const $valorInput = $('input[name="valor"]'); // This might target multiple if hidden exists? No, th:field="*{valor}" creates one input usually.
+                // Wait, there is a "valor" input in "Valor Personalizado".
+                
+                let valorAnterior = '';
+
+                function checkFidelidadeVisibility(pontos) {
+                    $spanPontos.text(pontos);
+                    if (pontos >= 10) {
+                        $divFidelidade.fadeIn();
+                    } else {
+                        $divFidelidade.hide();
+                        $checkFidelidade.prop('checked', false).trigger('change');
+                    }
+                }
+
+                $checkFidelidade.on('change', function() {
+                    if ($(this).is(':checked')) {
+                         valorAnterior = $valorInput.val();
+                         $valorInput.val('0.00').prop('readonly', true).addClass('text-muted');
+                         // Also update radio button visual if needed, but the radio selection stays.
+                    } else {
+                         $valorInput.prop('readonly', false).removeClass('text-muted');
+                         // Restore value from selected service or previous manual value
+                         const selectedServicePrice = $('input[name="servico"]:checked').data('preco');
+                         if (selectedServicePrice) {
+                             $valorInput.val(selectedServicePrice);
+                         } else if (valorAnterior) {
+                             $valorInput.val(valorAnterior);
+                         }
+                    }
+                });
                 
                 // Tabs Logic
                 $('#btnTabBuscar').click(function() {
@@ -372,6 +424,8 @@
                     $selectedClienteNome.text(cliente.nome);
                     $selectedClienteVeiculo.text(veiculoInfo);
                     
+                    checkFidelidadeVisibility(cliente.quantidadeLavagens || 0);
+                    
                     $inputBusca.closest('.input-group').addClass('d-none');
                     $clienteSelecionadoCard.removeClass('d-none').addClass('d-flex');
                     $listaResultados.hide();
@@ -380,6 +434,7 @@
 
                 $('#btnRemoverCliente').on('click', function() {
                     $clienteIdHidden.val('');
+                    checkFidelidadeVisibility(0);
                     $inputBusca.closest('.input-group').removeClass('d-none');
                     $clienteSelecionadoCard.addClass('d-none').removeClass('d-flex');
                     $inputBusca.focus();

@@ -209,7 +209,7 @@
                                     <span th:text="${#temporals.format(ag.data, 'dd/MM/yyyy')}">Data</span>
                                     <span th:text="${#temporals.format(ag.data, 'HH:mm')}">Hora</span>
                                 </div>
-                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(ag.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(ag.valor != null ? ag.valor : 0, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
                             </div>
                         </div>
                     </div>

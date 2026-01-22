@@ -201,7 +201,15 @@
     }
 
     function marcarComoLida(id) {
-        fetch('/api/notificacoes/' + id + '/ler', { method: 'POST' })
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        
+        fetch('/api/notificacoes/' + id + '/ler', { 
+            method: 'POST',
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        })
             .catch(err => console.error('Erro ao marcar notificação como lida', err));
     }
 </script>

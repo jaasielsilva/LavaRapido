@@ -58,6 +58,9 @@ public class ServicoAvulso {
     // Cliente Avulso (Opcional)
     private String clienteAvulsoNome;
     private String clienteAvulsoVeiculo; // Modelo - Placa
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean usoFidelidade = false;
     
     public String getNomeClienteDisplay() {
         if (cliente != null) {

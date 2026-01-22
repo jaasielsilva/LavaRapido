@@ -50,7 +50,7 @@
                 <div class="card-info">
                     <div>
                         <h4>FATURAMENTO  PREVISTO HOJE</h4>
-                        <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo.faturamentoHoje, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
+                        <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo.faturamentoHoje != null ? resumo.faturamentoHoje : 0, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
                     </div>
                     <div class="stat">
                         <span class="up"><i class="fa-solid fa-arrow-trend-up"></i> Hoje</span>
@@ -152,7 +152,7 @@
 
                 <!-- Price & Actions -->
                 <div class="item-end">
-                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(agendamento.valor, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
+                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(agendamento.valor != null ? agendamento.valor : 0, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
                     
                     <div class="dropdown">
                         <button class="btn-action-trigger" type="button" data-bs-toggle="dropdown">

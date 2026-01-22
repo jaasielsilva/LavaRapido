@@ -61,12 +61,12 @@ public class FinanceiroService {
         List<LancamentoFinanceiro> lancamentos = lancamentoRepository.findByEmpresaAndDataBetween(empresa, dataInicio, dataFim);
 
         // 1. Receita Total
-        BigDecimal receitaVendas = vendas.stream().map(Venda::getValorTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal receitaServicos = servicos.stream().map(ServicoAvulso::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal receitaAgendamentos = agendamentos.stream().map(Agendamento::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal receitaVendas = vendas.stream().map(v -> v.getValorTotal() != null ? v.getValorTotal() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal receitaServicos = servicos.stream().map(s -> s.getValor() != null ? s.getValor() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal receitaAgendamentos = agendamentos.stream().map(a -> a.getValor() != null ? a.getValor() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal receitasExtras = considerarEntradas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
-                .map(LancamentoFinanceiro::getValor)
+                .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
         
         BigDecimal receitaTotal = receitaVendas.add(receitaServicos).add(receitaAgendamentos).add(receitasExtras);
@@ -82,7 +82,7 @@ public class FinanceiroService {
 
         BigDecimal despesasOperacionais = considerarSaidas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
-                .map(LancamentoFinanceiro::getValor)
+                .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
         // 3. Lucro Líquido

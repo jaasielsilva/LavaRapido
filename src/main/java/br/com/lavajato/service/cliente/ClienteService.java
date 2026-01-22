@@ -90,4 +90,18 @@ public class ClienteService {
     public long contarPorEmpresa(Empresa empresa) {
         return clienteRepository.countByEmpresaAndAtivoTrue(empresa);
     }
+
+    public void incrementarFidelidade(Cliente cliente) {
+        if (cliente != null) {
+            cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() + 1);
+            clienteRepository.save(cliente);
+        }
+    }
+
+    public void resgatarFidelidade(Cliente cliente) {
+        if (cliente != null && cliente.getQuantidadeLavagens() >= 10) {
+            cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() - 10);
+            clienteRepository.save(cliente);
+        }
+    }
 }

@@ -5,6 +5,7 @@ import br.com.lavajato.model.servico.ServicoAvulso;
 import br.com.lavajato.model.servico.StatusServico;
 import br.com.lavajato.model.usuario.Usuario;
 import br.com.lavajato.repository.servico.ServicoAvulsoRepository;
+import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class ServicoAvulsoService {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private ClienteService clienteService;
+
     public List<ServicoAvulso> listarTodos() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         return repository.findAllByEmpresaOrderByDataCriacaoDesc(usuario.getEmpresa());
@@ -44,6 +48,24 @@ public class ServicoAvulsoService {
             servicoAvulso.setValor(servicoAvulso.getServico().getPreco());
         }
         
+        // Lógica de Fidelidade (Resgate)
+        if (Boolean.TRUE.equals(servicoAvulso.getUsoFidelidade())) {
+            servicoAvulso.setValor(BigDecimal.ZERO);
+            
+            if (servicoAvulso.getId() == null) {
+                if (servicoAvulso.getCliente() != null) {
+                    clienteService.resgatarFidelidade(servicoAvulso.getCliente());
+                }
+            } else {
+                java.util.Optional<ServicoAvulso> anterior = repository.findById(servicoAvulso.getId());
+                if (anterior.isPresent() && !Boolean.TRUE.equals(anterior.get().getUsoFidelidade())) {
+                    if (servicoAvulso.getCliente() != null) {
+                        clienteService.resgatarFidelidade(servicoAvulso.getCliente());
+                    }
+                }
+            }
+        }
+        
         // Define preço e nome baseados no serviço do catálogo, se não vierem
         if (servicoAvulso.getServico() != null) {
             if (servicoAvulso.getValor() == null) {
@@ -61,6 +83,7 @@ public class ServicoAvulsoService {
         Usuario usuario = usuarioService.getUsuarioLogado();
         repository.findById(id).ifPresent(s -> {
             if (s.getEmpresa().getId().equals(usuario.getEmpresa().getId())) {
+                StatusServico statusAnterior = s.getStatus();
                 s.setStatus(novoStatus);
                 if (novoStatus == StatusServico.EM_ANDAMENTO && s.getDataInicio() == null) {
                     s.setDataInicio(LocalDateTime.now());
@@ -72,6 +95,13 @@ public class ServicoAvulsoService {
                     // Vamos assumir que se dataInicio for null, define igual a conclusao (duração 0) ou dataCriacao.
                     if (s.getDataInicio() == null) {
                         s.setDataInicio(s.getDataCriacao());
+                    }
+                    
+                    // Fidelidade Incremento
+                    if (statusAnterior != StatusServico.CONCLUIDO) {
+                         if (!Boolean.TRUE.equals(s.getUsoFidelidade()) && s.getCliente() != null) {
+                             clienteService.incrementarFidelidade(s.getCliente());
+                         }
                     }
                 }
                 repository.save(s);

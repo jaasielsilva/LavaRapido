@@ -6,12 +6,14 @@ import br.com.lavajato.model.empresa.Empresa;
 import br.com.lavajato.model.usuario.Perfil;
 import br.com.lavajato.model.usuario.Usuario;
 import br.com.lavajato.repository.agendamento.AgendamentoRepository;
+import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,6 +29,9 @@ public class AgendamentoService {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private ClienteService clienteService;
 
     public Page<Agendamento> filtrar(LocalDate dataInicio, LocalDate dataFim, StatusAgendamento status, String busca, Pageable pageable) {
         Usuario usuario = usuarioService.getUsuarioLogado();
@@ -73,6 +78,26 @@ public class AgendamentoService {
         // (Isso seria ideal validar também no VehicleService/Repository, mas aqui garantimos na criação)
         // Por simplificação, assumimos que o form só mostra veículos da empresa.
         
+        // Lógica de Fidelidade (Resgate)
+        if (Boolean.TRUE.equals(agendamento.getUsoFidelidade())) {
+            agendamento.setValor(BigDecimal.ZERO);
+            
+            if (agendamento.getId() == null) {
+                // Novo agendamento
+                if (agendamento.getVeiculo() != null && agendamento.getVeiculo().getCliente() != null) {
+                    clienteService.resgatarFidelidade(agendamento.getVeiculo().getCliente());
+                }
+            } else {
+                // Edição - verifica se já estava usando fidelidade para não descontar 2x
+                Optional<Agendamento> anterior = agendamentoRepository.findById(agendamento.getId());
+                if (anterior.isPresent() && !Boolean.TRUE.equals(anterior.get().getUsoFidelidade())) {
+                    if (agendamento.getVeiculo() != null && agendamento.getVeiculo().getCliente() != null) {
+                        clienteService.resgatarFidelidade(agendamento.getVeiculo().getCliente());
+                    }
+                }
+            }
+        }
+        
         return agendamentoRepository.save(agendamento);
     }
 
@@ -91,8 +116,18 @@ public class AgendamentoService {
 
     public void alterarStatus(Long id, StatusAgendamento novoStatus) {
         buscarPorId(id).ifPresent(agendamento -> {
+            StatusAgendamento statusAnterior = agendamento.getStatus();
             agendamento.setStatus(novoStatus);
             agendamentoRepository.save(agendamento);
+            
+            // Lógica de Fidelidade (Incremento)
+            if (novoStatus == StatusAgendamento.CONCLUIDO && statusAnterior != StatusAgendamento.CONCLUIDO) {
+                if (!Boolean.TRUE.equals(agendamento.getUsoFidelidade())) {
+                    if (agendamento.getVeiculo() != null && agendamento.getVeiculo().getCliente() != null) {
+                        clienteService.incrementarFidelidade(agendamento.getVeiculo().getCliente());
+                    }
+                }
+            }
         });
     }
 

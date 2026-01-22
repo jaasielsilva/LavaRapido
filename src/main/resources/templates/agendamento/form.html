@@ -28,7 +28,8 @@
                                 <option th:each="v : ${veiculos}" 
                                         th:value="${v.id}" 
                                         th:text="${v.modelo + ' - ' + v.placa + ' (' + v.cliente.nome + ')'}"
-                                        th:selected="${agendamento.veiculo != null && agendamento.veiculo.id == v.id}">
+                                        th:selected="${agendamento.veiculo != null && agendamento.veiculo.id == v.id}"
+                                        th:data-fidelidade-count="${v.cliente.quantidadeLavagens != null ? v.cliente.quantidadeLavagens : 0}">
                                     Civic - ABC-1234 (João)
                                 </option>
                             </select>
@@ -77,6 +78,19 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-4 mb-3" id="divFidelidade" style="display:none;">
+                        <label class="form-label text-success small fw-bold"><i class="fa-solid fa-gift me-1"></i>Fidelidade</label>
+                        <div class="p-2 border border-success rounded bg-success bg-opacity-10">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="usoFidelidade" th:field="*{usoFidelidade}">
+                                <label class="form-check-label text-light fw-bold" for="usoFidelidade">
+                                    Usar Lavagem Grátis
+                                </label>
+                            </div>
+                            <small class="text-success d-block mt-1">Cliente possui <span id="spanPontos">0</span>/10 pontos</small>
+                        </div>
+                    </div>
+
                     <div class="col-md-4 mb-3">
                         <label for="valorMascara" class="form-label text-light small fw-bold">Valor Total</label>
                         <input type="hidden" id="valor" th:field="*{valor}">
@@ -146,6 +160,79 @@
                 var valorMascara = document.getElementById('valorMascara');
                 var veiculoSelect = document.getElementById('veiculo');
                 var clienteInfo = document.getElementById('clienteInfo');
+                
+                // Fidelidade
+                var divFidelidade = document.getElementById('divFidelidade');
+                var checkFidelidade = document.getElementById('usoFidelidade');
+                var spanPontos = document.getElementById('spanPontos');
+                var valorAnterior = '';
+
+                function verificarFidelidade() {
+                    if (!veiculoSelect || !divFidelidade) return;
+                    
+                    var opt = veiculoSelect.options[veiculoSelect.selectedIndex];
+                    if (opt && opt.getAttribute('data-fidelidade-count')) {
+                        var pontos = parseInt(opt.getAttribute('data-fidelidade-count'));
+                        if (spanPontos) spanPontos.textContent = pontos;
+                        
+                        // Se já estiver marcado (edição), mostra independente dos pontos atuais (pois já descontou ou é visualização)
+                        // Mas aqui os pontos já foram descontados se foi salvo.
+                        // Se é edição e já está marcado, mostra.
+                        // Se é novo e tem >= 10, mostra.
+                        
+                        var isChecked = checkFidelidade.checked;
+                        
+                        if (pontos >= 10 || isChecked) {
+                            divFidelidade.style.display = 'block';
+                        } else {
+                            divFidelidade.style.display = 'none';
+                            checkFidelidade.checked = false; // Uncheck se mudar para veículo sem pontos
+                            toggleValorFidelidade(); // Restaura valor
+                        }
+                    } else {
+                        divFidelidade.style.display = 'none';
+                        if (checkFidelidade) checkFidelidade.checked = false;
+                    }
+                }
+
+                function toggleValorFidelidade() {
+                    if (!checkFidelidade || !valorMascara || !valorHidden) return;
+                    
+                    if (checkFidelidade.checked) {
+                        if (valorHidden.value && valorHidden.value !== '0.00') {
+                            valorAnterior = valorHidden.value;
+                        }
+                        valorHidden.value = '0.00';
+                        valorMascara.value = '0,00';
+                        valorMascara.readOnly = true;
+                        valorMascara.classList.add('text-muted');
+                    } else {
+                        valorMascara.readOnly = false;
+                        valorMascara.classList.remove('text-muted');
+                        if (valorAnterior) {
+                            valorHidden.value = valorAnterior;
+                            valorMascara.value = formatarMoeda(parseFloat(valorAnterior));
+                        }
+                    }
+                }
+
+                if (veiculoSelect) {
+                    veiculoSelect.addEventListener('change', function() {
+                        atualizarCliente(); // Existing function
+                        verificarFidelidade();
+                    });
+                    // Verifica ao carregar
+                    verificarFidelidade();
+                }
+                
+                if (checkFidelidade) {
+                    checkFidelidade.addEventListener('change', toggleValorFidelidade);
+                    // Aplica estado inicial
+                    if (checkFidelidade.checked) {
+                        valorMascara.readOnly = true;
+                        valorMascara.classList.add('text-muted');
+                    }
+                }
 
                 function formatarMoeda(valorNumerico) {
                     if (isNaN(valorNumerico)) {
