@@ -61,6 +61,12 @@ public class ServicoAvulso {
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean usoFidelidade = false;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean notificacaoFilaEnviada = false;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean notificacaoAtrasoEnviada = false;
     
     public String getNomeClienteDisplay() {
         if (cliente != null) {

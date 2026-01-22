@@ -521,7 +521,33 @@
             // Atualiza imediatamente e a cada 30 segundos
             atualizarStatusTempo();
             setInterval(atualizarStatusTempo, 30000);
+            
+            // Verificar Highlight na URL (Notificação)
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('highlight');
+            if (highlightId) {
+                const element = document.getElementById('servico-' + highlightId);
+                if (element) {
+                    setTimeout(() => {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        element.classList.add('highlight-pulse');
+                        // Remover destaque após animação
+                        setTimeout(() => element.classList.remove('highlight-pulse'), 3000);
+                    }, 500);
+                }
+            }
         });
     </script>
+    <style>
+        @keyframes highlightPulse {
+            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); border-color: #38bdf8; }
+            70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); border-color: #38bdf8; }
+            100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+        }
+        .highlight-pulse {
+            animation: highlightPulse 2s infinite;
+            z-index: 20;
+        }
+    </style>
 </body>
 </html>

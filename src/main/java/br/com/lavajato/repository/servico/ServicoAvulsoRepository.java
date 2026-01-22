@@ -29,4 +29,8 @@ public interface ServicoAvulsoRepository extends JpaRepository<ServicoAvulso, Lo
     List<ServicoAvulso> findServicosDoDia(@Param("empresa") Empresa empresa, @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
     List<ServicoAvulso> findByEmpresaAndStatusAndDataConclusaoBetween(Empresa empresa, StatusServico status, LocalDateTime inicio, LocalDateTime fim);
+
+    List<ServicoAvulso> findByStatusAndNotificacaoFilaEnviadaFalse(StatusServico status);
+
+    List<ServicoAvulso> findByStatusAndNotificacaoAtrasoEnviadaFalse(StatusServico status);
 }
