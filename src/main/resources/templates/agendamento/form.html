@@ -205,14 +205,19 @@
                         }
 
                         if (preco && valorHidden && valorMascara) {
-                            var numero = parseMoedaParaNumero(preco);
-                            if (numero === null) {
-                                numero = parseFloat(preco.toString().replace(',', '.'));
-                            }
-                            if (!isNaN(numero)) {
-                                valorHidden.value = numero.toFixed(2);
-                                valorMascara.value = formatarMoeda(numero);
-                            }
+                             // O data-preco vem do backend (BigDecimal.toString()), ex: "40.00" ou "4000.00" (se formatado errado)
+                             // O problema relatado (4.000,00) sugere que o JS está interpretando "40.00" ou "40" de forma errada na formatação
+                             // ou o parseMoedaParaNumero estava removendo o ponto incorretamente.
+                             
+                             // Solução robusta: tratar como float puro, pois vem do atributo HTML data-preco="${s.preco}"
+                             // BigDecimal no Java vira "40.00" no HTML (padrão US).
+                             
+                             var numero = parseFloat(preco);
+                             
+                             if (!isNaN(numero)) {
+                                 valorHidden.value = numero.toFixed(2);
+                                 valorMascara.value = formatarMoeda(numero);
+                             }
                         }
                     });
                 }

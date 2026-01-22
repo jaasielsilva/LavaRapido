@@ -26,4 +26,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Direct List methods
     List<Usuario> findAllByAtivoTrue();
     List<Usuario> findAllByEmpresaAndAtivoTrue(Empresa empresa);
+    List<Usuario> findByEmpresaAndPerfilAndAtivoTrue(Empresa empresa, Perfil perfil);
 }

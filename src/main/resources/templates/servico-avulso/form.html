@@ -251,7 +251,7 @@
 
                             <div th:unless="${catalogoServicos.empty}" class="services-grid">
                                 <label th:each="servico : ${catalogoServicos}" class="service-radio-card">
-                                    <input type="radio" name="servico" th:value="${servico.id}" required>
+                                    <input type="radio" name="servico" th:value="${servico.id}" th:data-preco="${servico.preco}" required>
                                     <div class="service-card-content">
                                         <div class="service-icon-lg" th:classappend="'bg-soft-' + ${servico.categoria.cor}">
                                             <i class="fa-solid" th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
@@ -405,6 +405,12 @@
                     if (!$(e.target).closest('#sectionBuscaCliente').length) {
                         $listaResultados.hide();
                     }
+                });
+
+                // Auto-fill price
+                $('input[name="servico"]').on('change', function() {
+                    const preco = $(this).data('preco');
+                    $('#valor').val(preco);
                 });
             });
         </script>

@@ -9,6 +9,7 @@ import br.com.lavajato.service.usuario.UsuarioService;
 import br.com.lavajato.service.veiculo.VeiculoService;
 import br.com.lavajato.service.agendamento.AgendamentoService;
 import br.com.lavajato.service.servico.ServicoAvulsoService;
+import br.com.lavajato.service.venda.VendaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,6 +36,9 @@ public class DashboardController {
 
     @Autowired
     private ServicoAvulsoService servicoAvulsoService;
+
+    @Autowired
+    private VendaService vendaService;
 
     @Autowired
     private SecurityConfig.ActiveSessionCounter activeSessionCounter;
@@ -88,16 +92,39 @@ public class DashboardController {
             model.addAttribute("agendamentosPendentes", agendamentosPendentes);
 
             long servicosHoje = servicoAvulsoService.contarConcluidosHoje(empresaContexto);
+            servicosHoje += agendamentoService.contarServicosHoje(empresaContexto);
             model.addAttribute("servicosHoje", servicosHoje);
 
             java.util.List<br.com.lavajato.model.servico.ServicoAvulso> servicosHojeLista =
                     servicoAvulsoService.listarServicosDoDia(empresaContexto, 5);
             model.addAttribute("servicosHojeLista", servicosHojeLista);
 
-            java.math.BigDecimal faturamentoHoje = servicoAvulsoService.calcularFaturamentoHoje(empresaContexto);
+            java.math.BigDecimal servicosHojeVal = servicoAvulsoService.calcularFaturamentoHoje(empresaContexto);
+            java.math.BigDecimal vendasHojeVal = vendaService.calcularFaturamentoHoje(empresaContexto);
+            java.math.BigDecimal agendamentosHojeVal = agendamentoService.calcularFaturamentoHoje(empresaContexto);
+            
+            java.math.BigDecimal faturamentoHoje = servicosHojeVal.add(vendasHojeVal).add(agendamentosHojeVal);
             model.addAttribute("faturamentoHoje", faturamentoHoje);
 
-            java.math.BigDecimal faturamentoVariacao = servicoAvulsoService.calcularVariacaoHojeVsOntem(empresaContexto);
+            java.math.BigDecimal servicosOntemVal = servicoAvulsoService.calcularFaturamentoOntem(empresaContexto);
+            java.math.BigDecimal vendasOntemVal = vendaService.calcularFaturamentoOntem(empresaContexto);
+            java.math.BigDecimal agendamentosOntemVal = agendamentoService.calcularFaturamentoOntem(empresaContexto);
+            
+            java.math.BigDecimal faturamentoOntem = servicosOntemVal.add(vendasOntemVal).add(agendamentosOntemVal);
+
+            java.math.BigDecimal faturamentoVariacao;
+            if (faturamentoOntem.compareTo(java.math.BigDecimal.ZERO) == 0) {
+                if (faturamentoHoje.compareTo(java.math.BigDecimal.ZERO) == 0) {
+                    faturamentoVariacao = java.math.BigDecimal.ZERO;
+                } else {
+                    faturamentoVariacao = java.math.BigDecimal.valueOf(100);
+                }
+            } else {
+                java.math.BigDecimal diferenca = faturamentoHoje.subtract(faturamentoOntem);
+                faturamentoVariacao = diferenca
+                        .multiply(java.math.BigDecimal.valueOf(100))
+                        .divide(faturamentoOntem, 2, java.math.RoundingMode.HALF_UP);
+            }
             model.addAttribute("faturamentoVariacao", faturamentoVariacao);
             model.addAttribute("faturamentoSubiu", faturamentoVariacao.compareTo(java.math.BigDecimal.ZERO) > 0);
             model.addAttribute("faturamentoCaiu", faturamentoVariacao.compareTo(java.math.BigDecimal.ZERO) < 0);

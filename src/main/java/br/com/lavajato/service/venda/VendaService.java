@@ -3,6 +3,7 @@ package br.com.lavajato.service.venda;
 import br.com.lavajato.dto.ItemVendaDTO;
 import br.com.lavajato.dto.VendaDTO;
 import br.com.lavajato.model.cliente.Cliente;
+import br.com.lavajato.model.empresa.Empresa;
 import br.com.lavajato.model.produto.Produto;
 import br.com.lavajato.model.usuario.Usuario;
 import br.com.lavajato.model.venda.ItemVenda;
@@ -16,7 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Service
 public class VendaService {
@@ -72,5 +75,20 @@ public class VendaService {
 
         venda.setValorTotal(total);
         vendaRepository.save(venda);
+    }
+
+    public BigDecimal calcularFaturamentoHoje(Empresa empresa) {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
+        BigDecimal valor = vendaRepository.sumFaturamentoPorPeriodo(empresa, inicio, fim);
+        return valor != null ? valor : BigDecimal.ZERO;
+    }
+
+    public BigDecimal calcularFaturamentoOntem(Empresa empresa) {
+        LocalDate ontem = LocalDate.now().minusDays(1);
+        LocalDateTime inicio = ontem.atStartOfDay();
+        LocalDateTime fim = ontem.atTime(LocalTime.MAX);
+        BigDecimal valor = vendaRepository.sumFaturamentoPorPeriodo(empresa, inicio, fim);
+        return valor != null ? valor : BigDecimal.ZERO;
     }
 }

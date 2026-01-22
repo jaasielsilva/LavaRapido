@@ -110,5 +110,100 @@
 <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script th:src="@{/js/app.js}"></script>
+
+<script>
+    // Set global para rastrear IDs de notificações já exibidas na sessão atual
+    // Isso evita que o Toast seja recriado/pisque a cada polling de 30s
+    // Mas permite que ele persista na tela.
+    const notificacoesExibidas = new Set();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verifica notificações a cada 30 segundos
+        setInterval(verificarNotificacoes, 30000);
+        // Verifica imediatamente ao carregar
+        verificarNotificacoes();
+    });
+
+    function verificarNotificacoes() {
+        fetch('/api/notificacoes/check')
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    return null;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.length > 0) {
+                    // Se houver notificações ativas vindas do backend
+                    data.forEach(notificacao => {
+                        // Só exibe se ainda não estiver na tela/rastreada
+                        if (!notificacoesExibidas.has(notificacao.id)) {
+                            exibirNotificacao(notificacao);
+                            notificacoesExibidas.add(notificacao.id);
+                        }
+                    });
+                }
+                
+                // Opcional: Limpar do Set se não vier mais no backend? 
+                // Não precisa, pois se sumiu do backend (expirou), o frontend não precisa fechar forçado,
+                // mas se o usuário recarregar a página, não aparecerá mais.
+                // Se quisermos fechar o Toast quando expirar em tempo real, precisaríamos guardar a referência do Swal.
+                // Mas o requisito "não aparecer mais" geralmente se refere a novas exibições.
+            })
+            .catch(error => console.error('Erro ao verificar notificações:', error));
+    }
+
+    function exibirNotificacao(notificacao) {
+        // Alerta Sutil (Toast no canto superior direito)
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: true,
+            confirmButtonText: '<i class="fa-solid fa-check"></i> Lido',
+            showCancelButton: !!notificacao.link,
+            cancelButtonText: '<i class="fa-solid fa-eye"></i> Ver',
+            timer: null, // SEM TIMER - Fica até clicar ou recarregar (se expirado)
+            timerProgressBar: false,
+            width: '400px',
+            padding: '1rem',
+            customClass: {
+                confirmButton: 'btn btn-sm btn-outline-success ms-1',
+                cancelButton: 'btn btn-sm btn-outline-primary ms-1'
+            },
+            buttonsStyling: false,
+            didOpen: (toast) => {
+                // Não precisa mais de pause/resume timer
+            }
+        });
+
+        Toast.fire({
+            icon: 'info',
+            title: notificacao.titulo,
+            text: notificacao.mensagem
+        }).then((result) => {
+            // Ao interagir (fechar, lido, ver), removemos do set para permitir re-exibir se o backend mandar de novo (improvável se marcado lido)
+            notificacoesExibidas.delete(notificacao.id);
+
+            if (result.isConfirmed) {
+                // Clicou em Lido
+                marcarComoLida(notificacao.id);
+            } else if (result.dismiss === Swal.DismissReason.cancel && notificacao.link) {
+                // Clicou em Ver
+                marcarComoLida(notificacao.id);
+                window.location.href = notificacao.link;
+            } else {
+                // Fechou no X ou clicou fora (se configurado, mas toast geralmente não fecha clicando fora)
+                // Se fechou manualmente, marca como lida? O usuário pediu "até clicar em lido".
+                // Mas se ele fecha no X, subentende-se lido. Vamos marcar.
+                marcarComoLida(notificacao.id);
+            }
+        });
+    }
+
+    function marcarComoLida(id) {
+        fetch('/api/notificacoes/' + id + '/ler', { method: 'POST' })
+            .catch(err => console.error('Erro ao marcar notificação como lida', err));
+    }
+</script>
 </body>
 </html>

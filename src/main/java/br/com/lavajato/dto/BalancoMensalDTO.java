@@ -12,6 +12,7 @@ public class BalancoMensalDTO {
     private YearMonth mes; // Para ordenação e formatação (ex: "Fevereiro 2025")
     
     private BigDecimal receitaServicos;
+    private BigDecimal receitaAgendamentos;
     private BigDecimal receitaProdutos;
     private BigDecimal receitaTotal;
     

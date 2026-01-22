@@ -62,6 +62,7 @@ public class FinanceiroController {
         // Calcular Total do Balanço para a linha TOTAL
         br.com.lavajato.dto.BalancoMensalDTO totalBalanco = br.com.lavajato.dto.BalancoMensalDTO.builder()
             .receitaServicos(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getReceitaServicos).reduce(BigDecimal.ZERO, BigDecimal::add))
+            .receitaAgendamentos(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getReceitaAgendamentos).reduce(BigDecimal.ZERO, BigDecimal::add))
             .receitaProdutos(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getReceitaProdutos).reduce(BigDecimal.ZERO, BigDecimal::add))
             .receitaTotal(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getReceitaTotal).reduce(BigDecimal.ZERO, BigDecimal::add))
             .custosProdutos(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getCustosProdutos).reduce(BigDecimal.ZERO, BigDecimal::add))

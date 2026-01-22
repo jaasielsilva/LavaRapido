@@ -45,6 +45,14 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status = :status AND a.data BETWEEN :inicio AND :fim")
     long countByEmpresaAndStatusAndDataBetween(@Param("empresa") Empresa empresa, @Param("status") br.com.lavajato.model.agendamento.StatusAgendamento status, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
 
-    @Query("SELECT COALESCE(SUM(a.valor), 0) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status <> 'CANCELADO' AND a.data BETWEEN :inicio AND :fim")
-    java.math.BigDecimal sumValorByEmpresaAndDataBetween(@Param("empresa") Empresa empresa, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status <> :status AND a.data BETWEEN :inicio AND :fim")
+    long countByEmpresaAndStatusNotAndDataBetween(@Param("empresa") Empresa empresa, @Param("status") br.com.lavajato.model.agendamento.StatusAgendamento status, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
+
+    @Query("SELECT COALESCE(SUM(a.valor), 0) FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status = :status AND a.data BETWEEN :inicio AND :fim")
+    java.math.BigDecimal sumValorByEmpresaAndStatusAndDataBetween(@Param("empresa") Empresa empresa, @Param("status") br.com.lavajato.model.agendamento.StatusAgendamento status, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
+
+    @Query("SELECT a FROM Agendamento a WHERE a.veiculo.cliente.empresa = :empresa AND a.status = :status AND a.data BETWEEN :inicio AND :fim")
+    java.util.List<Agendamento> findByEmpresaAndStatusAndDataBetween(@Param("empresa") Empresa empresa, @Param("status") br.com.lavajato.model.agendamento.StatusAgendamento status, @Param("inicio") java.time.LocalDateTime inicio, @Param("fim") java.time.LocalDateTime fim);
+
+    java.util.List<Agendamento> findByDataBetweenAndStatus(java.time.LocalDateTime start, java.time.LocalDateTime end, br.com.lavajato.model.agendamento.StatusAgendamento status);
 }

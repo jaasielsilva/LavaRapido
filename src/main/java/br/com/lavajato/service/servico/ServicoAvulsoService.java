@@ -104,7 +104,8 @@ public class ServicoAvulsoService {
     public BigDecimal calcularFaturamentoHoje(Empresa empresa) {
         LocalDateTime inicio = LocalDate.now().atStartOfDay();
         LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
-        return repository.sumFaturamentoHoje(empresa, inicio, fim);
+        BigDecimal valor = repository.sumFaturamentoHoje(empresa, inicio, fim);
+        return valor != null ? valor : BigDecimal.ZERO;
     }
 
     public java.util.List<ServicoAvulso> listarServicosDoDia(Empresa empresa, int limite) {
@@ -121,7 +122,8 @@ public class ServicoAvulsoService {
         LocalDate ontem = LocalDate.now().minusDays(1);
         LocalDateTime inicio = ontem.atStartOfDay();
         LocalDateTime fim = ontem.atTime(LocalTime.MAX);
-        return repository.sumFaturamentoHoje(empresa, inicio, fim);
+        BigDecimal valor = repository.sumFaturamentoHoje(empresa, inicio, fim);
+        return valor != null ? valor : BigDecimal.ZERO;
     }
 
     public BigDecimal calcularVariacaoHojeVsOntem(Empresa empresa) {

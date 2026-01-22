@@ -2,6 +2,8 @@ package br.com.lavajato.service.financeiro;
 
 import br.com.lavajato.dto.BalancoMensalDTO;
 import br.com.lavajato.dto.MovimentacaoDTO;
+import br.com.lavajato.model.agendamento.Agendamento;
+import br.com.lavajato.model.agendamento.StatusAgendamento;
 import br.com.lavajato.model.empresa.Empresa;
 import br.com.lavajato.model.financeiro.LancamentoFinanceiro;
 import br.com.lavajato.model.financeiro.TipoLancamento;
@@ -9,6 +11,7 @@ import br.com.lavajato.model.servico.ServicoAvulso;
 import br.com.lavajato.model.servico.StatusServico;
 import br.com.lavajato.model.venda.ItemVenda;
 import br.com.lavajato.model.venda.Venda;
+import br.com.lavajato.repository.agendamento.AgendamentoRepository;
 import br.com.lavajato.repository.financeiro.LancamentoFinanceiroRepository;
 import br.com.lavajato.repository.servico.ServicoAvulsoRepository;
 import br.com.lavajato.repository.venda.VendaRepository;
@@ -41,6 +44,9 @@ public class FinanceiroService {
     @Autowired
     private ServicoAvulsoRepository servicoAvulsoRepository;
 
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
     public Map<String, Object> calcularResumoFinanceiro(Empresa empresa, LocalDate inicio, LocalDate fim, String tipoFiltro) {
         LocalDateTime dataInicio = inicio.atStartOfDay();
         LocalDateTime dataFim = fim.atTime(LocalTime.MAX);
@@ -51,17 +57,19 @@ public class FinanceiroService {
         // Buscar dados brutos
         List<Venda> vendas = considerarEntradas ? vendaRepository.findByEmpresaAndDataVendaBetween(empresa, dataInicio, dataFim) : Collections.emptyList();
         List<ServicoAvulso> servicos = considerarEntradas ? servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, dataInicio, dataFim) : Collections.emptyList();
+        List<Agendamento> agendamentos = considerarEntradas ? agendamentoRepository.findByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, dataInicio, dataFim) : Collections.emptyList();
         List<LancamentoFinanceiro> lancamentos = lancamentoRepository.findByEmpresaAndDataBetween(empresa, dataInicio, dataFim);
 
         // 1. Receita Total
         BigDecimal receitaVendas = vendas.stream().map(Venda::getValorTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal receitaServicos = servicos.stream().map(ServicoAvulso::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal receitaAgendamentos = agendamentos.stream().map(Agendamento::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal receitasExtras = considerarEntradas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
                 .map(LancamentoFinanceiro::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
         
-        BigDecimal receitaTotal = receitaVendas.add(receitaServicos).add(receitasExtras);
+        BigDecimal receitaTotal = receitaVendas.add(receitaServicos).add(receitaAgendamentos).add(receitasExtras);
 
         // 2. Custos e Despesas
         BigDecimal custoProdutos = considerarSaidas ? vendas.stream()
@@ -89,7 +97,8 @@ public class FinanceiroService {
 
         Map<String, Object> resumo = new HashMap<>();
         resumo.put("receitaTotal", receitaTotal);
-        resumo.put("receitaServicos", receitaServicos); // Apenas serviços para o card azul
+        resumo.put("receitaServicos", receitaServicos); // Apenas serviços avulsos
+        resumo.put("receitaAgendamentos", receitaAgendamentos); // Apenas agendamentos
         resumo.put("receitaProdutos", receitaVendas); // Apenas produtos para o card roxo
         resumo.put("lucroLiquido", lucroLiquido);
         resumo.put("margemLucro", margemLucro);
@@ -119,17 +128,19 @@ public class FinanceiroService {
             // Fetch dados do mês
             List<Venda> vendasMes = considerarEntradas ? vendaRepository.findByEmpresaAndDataVendaBetween(empresa, mesInicio, mesFim) : Collections.emptyList();
             List<ServicoAvulso> servicosMes = considerarEntradas ? servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, mesInicio, mesFim) : Collections.emptyList();
+            List<Agendamento> agendamentosMes = considerarEntradas ? agendamentoRepository.findByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, mesInicio, mesFim) : Collections.emptyList();
             List<LancamentoFinanceiro> lancamentosMes = lancamentoRepository.findByEmpresaAndDataBetween(empresa, mesInicio, mesFim);
 
             // Cálculos
-            BigDecimal recServicos = servicosMes.stream().map(ServicoAvulso::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal recProdutos = vendasMes.stream().map(Venda::getValorTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal recServicos = servicosMes.stream().map(s -> s.getValor() != null ? s.getValor() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal recAgendamentos = agendamentosMes.stream().map(a -> a.getValor() != null ? a.getValor() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal recProdutos = vendasMes.stream().map(v -> v.getValorTotal() != null ? v.getValorTotal() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal recExtras = considerarEntradas ? lancamentosMes.stream()
                     .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
-                    .map(LancamentoFinanceiro::getValor)
+                    .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
             
-            BigDecimal recTotal = recServicos.add(recProdutos).add(recExtras);
+            BigDecimal recTotal = recServicos.add(recAgendamentos).add(recProdutos).add(recExtras);
 
             BigDecimal custoProd = considerarSaidas ? vendasMes.stream()
                 .flatMap(v -> v.getItens().stream())
@@ -141,20 +152,25 @@ public class FinanceiroService {
 
             BigDecimal despOp = considerarSaidas ? lancamentosMes.stream()
                     .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
-                    .map(LancamentoFinanceiro::getValor)
+                    .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
             BigDecimal lucro = recTotal.subtract(custoProd).subtract(despOp);
+            BigDecimal margem = recTotal.compareTo(BigDecimal.ZERO) > 0 
+                    ? lucro.divide(recTotal, 4, RoundingMode.HALF_UP).multiply(new BigDecimal(100)) 
+                    : BigDecimal.ZERO;
 
             balanco.add(BalancoMensalDTO.builder()
                     .mes(current)
                     .receitaServicos(recServicos)
+                    .receitaAgendamentos(recAgendamentos)
                     .receitaProdutos(recProdutos)
                     .receitaTotal(recTotal)
                     .custosProdutos(custoProd)
                     .despesasOperacionais(despOp)
                     .custosTotal(custoProd.add(despOp))
                     .lucroLiquido(lucro)
+                    .margemLucro(margem)
                     .build());
 
             current = current.plusMonths(1);
@@ -184,6 +200,20 @@ public class FinanceiroService {
                         .tipo(TipoLancamento.ENTRADA)
                         .categoria("Venda")
                         .origem("VENDA")
+                        .build());
+            }
+
+            // 1.1 Buscar Agendamentos (Apenas se o filtro não for SAIDA)
+            List<Agendamento> agendamentos = agendamentoRepository.findByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, dataInicio, dataFim);
+            for (Agendamento ag : agendamentos) {
+                movimentacoes.add(MovimentacaoDTO.builder()
+                        .id("A-" + ag.getId())
+                        .data(ag.getData())
+                        .descricao("Agendamento #" + ag.getId() + " - " + ag.getVeiculo().getPlaca())
+                        .valor(ag.getValor())
+                        .tipo(TipoLancamento.ENTRADA)
+                        .categoria("Agendamento")
+                        .origem("AGENDAMENTO")
                         .build());
             }
         }

@@ -54,7 +54,7 @@ public class AgendamentoService {
         Map<String, Object> resumo = new HashMap<>();
         resumo.put("totalHoje", agendamentoRepository.countByEmpresaAndDataBetween(empresa, inicioDia, fimDia));
         resumo.put("emAndamento", agendamentoRepository.countByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.EM_ANDAMENTO, inicioDia, fimDia));
-        resumo.put("faturamentoHoje", agendamentoRepository.sumValorByEmpresaAndDataBetween(empresa, inicioDia, fimDia));
+        resumo.put("faturamentoHoje", agendamentoRepository.sumValorByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, inicioDia, fimDia));
         
         return resumo;
     }
@@ -102,5 +102,26 @@ public class AgendamentoService {
 
     public java.util.List<Agendamento> listarProximos(Empresa empresa, int limite) {
         return agendamentoRepository.findProximosByEmpresa(empresa, org.springframework.data.domain.PageRequest.of(0, limite)).getContent();
+    }
+
+    public long contarServicosHoje(Empresa empresa) {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
+        // Conta apenas CONCLUIDOS conforme regra de negócio
+        return agendamentoRepository.countByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, inicio, fim);
+    }
+
+    public java.math.BigDecimal calcularFaturamentoHoje(Empresa empresa) {
+        LocalDateTime inicio = LocalDate.now().atStartOfDay();
+        LocalDateTime fim = LocalDate.now().atTime(LocalTime.MAX);
+        java.math.BigDecimal valor = agendamentoRepository.sumValorByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, inicio, fim);
+        return valor != null ? valor : java.math.BigDecimal.ZERO;
+    }
+
+    public java.math.BigDecimal calcularFaturamentoOntem(Empresa empresa) {
+        LocalDateTime inicio = LocalDate.now().minusDays(1).atStartOfDay();
+        LocalDateTime fim = LocalDate.now().minusDays(1).atTime(LocalTime.MAX);
+        java.math.BigDecimal valor = agendamentoRepository.sumValorByEmpresaAndStatusAndDataBetween(empresa, StatusAgendamento.CONCLUIDO, inicio, fim);
+        return valor != null ? valor : java.math.BigDecimal.ZERO;
     }
 }

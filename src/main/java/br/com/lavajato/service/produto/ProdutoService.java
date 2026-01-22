@@ -96,7 +96,8 @@ public class ProdutoService {
     
     public BigDecimal calcularValorEstoque() {
         Usuario usuario = usuarioService.getUsuarioLogado();
-        return repository.sumValorEstoque(usuario.getEmpresa());
+        BigDecimal total = repository.sumValorEstoque(usuario.getEmpresa());
+        return total != null ? total : BigDecimal.ZERO;
     }
 
     public void inicializarProdutosPadrao(Empresa empresa) {

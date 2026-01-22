@@ -125,14 +125,14 @@
                     <div class="card-info">
                         <h4>Faturamento Hoje</h4>
                         <span class="number"
-                              th:text="'R$ ' + ${#numbers.formatDecimal(faturamentoHoje, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
+                              th:text="'R$ ' + ${#numbers.formatDecimal(faturamentoHoje != null ? faturamentoHoje : 0, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
                         <div class="stat">
                             <span class="up text-success"
                                   th:if="${faturamentoSubiu}"
-                                  th:text="'↑ ' + ${#numbers.formatDecimal(faturamentoVariacaoAbsoluta, 1, 'POINT', 0, 'COMMA')} + '%'">↑ 0%</span>
+                                  th:text="'↑ ' + ${#numbers.formatDecimal(faturamentoVariacaoAbsoluta != null ? faturamentoVariacaoAbsoluta : 0, 1, 'POINT', 1, 'COMMA')} + '%'">↑ 0%</span>
                             <span class="down text-danger"
                                   th:if="${faturamentoCaiu}"
-                                  th:text="'↓ ' + ${#numbers.formatDecimal(faturamentoVariacaoAbsoluta, 1, 'POINT', 0, 'COMMA')} + '%'">↓ 0%</span>
+                                  th:text="'↓ ' + ${#numbers.formatDecimal(faturamentoVariacaoAbsoluta != null ? faturamentoVariacaoAbsoluta : 0, 1, 'POINT', 1, 'COMMA')} + '%'">↓ 0%</span>
                             <span class="muted"
                                   th:if="${!faturamentoSubiu and !faturamentoCaiu}">0%</span>
                             <span class="muted">vs. ontem</span>
@@ -169,8 +169,8 @@
                                       th:classappend="' bg-' + ${s.status.cor}"
                                       th:text="${s.status.descricao}">Status</span>
                                 <span class="price"
-                                      th:text="'R$ ' + ${#numbers.formatDecimal(s.valor != null ? s.valor : (s.servico != null ? s.servico.preco : 0), 1, 'POINT', 0, 'COMMA')}">
-                                    R$ 0
+                                      th:text="'R$ ' + ${#numbers.formatDecimal(s.valor != null ? s.valor : (s.servico != null ? s.servico.preco : 0), 1, 'POINT', 2, 'COMMA')}">
+                                    R$ 0,00
                                 </span>
                             </div>
                         </div>
@@ -209,7 +209,7 @@
                                     <span th:text="${#temporals.format(ag.data, 'dd/MM/yyyy')}">Data</span>
                                     <span th:text="${#temporals.format(ag.data, 'HH:mm')}">Hora</span>
                                 </div>
-                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(ag.valor, 1, 'POINT', 0, 'COMMA')}">R$ 0</span>
+                                <span class="price" th:text="'R$ ' + ${#numbers.formatDecimal(ag.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
                             </div>
                         </div>
                     </div>
