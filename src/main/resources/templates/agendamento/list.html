@@ -131,7 +131,7 @@
             <div class="card green">
                 <div class="card-info">
                     <div>
-                        <h4>FATURAMENTO  PREVISTO HOJE</h4>
+                        <h4>FATURAMENTO HOJE</h4>
                         <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo.faturamentoHoje != null ? resumo.faturamentoHoje : 0, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
                     </div>
                     <div class="stat">

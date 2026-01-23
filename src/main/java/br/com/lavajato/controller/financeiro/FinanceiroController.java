@@ -29,6 +29,9 @@ public class FinanceiroController {
 
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private br.com.lavajato.service.EmailService emailService;
 
     @GetMapping
     public String listar(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
@@ -85,9 +88,26 @@ public class FinanceiroController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute LancamentoFinanceiro lancamento) {
-        Usuario usuario = usuarioService.getUsuarioLogado();
-        financeiroService.salvarLancamento(lancamento, usuario.getEmpresa());
+    public String salvar(@ModelAttribute LancamentoFinanceiro lancamento, 
+                         @RequestParam(required = false) Long funcionarioId) {
+        Usuario usuarioLogado = usuarioService.getUsuarioLogado();
+        financeiroService.salvarLancamento(lancamento, usuarioLogado.getEmpresa());
+        
+        // Envio de Comprovante por E-mail (Se for pagamento de funcionário)
+        if (funcionarioId != null) {
+            usuarioService.buscarPorId(funcionarioId).ifPresent(funcionario -> {
+                if (funcionario.getEmail() != null && !funcionario.getEmail().isEmpty()) {
+                    emailService.enviarComprovantePagamento(
+                        funcionario.getEmail(), 
+                        funcionario.getNome(), 
+                        lancamento.getValor(), 
+                        lancamento.getData(), 
+                        lancamento.getDescricao()
+                    );
+                }
+            });
+        }
+        
         return "redirect:/financeiro";
     }
 

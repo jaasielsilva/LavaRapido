@@ -97,12 +97,12 @@ public class FinanceiroService {
 
         Map<String, Object> resumo = new HashMap<>();
         resumo.put("receitaTotal", receitaTotal);
-        resumo.put("receitaServicos", receitaServicos); // Apenas serviços avulsos
-        resumo.put("receitaAgendamentos", receitaAgendamentos); // Apenas agendamentos
-        resumo.put("receitaProdutos", receitaVendas); // Apenas produtos para o card roxo
+        resumo.put("receitaServicos", receitaServicos.add(receitaAgendamentos)); // Unifica serviços avulsos + agendamentos
+        resumo.put("receitaAgendamentos", receitaAgendamentos); // Mantém separado caso precise detalhar depois
+        resumo.put("receitaProdutos", receitaVendas);
         resumo.put("lucroLiquido", lucroLiquido);
         resumo.put("margemLucro", margemLucro);
-        resumo.put("qtdServicos", qtdServicos);
+        resumo.put("qtdServicos", qtdServicos + agendamentos.size()); // Soma quantidades
         resumo.put("qtdProdutos", qtdProdutos);
         
         // Média Mensal (Simples: divide pelo número de meses no intervalo)
@@ -162,7 +162,7 @@ public class FinanceiroService {
 
             balanco.add(BalancoMensalDTO.builder()
                     .mes(current)
-                    .receitaServicos(recServicos)
+                    .receitaServicos(recServicos.add(recAgendamentos)) // Unifica no balanço também
                     .receitaAgendamentos(recAgendamentos)
                     .receitaProdutos(recProdutos)
                     .receitaTotal(recTotal)
@@ -214,6 +214,20 @@ public class FinanceiroService {
                         .tipo(TipoLancamento.ENTRADA)
                         .categoria("Agendamento")
                         .origem("AGENDAMENTO")
+                        .build());
+            }
+
+            // 1.2 Buscar Serviços Avulsos (Apenas se o filtro não for SAIDA)
+            List<ServicoAvulso> servicos = servicoAvulsoRepository.findByEmpresaAndStatusAndDataConclusaoBetween(empresa, StatusServico.CONCLUIDO, dataInicio, dataFim);
+            for (ServicoAvulso sv : servicos) {
+                movimentacoes.add(MovimentacaoDTO.builder()
+                        .id("S-" + sv.getId())
+                        .data(sv.getDataConclusao())
+                        .descricao("Serviço Avulso #" + sv.getId() + " - " + (sv.getClienteAvulsoVeiculo() != null ? sv.getClienteAvulsoVeiculo() : "Veículo N/D"))
+                        .valor(sv.getValor())
+                        .tipo(TipoLancamento.ENTRADA)
+                        .categoria("Serviço Avulso")
+                        .origem("SERVICO")
                         .build());
             }
         }
@@ -294,7 +308,12 @@ public class FinanceiroService {
                 row.createCell(3).setCellValue(mov.getTipo().toString());
 
                 Cell cellValor = row.createCell(4);
-                cellValor.setCellValue(mov.getValor().doubleValue());
+                // Se for SAIDA, torna o valor negativo para facilitar a soma no Excel
+                double valor = mov.getValor().doubleValue();
+                if (mov.getTipo() == TipoLancamento.SAIDA) {
+                    valor = -valor;
+                }
+                cellValor.setCellValue(valor);
                 cellValor.setCellStyle(currencyStyle);
 
                 row.createCell(5).setCellValue(mov.getOrigem());

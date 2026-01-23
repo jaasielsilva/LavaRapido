@@ -40,6 +40,17 @@ public class CatalogoController {
         return "catalogo/form";
     }
 
+    @GetMapping("/editar/{id}")
+    public String editar(@PathVariable Long id, Model model) {
+        return catalogoService.buscarPorId(id)
+            .map(servico -> {
+                model.addAttribute("servico", servico);
+                model.addAttribute("categorias", CategoriaServico.values());
+                return "catalogo/form";
+            })
+            .orElse("redirect:/catalogo");
+    }
+
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Servico servico) {
         catalogoService.salvar(servico);

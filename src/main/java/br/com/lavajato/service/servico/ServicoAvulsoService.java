@@ -8,6 +8,10 @@ import br.com.lavajato.repository.servico.ServicoAvulsoRepository;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +36,12 @@ public class ServicoAvulsoService {
     public List<ServicoAvulso> listarTodos() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         return repository.findAllByEmpresaOrderByDataCriacaoDesc(usuario.getEmpresa());
+    }
+
+    public Page<ServicoAvulso> listarPaginado(int page, int size) {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dataCriacao").descending());
+        return repository.findAllByEmpresaOrderByDataCriacaoDesc(usuario.getEmpresa(), pageable);
     }
 
     public ServicoAvulso salvar(ServicoAvulso servicoAvulso) {

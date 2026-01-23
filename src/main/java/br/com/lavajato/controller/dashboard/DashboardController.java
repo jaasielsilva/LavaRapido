@@ -39,6 +39,9 @@ public class DashboardController {
 
     @Autowired
     private VendaService vendaService;
+    
+    @Autowired
+    private br.com.lavajato.repository.financeiro.LancamentoFinanceiroRepository lancamentoRepository;
 
     @Autowired
     private SecurityConfig.ActiveSessionCounter activeSessionCounter;
@@ -99,11 +102,29 @@ public class DashboardController {
                     servicoAvulsoService.listarServicosDoDia(empresaContexto, 5);
             model.addAttribute("servicosHojeLista", servicosHojeLista);
 
-            java.math.BigDecimal servicosHojeVal = servicoAvulsoService.calcularFaturamentoHoje(empresaContexto);
-            java.math.BigDecimal vendasHojeVal = vendaService.calcularFaturamentoHoje(empresaContexto);
-            java.math.BigDecimal agendamentosHojeVal = agendamentoService.calcularFaturamentoHoje(empresaContexto);
+            java.math.BigDecimal faturamentoHoje = java.math.BigDecimal.ZERO;
             
-            java.math.BigDecimal faturamentoHoje = servicosHojeVal.add(vendasHojeVal).add(agendamentosHojeVal);
+            // Somar Vendas de Produtos
+            faturamentoHoje = faturamentoHoje.add(vendaService.calcularFaturamentoHoje(empresaContexto));
+            
+            // Somar Serviços Avulsos
+            faturamentoHoje = faturamentoHoje.add(servicoAvulsoService.calcularFaturamentoHoje(empresaContexto));
+            
+            // Somar Agendamentos Concluídos Hoje
+            faturamentoHoje = faturamentoHoje.add(agendamentoService.calcularFaturamentoHoje(empresaContexto));
+            
+            // Somar Entradas Manuais Hoje (Para alinhar com o Relatório Financeiro)
+            java.math.BigDecimal entradasManuaisHoje = lancamentoRepository.findByEmpresaAndDataBetween(
+                    empresaContexto, 
+                    java.time.LocalDate.now().atStartOfDay(), 
+                    java.time.LocalDate.now().atTime(java.time.LocalTime.MAX))
+                .stream()
+                .filter(l -> l.getTipo() == br.com.lavajato.model.financeiro.TipoLancamento.ENTRADA)
+                .map(l -> l.getValor() != null ? l.getValor() : java.math.BigDecimal.ZERO)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                
+            faturamentoHoje = faturamentoHoje.add(entradasManuaisHoje);
+            
             model.addAttribute("faturamentoHoje", faturamentoHoje);
 
             java.math.BigDecimal servicosOntemVal = servicoAvulsoService.calcularFaturamentoOntem(empresaContexto);

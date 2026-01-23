@@ -3,6 +3,8 @@ package br.com.lavajato.repository.servico;
 import br.com.lavajato.model.empresa.Empresa;
 import br.com.lavajato.model.servico.ServicoAvulso;
 import br.com.lavajato.model.servico.StatusServico;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,8 @@ import java.util.List;
 public interface ServicoAvulsoRepository extends JpaRepository<ServicoAvulso, Long> {
 
     List<ServicoAvulso> findAllByEmpresaOrderByDataCriacaoDesc(Empresa empresa);
+    
+    Page<ServicoAvulso> findAllByEmpresaOrderByDataCriacaoDesc(Empresa empresa, Pageable pageable);
 
     long countByEmpresaAndStatus(Empresa empresa, StatusServico status);
 

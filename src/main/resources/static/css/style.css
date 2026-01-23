@@ -597,7 +597,7 @@ header h1 {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .sidebar {
         transform: translateX(-100%);
         transition: transform 0.3s;
