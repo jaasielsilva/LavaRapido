@@ -16,6 +16,21 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
   thymeleaf:
     cache: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: silvajasiel30@gmail.com
+    password: uatakfluohmgczdo
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 server:
   error:

@@ -1,6 +1,7 @@
 package br.com.lavajato.config;
 
 import br.com.lavajato.service.auth.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,19 +21,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private CustomAuthenticationSuccessHandler successHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                .requestMatchers("/login").permitAll()
+                .requestMatchers("/login", "/esqueci-senha").permitAll()
                 .requestMatchers("/empresas/**").hasRole("MASTER")
-                .requestMatchers("/usuarios/**", "/produtos/**", "/catalogo/**").hasAnyRole("MASTER", "ADMIN")
+                .requestMatchers("/usuarios/**", "/financeiro/**", "/produtos/**", "/catalogo/**").hasAnyRole("MASTER", "ADMIN")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(exception -> exception
+                .accessDeniedPage("/acesso-negado")
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", true)
+                .successHandler(successHandler)
                 .permitAll()
             )
             .logout(logout -> logout
@@ -50,15 +57,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService) {
+    public DaoAuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
     

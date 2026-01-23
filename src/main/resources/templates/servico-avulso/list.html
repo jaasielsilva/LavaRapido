@@ -39,9 +39,10 @@
                 animation: pulse-red 1.5s infinite;
             }
             
-            /* Visual indication for delayed items (optional) */
+            /* Visual indication for delayed items (ALWAYS VISIBLE) */
             .item-row.atrasado {
-                border-color: rgba(239, 68, 68, 0.3);
+                border-color: #ef4444 !important; /* Solid Red */
+                background: rgba(239, 68, 68, 0.05); /* Slight tint */
             }
 
             @keyframes pulse-red {
@@ -370,6 +371,7 @@
             </div>
 
             <div th:each="servico : ${servicos}" class="item-row"
+                 th:classappend="${servico.atrasado ? 'atrasado' : ''}"
                  th:data-inicio="${#temporals.format(servico.dataInicio, 'yyyy-MM-dd''T''HH:mm:ss')}"
                  th:data-conclusao="${servico.dataConclusao != null ? #temporals.format(servico.dataConclusao, 'yyyy-MM-dd''T''HH:mm:ss') : ''}"
                  th:data-tempo-estimado="${servico.servico != null ? servico.servico.tempoMinutos : 0}"
@@ -408,16 +410,38 @@
                 <!-- Execution Time (New) -->
                 <div class="item-execution" style="min-width: 0;">
                     <div th:if="${servico.dataInicio != null}">
-                        <div class="service-label">INÍCIO</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-white fw-bold" th:text="${#temporals.format(servico.dataInicio, 'HH:mm')}">10:00</span>
-                            <span class="badge bg-dark border border-secondary text-secondary" 
-                                  th:if="${servico.dataConclusao != null}" 
-                                  th:title="'Duração Total'"
-                                  style="font-size: 10px;">
-                                <i class="fa-solid fa-stopwatch me-1"></i>
-                                <span th:text="${servico.duracaoFormatada}">45m</span>
-                            </span>
+                        <div class="service-label mb-1">EXECUÇÃO</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Início -->
+                            <div>
+                                <div class="text-secondary" style="font-size: 9px; text-transform: uppercase;">Início</div>
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="text-white fw-bold" th:text="${#temporals.format(servico.dataInicio, 'HH:mm')}">10:00</span>
+                                    <span class="text-secondary" style="font-size: 10px;" 
+                                          th:if="${#temporals.format(servico.dataInicio, 'dd/MM') != #temporals.format(servico.dataConclusao != null ? servico.dataConclusao : #temporals.createNow(), 'dd/MM')}"
+                                          th:text="${#temporals.format(servico.dataInicio, 'dd/MM')}">22/01</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Fim (Se concluído) -->
+                            <div th:if="${servico.dataConclusao != null}">
+                                <div class="text-secondary" style="font-size: 9px; text-transform: uppercase;">Fim</div>
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="text-success fw-bold" th:text="${#temporals.format(servico.dataConclusao, 'HH:mm')}">18:00</span>
+                                    <span class="text-secondary" style="font-size: 10px;" 
+                                          th:text="${#temporals.format(servico.dataConclusao, 'dd/MM')}">23/01</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Duração Total -->
+                            <div th:if="${servico.dataConclusao != null}" class="ms-1">
+                                <span class="badge bg-dark border border-secondary text-secondary" 
+                                      th:title="'Duração Total'"
+                                      style="font-size: 10px;">
+                                    <i class="fa-solid fa-stopwatch me-1"></i>
+                                    <span th:text="${servico.duracaoFormatada}">45m</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div th:if="${servico.dataInicio == null}">
@@ -429,10 +453,11 @@
                 <!-- Status Badge -->
                 <div class="item-status">
                     <span class="badge-status" 
-                          th:classappend="${servico.status.name() == 'EM_FILA' ? 'status-blue' : 
+                          th:classappend="${servico.atrasado ? 'status-red' :
+                                          (servico.status.name() == 'EM_FILA' ? 'status-blue' : 
                                           (servico.status.name() == 'EM_ANDAMENTO' ? 'status-orange' : 
-                                          (servico.status.name() == 'CONCLUIDO' ? 'status-green' : 'status-red'))}"
-                          th:text="${servico.status.descricao}">Em Fila</span>
+                                          (servico.status.name() == 'CONCLUIDO' ? 'status-green' : 'status-red')))}"
+                          th:text="${servico.status.descricao + (servico.atrasado ? ' (Atrasado)' : '')}">Em Fila</span>
                 </div>
 
                 <!-- Price & Actions -->

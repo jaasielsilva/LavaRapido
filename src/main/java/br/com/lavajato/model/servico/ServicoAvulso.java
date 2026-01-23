@@ -134,6 +134,26 @@ public class ServicoAvulso {
         return sb.toString();
     }
     
+    public boolean isAtrasado() {
+        if (servico == null || servico.getTempoMinutos() == null || servico.getTempoMinutos() <= 0) {
+            return false;
+        }
+        
+        if (dataInicio == null) {
+            return false;
+        }
+        
+        // Only relevant for EM_ANDAMENTO or CONCLUIDO
+        if (status != StatusServico.EM_ANDAMENTO && status != StatusServico.CONCLUIDO) {
+            return false;
+        }
+        
+        LocalDateTime fim = dataConclusao != null ? dataConclusao : LocalDateTime.now();
+        long minutosDecorridos = java.time.Duration.between(dataInicio, fim).toMinutes();
+        
+        return minutosDecorridos > servico.getTempoMinutos();
+    }
+
     public String getLinkWhatsapp() {
         String telefone = null;
         if (cliente != null && cliente.getTelefone() != null) {

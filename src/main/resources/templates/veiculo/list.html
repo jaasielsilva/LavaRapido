@@ -61,16 +61,12 @@
                     </div>
                     <div class="info-content">
                         <div class="primary-text" th:text="${veiculo.modelo}">Modelo Veículo</div>
-                        <div class="secondary-text">
+                        <div class="secondary-text d-flex gap-2 align-items-center">
                             <span class="plate-badge" th:text="${veiculo.placa}">ABC-1234</span>
+                            <span class="text-secondary" style="font-size: 12px;">|</span>
+                            <span class="text-secondary" style="font-size: 12px; font-weight: 500;" th:text="${veiculo.cor != null && !veiculo.cor.empty ? veiculo.cor : 'Sem cor'}">Prata</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Color (Services slot in original) -->
-                <div class="item-services">
-                    <div class="service-label">COR</div>
-                    <div class="service-text" th:text="${veiculo.cor != null && !veiculo.cor.empty ? veiculo.cor : '-'}">Prata</div>
                 </div>
 
                 <!-- Client (Status slot in original) -->

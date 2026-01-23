@@ -1,6 +1,7 @@
 package br.com.lavajato.controller.usuario;
 
 import br.com.lavajato.model.usuario.Perfil;
+import br.com.lavajato.model.usuario.TipoPagamento;
 import br.com.lavajato.model.usuario.Usuario;
 import br.com.lavajato.service.empresa.EmpresaService;
 import br.com.lavajato.service.usuario.UsuarioService;
@@ -41,6 +42,7 @@ public class UsuarioController {
         Usuario logado = usuarioService.getUsuarioLogado();
         model.addAttribute("usuario", usuario);
         model.addAttribute("perfis", Perfil.values());
+        model.addAttribute("tiposPagamento", TipoPagamento.values());
         model.addAttribute("isMaster", logado.isMaster());
         if (logado.isMaster()) {
             model.addAttribute("empresas", empresaService.listarTodas());
@@ -67,6 +69,7 @@ public class UsuarioController {
         
         model.addAttribute("usuario", usuario);
         model.addAttribute("perfis", Perfil.values());
+        model.addAttribute("tiposPagamento", TipoPagamento.values());
         model.addAttribute("isMaster", logado.isMaster());
         
         if (logado.isMaster()) {

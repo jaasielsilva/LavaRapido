@@ -26,6 +26,9 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private br.com.lavajato.service.EmailService emailService;
+
     public Usuario getUsuarioLogado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
@@ -134,5 +137,39 @@ public class UsuarioService {
 
     public long contarPorEmpresa(Empresa empresa) {
         return usuarioRepository.countByEmpresa(empresa);
+    }
+
+    public boolean processarEsqueciSenha(String email) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            // Gerar senha temporária (8 caracteres alfanuméricos)
+            String senhaTemporaria = java.util.UUID.randomUUID().toString().substring(0, 8);
+            
+            // Logar a senha (para debug e caso o email falhe na configuração inicial)
+            System.out.println("========================================================================================");
+            System.out.println("RESET DE SENHA SOLICITADO PARA: " + email);
+            System.out.println("NOVA SENHA TEMPORÁRIA: " + senhaTemporaria);
+            System.out.println("Tentando enviar e-mail...");
+            System.out.println("========================================================================================");
+            
+            // Enviar email
+            try {
+                emailService.enviarEmailRecuperacaoSenha(email, senhaTemporaria);
+            } catch (Exception e) {
+                // Logar erro mas não impedir o reset, pois o usuário pode ver no console em dev
+                // ou contatar o admin.
+                System.err.println("ERRO AO ENVIAR EMAIL: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            // Atualizar senha no banco
+            usuario.setSenha(passwordEncoder.encode(senhaTemporaria));
+            usuario.setAlterarSenhaProximoLogin(true);
+            usuarioRepository.save(usuario);
+            
+            return true;
+        }
+        return false;
     }
 }

@@ -37,14 +37,14 @@
                             <div class="col-md-6 mb-3">
                                 <label for="placa" class="form-label">Placa <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control text-uppercase" id="placa" th:field="*{placa}" 
-                                       placeholder="ABC-1234" required>
+                                       placeholder="ABC-1234" required oninput="this.value = this.value.toUpperCase()">
                                 <div class="form-text text-danger" th:if="${#fields.hasErrors('placa')}" th:errors="*{placa}"></div>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label for="modelo" class="form-label">Modelo <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="modelo" th:field="*{modelo}" 
-                                       placeholder="Ex: Fiat Uno" required>
+                                <input type="text" class="form-control text-uppercase" id="modelo" th:field="*{modelo}" 
+                                       placeholder="Ex: FIAT UNO" required oninput="this.value = this.value.toUpperCase()">
                                 <div class="form-text text-danger" th:if="${#fields.hasErrors('modelo')}" th:errors="*{modelo}"></div>
                             </div>
                         </div>
@@ -52,7 +52,7 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="cor" class="form-label">Cor</label>
-                                <input type="text" class="form-control" id="cor" th:field="*{cor}" placeholder="Ex: Prata">
+                                <input type="text" class="form-control text-uppercase" id="cor" th:field="*{cor}" placeholder="Ex: PRATA" oninput="this.value = this.value.toUpperCase()">
                             </div>
 
                             <div class="col-md-6 mb-3">

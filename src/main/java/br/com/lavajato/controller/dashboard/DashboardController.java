@@ -143,4 +143,9 @@ public class DashboardController {
     public String home() {
         return "redirect:/dashboard";
     }
+
+    @GetMapping("/acesso-negado")
+    public String acessoNegado() {
+        return "acesso-negado";
+    }
 }

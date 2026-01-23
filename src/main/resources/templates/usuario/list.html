@@ -55,10 +55,28 @@
                                 <span th:text="${user.empresa.nome}">Empresa</span>
                             </small>
                         </div>
+                        <!-- Dados Financeiros -->
+                        <div class="mt-3 pt-2 border-top border-secondary text-end" th:if="${user.valorSalario != null}">
+                            <div class="text-success fw-bold">
+                                <span th:text="'R$ ' + ${#numbers.formatDecimal(user.valorSalario, 1, 'POINT', 2, 'COMMA')}">R$ 1.500,00</span>
+                                <small class="text-muted ms-1" th:text="${user.tipoPagamento?.descricao}">Mensal</small>
+                            </div>
+                            <div th:if="${user.chavePix != null}" class="small text-muted mt-1">
+                                <i class="fa-brands fa-pix"></i> <span th:text="${user.chavePix}">123.456.789-00</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-2">
+                    <button type="button" 
+                            class="btn btn-sm btn-success btn-pagar-usuario"
+                            th:if="${user.valorSalario != null}"
+                            th:data-id="${user.id}"
+                            th:data-nome="${user.nome}"
+                            th:data-valor="${user.valorSalario}">
+                        <i class="fa-solid fa-money-bill-wave"></i> Pagar
+                    </button>
                     <a th:href="@{/usuarios/editar/{id}(id=${user.id})}" class="btn btn-sm btn-outline-light">
                         <i class="fa-solid fa-pen-to-square"></i> Editar
                     </a>
@@ -144,9 +162,68 @@
             </div>
         </div>
         
+        <!-- Modal de Pagamento -->
+        <div class="modal fade" id="modalPagamento" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background-color: #0f1623; border: 1px solid #1e293b;">
+                    <div class="modal-header border-bottom border-secondary">
+                        <h5 class="modal-title text-white">Registrar Pagamento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formPagamento" th:action="@{/financeiro/salvar}" method="post">
+                            <input type="hidden" name="tipo" value="SAIDA">
+                            <input type="hidden" name="categoria" value="PAGAMENTO_PESSOAL">
+                            
+                            <div class="mb-3">
+                                <label for="pagamentoDescricao" class="form-label text-light">Descrição</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary" id="pagamentoDescricao" name="descricao" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="pagamentoValor" class="form-label text-light">Valor (R$)</label>
+                                <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" id="pagamentoValor" name="valor" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="pagamentoData" class="form-label text-light">Data do Pagamento</label>
+                                <input type="datetime-local" class="form-control bg-dark text-light border-secondary" id="pagamentoData" name="data" required>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fa-solid fa-check"></i> Confirmar Pagamento
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script th:inline="javascript">
         /*<![CDATA[*/
             document.addEventListener('DOMContentLoaded', function() {
+                // Configurar Data Atual no Modal
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('pagamentoData').value = now.toISOString().slice(0, 16);
+
+                // Botão Pagar
+                document.querySelectorAll('.btn-pagar-usuario').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const nome = this.dataset.nome;
+                        const valor = this.dataset.valor;
+                        
+                        document.getElementById('pagamentoDescricao').value = 'Pagamento Salário - ' + nome;
+                        document.getElementById('pagamentoValor').value = valor;
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('modalPagamento'));
+                        modal.show();
+                    });
+                });
+
                 document.querySelectorAll('.btn-excluir-usuario').forEach(function(btn) {
                     btn.addEventListener('click', function(e) {
                         e.preventDefault();

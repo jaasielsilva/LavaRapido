@@ -3,6 +3,8 @@ package br.com.lavajato.model.usuario;
 import br.com.lavajato.model.empresa.Empresa;
 import jakarta.persistence.*;
 import lombok.Data;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -26,8 +28,21 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Perfil perfil;
+    
+    // Dados Financeiros / RH
+    @Enumerated(EnumType.STRING)
+    private TipoPagamento tipoPagamento;
+    
+    private BigDecimal valorSalario;
+    
+    private String chavePix;
+    
+    private LocalDate dataAdmissao;
 
     private boolean ativo = true;
+
+    @Column(name = "alterar_senha_proximo_login", nullable = false, columnDefinition = "boolean default false")
+    private boolean alterarSenhaProximoLogin = false;
 
     @ManyToOne
     @JoinColumn(name = "empresa_id")

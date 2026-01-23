@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+        <div class="mb-4 text-danger">
+            <i class="fa-solid fa-ban fa-5x"></i>
+        </div>
+        
+        <h1 class="display-4 fw-bold text-white mb-3">Acesso Negado</h1>
+        
+        <p class="lead text-secondary mb-4">
+            Você não tem permissão para acessar esta página.<br>
+            Se você acredita que isso é um erro, contate o administrador.
+        </p>
+
+        <div class="d-flex gap-3">
+            <a href="javascript:history.back()" class="btn btn-outline-light">
+                <i class="fa-solid fa-arrow-left"></i> Voltar
+            </a>
+            <a th:href="@{/dashboard}" class="btn btn-primary">
+                <i class="fa-solid fa-house"></i> Ir para o Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>

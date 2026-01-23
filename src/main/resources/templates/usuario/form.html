@@ -56,6 +56,33 @@
                 </div>
             </div>
 
+            <!-- Dados Financeiros -->
+            <h5 class="text-white mt-4 mb-3 pb-2 border-bottom border-secondary">Informações Financeiras & RH</h5>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="tipoPagamento" class="form-label text-light">Tipo de Pagamento</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="tipoPagamento" th:field="*{tipoPagamento}">
+                        <option value="">Selecione...</option>
+                        <option th:each="tp : ${tiposPagamento}" th:value="${tp}" th:text="${tp.descricao}"></option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="valorSalario" class="form-label text-light">Valor (R$)</label>
+                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" id="valorSalario" th:field="*{valorSalario}">
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="dataAdmissao" class="form-label text-light">Data Admissão</label>
+                    <input type="date" class="form-control bg-dark text-light border-secondary" id="dataAdmissao" th:field="*{dataAdmissao}">
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="chavePix" class="form-label text-light">Chave PIX</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="chavePix" th:field="*{chavePix}" placeholder="CPF, Email ou Aleatória">
+                </div>
+            </div>
+
             <div class="d-flex gap-2 justify-content-end mt-4">
                 <a th:href="@{/usuarios}" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary">

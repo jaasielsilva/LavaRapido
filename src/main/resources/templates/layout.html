@@ -4,15 +4,15 @@
       th:fragment="layout(conteudoPagina)">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Lava-Jato SaaS</title>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 </head>
 
 <body>
@@ -24,7 +24,7 @@
                 <i class="fa-solid fa-car"></i>
             </div>
             <div class="logo-icon" th:if="${empresaLogada != null && empresaLogada.logo != null}" style="background: none; padding: 0;">
-                <img th:src="${empresaLogada.logo}" alt="Logo" style="max-width: 100%; max-height: 40px; border-radius: 6px;">
+                <img th:src="${empresaLogada.logo}" alt="Logo" style="max-width: 100%; max-height: 40px; border-radius: 6px;" />
             </div>
             
             <div class="logo-text">
@@ -34,60 +34,63 @@
         </div>
 
         <div class="menu">
-            <a th:href="@{/dashboard}">
+            <!-- OPERACIONAL -->
+            <div class="menu-label mt-2 px-3 mb-2" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); opacity: 0.6; text-transform: uppercase;">Operacional</div>
+            
+            <a th:href="@{/dashboard}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI == '/dashboard' ? 'active' : ''}">
                 <i class="fa-solid fa-table-columns"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a th:href="@{/clientes}">
+            <a th:href="@{/clientes}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/clientes') ? 'active' : ''}">
                 <i class="fa-solid fa-users"></i>
                 <span>Clientes</span>
             </a>
 
-            <a th:href="@{/agendamentos}">
+            <a th:href="@{/agendamentos}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/agendamentos') ? 'active' : ''}">
                 <i class="fa-solid fa-calendar-days"></i>
                 <span>Agendamentos</span>
             </a>
 
-            <a th:href="@{/servicos-avulsos}">
+            <a th:href="@{/servicos-avulsos}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/servicos-avulsos') ? 'active' : ''}">
                 <i class="fa-solid fa-wrench"></i>
                 <span>Abrir OS</span>
             </a>
-
-            <a th:href="@{/financeiro}"
-               sec:authorize="hasAnyRole('MASTER','ADMIN')">
-                <i class="fa-solid fa-file-invoice-dollar"></i>
-                <span>Financeiro</span>
-            </a>
-
-            <a th:href="@{/produtos}"
-               sec:authorize="hasAnyRole('MASTER','ADMIN')">
-                <i class="fa-solid fa-box-open"></i>
-                <span>Produtos</span>
-            </a>
             
-            <a th:href="@{/catalogo}"
-               sec:authorize="hasAnyRole('MASTER','ADMIN')">
-                <i class="fa-solid fa-tags"></i>
-                <span>Catálogo</span>
-            </a>
-
-            <a th:href="@{/veiculos}">
+            <a th:href="@{/veiculos}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/veiculos') ? 'active' : ''}">
                 <i class="fa-solid fa-car-side"></i>
-                <span>Consulta Veículos</span>
+                <span>Veículos</span>
             </a>
 
-            <a th:href="@{/empresas}"
-               sec:authorize="hasRole('MASTER')">
-                <i class="fa-solid fa-building"></i>
-                <span>Empresas</span>
-            </a>
+            <!-- GESTÃO (ADMIN/MASTER) -->
+            <div sec:authorize="hasAnyRole('MASTER','ADMIN')">
+                <div class="menu-label mt-4 px-3 mb-2" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); opacity: 0.6; text-transform: uppercase;">Gestão & Financeiro</div>
+                
+                <a th:href="@{/usuarios}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/usuarios') ? 'active' : ''}">
+                    <i class="fa-solid fa-user-group"></i>
+                    <span>Funcionários</span>
+                </a>
 
-            <a th:href="@{/usuarios}"
-               sec:authorize="hasAnyRole('MASTER','ADMIN')">
-                <i class="fa-solid fa-user-gear"></i>
-                <span>Usuários</span>
-            </a>
+                <a th:href="@{/financeiro}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/financeiro') ? 'active' : ''}">
+                    <i class="fa-solid fa-cash-register"></i>
+                    <span>Fluxo de Caixa</span>
+                </a>
+
+                <a th:href="@{/produtos}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/produtos') ? 'active' : ''}">
+                    <i class="fa-solid fa-box-open"></i>
+                    <span>Produtos</span>
+                </a>
+                
+                <a th:href="@{/catalogo}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/catalogo') ? 'active' : ''}">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>Catálogo</span>
+                </a>
+                
+                <a th:href="@{/empresas}" sec:authorize="hasRole('MASTER')" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/empresas') ? 'active' : ''}">
+                    <i class="fa-solid fa-building"></i>
+                    <span>Empresas</span>
+                </a>
+            </div>
         </div>
     </div>
 
