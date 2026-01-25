@@ -4,8 +4,12 @@ import br.com.lavajato.model.produto.CategoriaProduto;
 import br.com.lavajato.model.produto.Produto;
 import br.com.lavajato.model.produto.UnidadeMedida;
 import br.com.lavajato.model.venda.FormaPagamento;
+import br.com.lavajato.model.financeiro.LancamentoFinanceiro;
+import br.com.lavajato.model.financeiro.TipoLancamento;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.produto.ProdutoService;
+import br.com.lavajato.service.financeiro.FinanceiroService;
+import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +33,12 @@ public class ProdutoController {
 
     @Autowired
     private ClienteService clienteService;
+
+    @Autowired
+    private FinanceiroService financeiroService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @GetMapping
     public String listar(Model model,
@@ -91,6 +101,28 @@ public class ProdutoController {
             }
         } catch (IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("produtoErro", ex.getMessage());
+        }
+        return "redirect:/produtos";
+    }
+
+    @PostMapping("/registrar-nota")
+    public String registrarNota(@RequestParam("numero") String numero,
+                                @RequestParam("valor") java.math.BigDecimal valor,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            var empresa = usuarioService.getUsuarioLogado().getEmpresa();
+            LancamentoFinanceiro lanc = new LancamentoFinanceiro();
+            lanc.setTipo(TipoLancamento.SAIDA);
+            lanc.setCategoria("Compra de Estoque");
+            lanc.setDescricao("Nota Fiscal: " + (numero != null ? numero.trim() : "N/D"));
+            lanc.setValor(valor != null ? valor : java.math.BigDecimal.ZERO);
+            lanc.setData(java.time.LocalDateTime.now());
+            financeiroService.salvarLancamento(lanc, empresa);
+            redirectAttributes.addFlashAttribute("produtoSucesso", "nota_registrada");
+            redirectAttributes.addFlashAttribute("notaNumero", numero);
+            redirectAttributes.addFlashAttribute("notaValor", valor);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("produtoErro", "Falha ao registrar nota: " + e.getMessage());
         }
         return "redirect:/produtos";
     }

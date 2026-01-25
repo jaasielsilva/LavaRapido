@@ -15,6 +15,7 @@ import br.com.lavajato.repository.agendamento.AgendamentoRepository;
 import br.com.lavajato.repository.financeiro.LancamentoFinanceiroRepository;
 import br.com.lavajato.repository.servico.ServicoAvulsoRepository;
 import br.com.lavajato.repository.venda.VendaRepository;
+import br.com.lavajato.service.usuario.UsuarioService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -48,6 +49,9 @@ public class FinanceiroService {
 
     @Autowired
     private AgendamentoRepository agendamentoRepository;
+    
+    @Autowired
+    private UsuarioService usuarioService;
 
     public Map<String, Object> calcularResumoFinanceiro(Empresa empresa, LocalDate inicio, LocalDate fim, String tipoFiltro) {
         LocalDateTime dataInicio = inicio.atStartOfDay();
@@ -309,6 +313,10 @@ public class FinanceiroService {
         lancamento.setEmpresa(empresa);
         if (lancamento.getData() == null) {
             lancamento.setData(LocalDateTime.now());
+        }
+        var usuario = usuarioService.getUsuarioLogado();
+        if (usuario != null) {
+            lancamento.setCriadoPor(usuario);
         }
         lancamentoRepository.save(lancamento);
     }

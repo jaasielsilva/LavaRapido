@@ -3,9 +3,12 @@ package br.com.lavajato.service.produto;
 import br.com.lavajato.model.empresa.Empresa;
 import br.com.lavajato.model.produto.CategoriaProduto;
 import br.com.lavajato.model.produto.Produto;
+import br.com.lavajato.model.produto.MovimentoEstoque;
+import br.com.lavajato.model.produto.TipoMovimentoEstoque;
 import br.com.lavajato.model.produto.UnidadeMedida;
 import br.com.lavajato.model.usuario.Usuario;
 import br.com.lavajato.repository.produto.ProdutoRepository;
+import br.com.lavajato.repository.produto.MovimentoEstoqueRepository;
 import br.com.lavajato.service.usuario.UsuarioService;
 import br.com.lavajato.service.financeiro.FinanceiroService;
 import br.com.lavajato.model.financeiro.LancamentoFinanceiro;
@@ -31,6 +34,9 @@ public class ProdutoService {
 
     @Autowired
     private FinanceiroService financeiroService;
+    
+    @Autowired
+    private MovimentoEstoqueRepository movimentoRepository;
 
     public List<Produto> listarAtivos() {
         Usuario usuario = usuarioService.getUsuarioLogado();
@@ -120,7 +126,32 @@ public class ProdutoService {
         Produto produto = repository.findByEmpresaAndEan(usuario.getEmpresa(), ean)
                 .orElseThrow(() -> new IllegalStateException("EAN não encontrado"));
         produto.setEstoque((produto.getEstoque() != null ? produto.getEstoque() : 0) + quantidade);
-        return repository.save(produto);
+        Produto atualizado = repository.save(produto);
+        
+        MovimentoEstoque mov = new MovimentoEstoque();
+        mov.setEmpresa(usuario.getEmpresa());
+        mov.setProduto(atualizado);
+        mov.setTipo(TipoMovimentoEstoque.ENTRADA);
+        mov.setQuantidade(quantidade);
+        mov.setValorUnitario(atualizado.getPrecoCusto());
+        if (atualizado.getPrecoCusto() != null) {
+            mov.setValorTotal(atualizado.getPrecoCusto().multiply(new java.math.BigDecimal(quantidade)));
+        }
+        mov.setOrigem("SCAN");
+        mov.setCriadoPor(usuario);
+        movimentoRepository.save(mov);
+        
+        if (atualizado.getPrecoCusto() != null && atualizado.getPrecoCusto().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            LancamentoFinanceiro lanc = new LancamentoFinanceiro();
+            lanc.setTipo(TipoLancamento.SAIDA);
+            lanc.setCategoria("Compra de Estoque");
+            lanc.setDescricao("Entrada estoque (SCAN): " + atualizado.getNome());
+            lanc.setValor(atualizado.getPrecoCusto().multiply(new java.math.BigDecimal(quantidade)));
+            lanc.setData(java.time.LocalDateTime.now());
+            financeiroService.salvarLancamento(lanc, usuario.getEmpresa());
+        }
+        
+        return atualizado;
     }
 
     // Métricas para Dashboard
