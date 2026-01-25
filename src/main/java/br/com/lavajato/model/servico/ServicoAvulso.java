@@ -11,6 +11,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import br.com.lavajato.util.OrdemServicoMensagemUtil;
 
 @Data
 @Entity
@@ -27,10 +28,10 @@ public class ServicoAvulso {
 
     @Column(nullable = false)
     private LocalDateTime dataCriacao = LocalDateTime.now();
-    
+
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime dataInicio;
-    
+
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime dataConclusao;
 
@@ -67,17 +68,18 @@ public class ServicoAvulso {
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean notificacaoAtrasoEnviada = false;
-    
+
     public String getNomeClienteDisplay() {
         if (cliente != null) {
             return cliente.getNome();
         }
         return clienteAvulsoNome != null ? clienteAvulsoNome : "Cliente Avulso";
     }
-    
+
     public String getVeiculoDisplay() {
         if (cliente != null && !cliente.getVeiculos().isEmpty()) {
-            // Pega o primeiro veículo para simplificar na listagem se não foi selecionado especificamente
+            // Pega o primeiro veículo para simplificar na listagem se não foi selecionado
+            // especificamente
             // Idealmente teríamos o Veículo selecionado aqui também, mas vamos simplificar
             var v = cliente.getVeiculos().get(0);
             return v.getModelo() + " - " + v.getPlaca();
@@ -92,7 +94,7 @@ public class ServicoAvulso {
         java.time.Duration duration = java.time.Duration.between(dataInicio, dataConclusao);
         long horas = duration.toHours();
         long minutos = duration.toMinutesPart();
-        
+
         if (horas > 0) {
             return String.format("%dh %dm", horas, minutos);
         } else {
@@ -101,78 +103,76 @@ public class ServicoAvulso {
     }
 
     public String getMensagemWhatsapp() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\uD83D\uDE97 *ORDEM DE SERVIÇO #").append(id).append("*").append("\n\n");
-        
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
-        sb.append("\uD83D\uDCC5 *Data:* ").append(dataCriacao.format(dtf)).append("\n\n");
-        
-        sb.append("\uD83D\uDC64 *Cliente:* ").append(getNomeClienteDisplay()).append("\n");
-        
+        String dataFormatada = dataCriacao != null ? dataCriacao.format(dtf) : "---";
+
+        String veiculo = "N/A";
+        String placa = "N/A";
         if (cliente != null && !cliente.getVeiculos().isEmpty()) {
-             var v = cliente.getVeiculos().get(0);
-             sb.append("\uD83D\uDE98 *Veículo:* ").append(v.getModelo()).append("\n");
-             sb.append("\uD83D\uDD16 *Placa:* ").append(v.getPlaca()).append("\n");
-             if (v.getCor() != null && !v.getCor().isEmpty()) {
-                 sb.append("\uD83C\uDFA8 *Cor:* ").append(v.getCor()).append("\n");
-             }
+            var v = cliente.getVeiculos().get(0);
+            veiculo = v.getModelo();
+            placa = v.getPlaca();
         } else if (clienteAvulsoVeiculo != null) {
-            sb.append("\uD83D\uDE98 *Veículo:* ").append(clienteAvulsoVeiculo).append("\n");
+            veiculo = clienteAvulsoVeiculo;
         }
-        
-        sb.append("\n\uD83E\uDDFD *Serviços:*\n");
+
         String nomeServico = servico != null ? servico.getNome() : nomeServicoHistorico;
-        sb.append("• ").append(nomeServico).append("\n\n");
-        
-        String valorFormatado = "R$ " + String.format("%.2f", valor != null ? valor : BigDecimal.ZERO);
-        sb.append("\uD83D\uDCB0 *Total:* ").append(valorFormatado).append("\n\n");
-        
-        sb.append("\u2705 *Status:* ").append(status.getDescricao()).append("\n\n");
-        
-        sb.append("_RAlavarapido_"); // Assinatura
-        
-        return sb.toString();
-    }
-    
-    public boolean isAtrasado() {
-        if (servico == null || servico.getTempoMinutos() == null || servico.getTempoMinutos() <= 0) {
-            return false;
-        }
-        
-        if (dataInicio == null) {
-            return false;
-        }
-        
-        // Only relevant for EM_ANDAMENTO or CONCLUIDO
-        if (status != StatusServico.EM_ANDAMENTO && status != StatusServico.CONCLUIDO) {
-            return false;
-        }
-        
-        LocalDateTime fim = dataConclusao != null ? dataConclusao : LocalDateTime.now();
-        long minutosDecorridos = java.time.Duration.between(dataInicio, fim).toMinutes();
-        
-        return minutosDecorridos > servico.getTempoMinutos();
+        String valorFormatado = String.format("%.2f", valor != null ? valor : BigDecimal.ZERO).replace(".", ",");
+
+        return OrdemServicoMensagemUtil.gerarMensagemOrdemServico(
+            id != null ? id.toString() : "-",
+            dataFormatada,
+            getNomeClienteDisplay(),
+            veiculo,
+            placa,
+            nomeServico,
+            valorFormatado,
+            status != null ? status.getDescricao() : "-"
+        );
     }
 
     public String getLinkWhatsapp() {
         String telefone = null;
         if (cliente != null && cliente.getTelefone() != null) {
             telefone = cliente.getTelefone().replaceAll("\\D", "");
-        }
-        
-        // Se não tiver telefone, retorna link sem número (abre lista de contatos)
-        String baseUrl = "https://wa.me/";
-        if (telefone != null && !telefone.isEmpty()) {
-            if (!telefone.startsWith("55")) {
+            // Se o telefone tem 10 ou 11 dígitos, assume-se que é um número brasileiro sem
+            // DDI (55)
+            if (telefone.length() == 10 || telefone.length() == 11) {
                 telefone = "55" + telefone;
             }
+        }
+
+        String baseUrl = "https://wa.me/";
+        if (telefone != null && !telefone.isEmpty()) {
             baseUrl += telefone;
         }
-        
+
         try {
-            return baseUrl + "?text=" + URLEncoder.encode(getMensagemWhatsapp(), StandardCharsets.UTF_8.toString());
+            String message = getMensagemWhatsapp();
+            String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+            return baseUrl + "?text=" + encodedMessage;
         } catch (Exception e) {
             return baseUrl;
         }
+    }
+
+    public boolean isAtrasado() {
+        if (servico == null || servico.getTempoMinutos() == null || servico.getTempoMinutos() <= 0) {
+            return false;
+        }
+
+        if (dataInicio == null) {
+            return false;
+        }
+
+        // Only relevant for EM_ANDAMENTO or CONCLUIDO
+        if (status != StatusServico.EM_ANDAMENTO && status != StatusServico.CONCLUIDO) {
+            return false;
+        }
+
+        LocalDateTime fim = dataConclusao != null ? dataConclusao : LocalDateTime.now();
+        long minutosDecorridos = java.time.Duration.between(dataInicio, fim).toMinutes();
+
+        return minutosDecorridos > servico.getTempoMinutos();
     }
 }

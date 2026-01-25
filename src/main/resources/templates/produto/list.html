@@ -1,56 +1,375 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::div})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div})}">
+
 <body>
     <div>
         <style>
-            /* Product Row Hover Effect - Blue Border */
-            .product-row {
-                transition: all 0.2s ease;
-                border-bottom: 1px solid rgba(255,255,255,0.03);
+            /* Layout & Common */
+            .list-container {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
             }
-            
-            .product-row:hover {
-                background-color: rgba(15, 22, 35, 1) !important;
-                box-shadow: inset 0 0 0 1px #38bdf8, 0 0 15px rgba(56, 189, 248, 0.2) !important;
-                transform: translateY(-2px);
-                z-index: 10;
+
+            /* Item Row - Floating Style */
+            .item-row {
+                background: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                padding: 15px 25px;
+                display: grid;
+                grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+                align-items: center;
+                gap: 20px;
+                transition: all 0.2s ease;
                 position: relative;
             }
-            
-            /* Adjust table cells to not block the row hover effect */
-            .product-row td {
-                transition: none;
-                background: transparent !important;
+
+            /* Default Hover: Blue (Matches Agendamentos) */
+            .item-row:hover {
+                transform: translateY(-2px);
+                border-color: #38bdf8 !important;
+                /* Azul */
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+                z-index: 10;
+            }
+
+            /* Estado Atrasado (Used for Low Stock here): Vermelho Pulsante no Hover */
+            .item-row.baixo-estoque:hover {
+                border-color: #ef4444 !important;
+                /* Vermelho */
+                animation: pulse-red 1.5s infinite;
+            }
+
+            /* Visual indication for low stock items (ALWAYS VISIBLE) */
+            .item-row.baixo-estoque {
+                border-color: #ef4444 !important;
+                /* Solid Red */
+                background: rgba(239, 68, 68, 0.05);
+                /* Slight tint */
+            }
+
+            @keyframes pulse-red {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+                }
+
+                70% {
+                    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+                }
+            }
+
+            /* Badge Pop Animation */
+            @keyframes badge-pop {
+                0% {
+                    transform: scale(1);
+                }
+
+                50% {
+                    transform: scale(1.4);
+                }
+
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+            .badge-animate {
+                animation: badge-pop 0.3s ease-out;
+            }
+
+            /* Toast Notification */
+            .custom-toast {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                background: #0f1623;
+                border: 1px solid #38bdf8;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+                z-index: 10000;
+                transform: translateY(100px);
+                opacity: 0;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .custom-toast.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            /* Icon Wrapper */
+            .item-icon {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                border-right: 1px solid rgba(255, 255, 255, 0.05);
+                padding-right: 20px;
+            }
+
+            .item-icon i {
+                font-size: 24px;
+                color: #38bdf8;
+            }
+
+            /* Main Info */
+            .item-main {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                min-width: 0;
+            }
+
+            .info-content .primary-text {
+                font-weight: 600;
+                color: white;
+                font-size: 15px;
+                margin-bottom: 2px;
+            }
+
+            .secondary-text {
+                font-size: 13px;
+                color: #94a3b8;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Category Section */
+            .item-category {
+                min-width: 0;
+            }
+
+            .label-text {
+                font-size: 10px;
+                text-transform: uppercase;
+                color: #475569;
+                font-weight: 700;
+                margin-bottom: 2px;
+            }
+
+            .value-text {
+                color: #cbd5e1;
+                font-size: 14px;
+            }
+
+            /* Status Section */
+            .item-status {
+                text-align: center;
+            }
+
+            .badge-status {
+                display: inline-block;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .status-green {
+                background: rgba(34, 197, 94, 0.15);
+                color: #4ade80;
+            }
+
+            .status-red {
+                background: rgba(239, 68, 68, 0.15);
+                color: #f87171;
+            }
+
+            .bg-soft-primary {
+                background: rgba(14, 165, 233, 0.2);
+                color: #38bdf8;
+            }
+
+            .bg-soft-warning {
+                background: rgba(245, 158, 11, 0.2);
+                color: #fbbf24;
+            }
+
+            .bg-soft-success {
+                background: rgba(34, 197, 94, 0.2);
+                color: #4ade80;
+            }
+
+            .bg-soft-danger {
+                background: rgba(239, 68, 68, 0.2);
+                color: #f87171;
+            }
+
+            .bg-soft-secondary {
+                background: rgba(148, 163, 184, 0.2);
+                color: #94a3b8;
+            }
+
+            /* End Section */
+            .item-end {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                padding-left: 20px;
+                border-left: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .price-tag {
+                font-weight: 700;
+                color: #4ade80;
+                font-size: 16px;
+                white-space: nowrap;
+            }
+
+            .btn-action-trigger {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background: transparent;
+                color: #94a3b8;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
+
+            .btn-action-trigger:hover,
+            .btn-action-trigger[aria-expanded="true"] {
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+            }
+
+            /* Search Bar */
+            .search-bar {
+                background: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 12px;
+                padding: 10px 15px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .search-bar input {
+                background: transparent;
+                border: none;
+                color: white;
+                font-size: 14px;
+                width: 100%;
+                outline: none;
+            }
+
+            .search-bar i {
+                color: #475569;
+            }
+
+            /* Empty State */
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                background: #0f1623;
+                border-radius: 20px;
+                border: 1px dashed #334155;
+            }
+
+            .empty-state .icon-circle {
+                width: 80px;
+                height: 80px;
+                background: rgba(30, 41, 59, 0.5);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 32px;
+                color: #475569;
+            }
+
+            /* Modal Styles */
+            .modal-content {
+                border-radius: 24px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+                background: linear-gradient(145deg, #0f1623 0%, #0b101b 100%) !important;
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            }
+
+            .modal-header {
+                padding: 24px 24px 16px 24px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .form-control,
+            .form-select {
+                background: rgba(0, 0, 0, 0.2) !important;
+                border: 1px solid #334155 !important;
+                color: white !important;
+                border-radius: 10px;
+            }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #38bdf8 !important;
+                box-shadow: 0 0 10px rgba(56, 189, 248, 0.1) !important;
+            }
+
+            .currency-input-wrapper {
+                position: relative;
+            }
+
+            .currency-input-wrapper .prefix {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #475569;
+                font-size: 14px;
+                pointer-events: none;
+            }
+
+            .currency-input-wrapper input {
+                padding-left: 35px;
             }
         </style>
+
         <!-- Header -->
-        <header>
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1>Produtos</h1>
-                    <div class="subtitle">Gerencie seu estoque e vendas</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary position-relative" id="btnAbrirVenda" data-bs-toggle="modal" data-bs-target="#modalFinalizarVenda">
-                        <i class="fa-solid fa-cart-shopping me-2"></i> Vender
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info" id="badgeCarrinho">
-                            0
-                        </span>
-                    </button>
-                    <button class="btn btn-primary" id="btnNovoProduto" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
-                        <i class="fa-solid fa-plus me-2"></i> Novo Produto
-                    </button>
-                </div>
+        <header class="mb-4 d-flex justify-content-between align-items-end">
+            <div>
+                <h1>Produtos</h1>
+                <div class="subtitle">Gestão de estoque e catálogo</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary position-relative px-4" id="btnAbrirVenda"
+                    data-bs-toggle="modal" data-bs-target="#modalFinalizarVenda">
+                    <i class="fa-solid fa-cart-shopping me-2"></i> Carrinho
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info"
+                        id="badgeCarrinho">0</span>
+                </button>
+                <button class="btn btn-primary px-4 d-flex align-items-center gap-2" data-bs-toggle="modal"
+                    data-bs-target="#modalNovoProduto" id="btnNovoProduto">
+                    <i class="fa-solid fa-plus"></i> Novo Produto
+                </button>
             </div>
         </header>
 
-        <!-- Stats Cards -->
-        <div class="cards mb-4">
+        <!-- Summary Cards -->
+        <div class="cards mb-5">
             <div class="card blue">
                 <div class="card-info">
-                    <h4>Total Produtos</h4>
-                    <span class="number" th:text="${totalProdutos}">0</span>
+                    <div>
+                        <h4>TOTAL PRODUTOS</h4>
+                        <div class="number" th:text="${totalProdutos}">0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Itens cadastrados</span>
+                    </div>
                 </div>
                 <div class="icon-box">
                     <i class="fa-solid fa-box"></i>
@@ -59,8 +378,13 @@
 
             <div class="card orange">
                 <div class="card-info">
-                    <h4>Estoque Baixo</h4>
-                    <span class="number" th:text="${estoqueBaixo}">0</span>
+                    <div>
+                        <h4>ESTOQUE BAIXO</h4>
+                        <div class="number" th:text="${estoqueBaixo}">0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Requer atenção</span>
+                    </div>
                 </div>
                 <div class="icon-box">
                     <i class="fa-solid fa-triangle-exclamation"></i>
@@ -69,8 +393,15 @@
 
             <div class="card green">
                 <div class="card-info">
-                    <h4>Valor em Estoque</h4>
-                    <span class="number" th:text="'R$ ' + ${#numbers.formatDecimal(valorEstoque != null ? valorEstoque : 0, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                    <div>
+                        <h4>VALOR EM ESTOQUE</h4>
+                        <div class="number"
+                            th:text="'R$ ' + ${#numbers.formatDecimal(valorEstoque != null ? valorEstoque : 0, 0, 'POINT', 2, 'COMMA')}">
+                            R$ 0,00</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Patrimônio total</span>
+                    </div>
                 </div>
                 <div class="icon-box">
                     <i class="fa-solid fa-dollar-sign"></i>
@@ -78,764 +409,526 @@
             </div>
         </div>
 
-        <!-- Filtros -->
-        <div class="d-flex justify-content-between mb-4">
-            <div class="search-bar flex-grow-1 me-3">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Buscar produtos...">
+        <!-- Search & Filter -->
+        <form th:action="@{/produtos}" method="get" class="row g-3 mb-4">
+            <div class="col-md-8">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="busca" th:value="${busca}" placeholder="Buscar por nome ou descrição...">
+                </div>
             </div>
-            <select class="form-select bg-dark text-secondary border-secondary w-auto" style="min-width: 200px;">
-                <option selected>Todas Categorias</option>
-                <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat.descricao}">Categoria</option>
-            </select>
-        </div>
+            <div class="col-md-3">
+                <select name="categoria" class="form-select">
+                    <option value="">Todas Categorias</option>
+                    <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat.descricao}"
+                        th:selected="${cat == categoriaSelecionada}">Categoria</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-secondary w-100"><i class="fa-solid fa-filter"></i></button>
+            </div>
+        </form>
 
-        <!-- Lista de Produtos (Padrão Serviços Avulsos) -->
+        <!-- Products List -->
         <div class="list-container">
-            <div th:if="${produtos.empty}" class="empty-state">
+            <div th:if="${#lists.isEmpty(produtos.content)}" class="empty-state">
                 <div class="icon-circle">
                     <i class="fa-solid fa-box-open"></i>
                 </div>
                 <h3>Nenhum produto encontrado</h3>
-                <p>Comece adicionando itens ao seu estoque.</p>
+                <p>Ajuste os filtros ou adicione um novo produto.</p>
             </div>
 
-            <div th:each="produto : ${produtos}" class="item-row" th:classappend="${produto.estoque <= produto.estoqueMinimo} ? ' atrasado' : ' em-prazo'">
+            <div th:each="produto : ${produtos.content}" class="item-row"
+                th:classappend="${produto.estoque <= (produto.estoqueMinimo != null ? produto.estoqueMinimo : 0)} ? 'baixo-estoque' : ''">
+
+                <!-- Icon -->
+                <div class="item-icon">
+                    <i
+                        th:class="${produto.categoria != null ? (
+                        produto.categoria.name() == 'CERA' ? 'fa-solid fa-spray-can-sparkles' : 
+                        produto.categoria.name() == 'SHAMPOO' ? 'fa-solid fa-soap' : 
+                        produto.categoria.name() == 'SILICONE' ? 'fa-solid fa-bottle-droplet' : 
+                        produto.categoria.name() == 'AROMATIZANTE' ? 'fa-solid fa-wind' : 
+                        produto.categoria.name() == 'ACESSORIO' ? 'fa-solid fa-bucket' : 'fa-solid fa-box') : 'fa-solid fa-box'}"></i>
+                </div>
+
+                <!-- Main Info -->
                 <div class="item-main">
-                    <div class="vehicle-icon-wrapper">
-                        <i class="fa-solid fa-box"></i>
-                    </div>
                     <div class="info-content">
-                        <div class="primary-text" th:text="${produto.nome}">Nome</div>
-                        <div class="secondary-text d-flex gap-2 align-items-center">
-                            <span class="badge rounded-pill border border-opacity-10 fw-semibold px-2 py-1" 
-                                  th:classappend="'bg-soft-' + ${produto.categoria.cor}"
-                                  th:text="${produto.categoria.descricao}">Categoria</span>
-                            <span class="text-secondary" th:text="${produto.unidade.sigla}">UN</span>
-                            <span class="text-secondary" th:if="${produto.descricao != null}" th:text="${produto.descricao}">Descrição</span>
-                        </div>
+                        <div class="primary-text" th:text="${produto.nome}">Nome do Produto</div>
+                        <div class="secondary-text" th:text="${produto.descricao != null ? produto.descricao : '-'}">
+                            Descrição do produto</div>
                     </div>
                 </div>
 
-                <div class="item-status">
-                    <span class="badge-status" 
-                          th:classappend="${produto.estoque <= produto.estoqueMinimo} ? 'status-red' : 'status-green'"
-                          th:text="${produto.estoque <= produto.estoqueMinimo ? 'ESTOQUE BAIXO' : 'EM ESTOQUE'}">EM ESTOQUE</span>
+                <!-- Category & Unit -->
+                <div class="item-category">
+                    <div class="label-text">CATEGORIA</div>
+                    <div class="value-text d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill fw-semibold px-2 py-1"
+                            th:classappend="'bg-soft-' + (produto.categoria != null ? produto.categoria.cor : 'secondary')"
+                            th:text="${produto.categoria != null ? produto.categoria.descricao : 'Outros'}">Categoria</span>
+                        <span class="text-secondary small fw-bold"
+                            th:text="'(' + ${produto.unidade != null ? produto.unidade.sigla : 'UN'} + ')'">UN</span>
+                    </div>
                 </div>
 
+                <!-- Stock Status -->
+                <div class="item-status text-start">
+                    <div class="label-text">ESTOQUE ATUAL</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold fs-5"
+                            th:classappend="${produto.estoque <= (produto.estoqueMinimo != null ? produto.estoqueMinimo : 0)} ? 'text-danger' : 'text-white'"
+                            th:text="${produto.estoque}">10</span>
+                        <span class="text-secondary small"
+                            th:text="${produto.unidade != null ? produto.unidade.descricao : 'Unid.'}">Unid.</span>
+                        <i class="fa-solid fa-triangle-exclamation text-danger ms-1"
+                            th:if="${produto.estoque <= (produto.estoqueMinimo != null ? produto.estoqueMinimo : 0)}"
+                            title="Estoque Baixo"></i>
+                    </div>
+                </div>
+
+                <!-- Price -->
                 <div class="item-end">
-                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda != null ? produto.precoVenda : 0, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
-                    
-                    <div class="dropdown">
-                        <button class="btn-action-trigger" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-ellipsis"></i>
+                    <div class="price-tag"
+                        th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda != null ? produto.precoVenda : 0, 1, 'POINT', 2, 'COMMA')}">
+                        R$ 0,00</div>
+
+                    <div class="d-flex gap-2">
+                        <!-- Botão Adicionar ao Carrinho -->
+                        <button class="btn-action-trigger btn-add-carrinho" type="button" title="Adicionar ao Carrinho"
+                            th:data-id="${produto.id}" th:data-nome="${produto.nome}"
+                            th:data-preco="${produto.precoVenda}">
+                            <i class="fa-solid fa-cart-plus"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg">
-                            <li>
-                                <button class="dropdown-item btn-edit-produto" type="button"
-                                        th:data-id="${produto.id}"
-                                        th:data-nome="${produto.nome}"
-                                        th:data-descricao="${produto.descricao}"
-                                        th:data-preco-venda="${produto.precoVenda}"
-                                        th:data-preco-custo="${produto.precoCusto}"
-                                        th:data-estoque="${produto.estoque}"
-                                        th:data-estoque-minimo="${produto.estoqueMinimo}"
-                                        th:data-categoria="${produto.categoria}"
-                                        th:data-unidade="${produto.unidade}">
-                                    <i class="fa-solid fa-pen me-2"></i> Editar
-                                </button>
-                            </li>
-                            <li>
-                                <button class="dropdown-item btn-add-carrinho" type="button"
-                                        th:data-id="${produto.id}"
-                                        th:data-nome="${produto.nome}"
-                                        th:data-preco="${produto.precoVenda}">
-                                    <i class="fa-solid fa-cart-plus me-2"></i> Adicionar ao Carrinho
-                                    <input type="hidden" class="input-qtd" value="1">
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tabela de Produtos -->
-        <div class="card d-block w-100 border border-secondary border-opacity-10 bg-dark-subtle overflow-hidden" style="background-color: #0b121f !important;" th:if="${false}">
-            <div>
-                <table class="table table-hover align-middle mb-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.03);">
-                    <thead style="background-color: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <tr>
-                            <th scope="col" class="py-3 ps-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Produto</th>
-                            <th scope="col" class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Categoria</th>
-                            <th scope="col" class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Preço</th>
-                            <th scope="col" class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Estoque</th>
-                            <th scope="col" class="py-3 text-end pe-4 text-secondary text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1.2px;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-top-0">
-                        <tr th:if="${produtos.content.empty}">
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <div class="py-4">
-                                    <div class="mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-dark border border-secondary border-opacity-25" style="width: 64px; height: 64px;">
-                                        <i class="fa-solid fa-box-open fa-lg text-secondary"></i>
-                                    </div>
-                                    <h6 class="text-white mb-1">Nenhum produto encontrado</h6>
-                                    <p class="text-secondary small mb-0">Comece adicionando itens ao seu estoque.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr th:each="produto : ${produtos.content}" class="product-row">
-                            <td class="ps-4 py-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-3 shadow-sm" 
-                                         style="width: 36px; height: 36px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(255,255,255,0.05);">
-                                        <i class="fa-solid fa-box text-info opacity-75 small"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-white mb-0" th:text="${produto.nome}" style="font-size: 0.9rem;">Nome</div>
-                                        <div class="small text-secondary text-truncate" style="max-width: 250px; font-size: 0.75rem;" th:text="${produto.descricao}">Descrição</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-2">
-                                <span class="badge rounded-pill border border-opacity-10 fw-semibold px-2 py-1" 
-                                      th:classappend="'bg-soft-' + ${produto.categoria.cor}"
-                                      style="font-size: 0.65rem; letter-spacing: 0.5px;"
-                                      th:text="${produto.categoria.descricao}">Categoria</span>
-                            </td>
-                            <td class="py-2">
-                                <div class="d-flex flex-column">
-                                    <span class="fw-bold text-white" style="font-size: 0.9rem;" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda != null ? produto.precoVenda : 0, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
-                                    <span class="text-secondary opacity-50" style="font-size: 0.7rem;" th:if="${produto.precoCusto != null}" th:text="'Custo: R$ ' + ${#numbers.formatDecimal(produto.precoCusto, 0, 'POINT', 2, 'COMMA')}"></span>
-                                </div>
-                            </td>
-                            <td class="py-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <div class="fw-bold text-white" style="font-size: 0.9rem;" th:text="${produto.estoque}">0</div>
-                                        <div class="text-secondary" style="font-size: 0.65rem;" th:text="${produto.unidade.sigla}">UN</div>
-                                    </div>
-                                    <span class="badge bg-soft-warning border border-warning border-opacity-25 text-warning rounded-pill px-2 py-1" 
-                                          th:if="${produto.estoque <= produto.estoqueMinimo}"
-                                          style="font-size: 0.6rem;">
-                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> BAIXO
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="text-end pe-4 py-2">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <!-- Botão Adicionar ao Carrinho -->
-                                    <button class="btn btn-icon btn-ghost-info btn-add-carrinho rounded-2"
-                                            title="Adicionar ao Carrinho"
-                                            th:data-id="${produto.id}"
-                                            th:data-nome="${produto.nome}"
-                                            th:data-preco="${produto.precoVenda}"
-                                            style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(14, 165, 233, 0.2); background: rgba(14, 165, 233, 0.05);">
-                                        <i class="fa-solid fa-cart-plus text-info" style="font-size: 0.8rem;"></i>
-                                        <input type="hidden" class="input-qtd" value="1">
-                                    </button>
-                                    
-                                    <!-- Botão Editar -->
-                                    <button class="btn btn-icon btn-ghost-secondary btn-edit-produto rounded-2"
-                                       title="Editar"
-                                       th:data-id="${produto.id}"
-                                       th:data-nome="${produto.nome}"
-                                       th:data-descricao="${produto.descricao}"
-                                       th:data-preco-venda="${produto.precoVenda}"
-                                       th:data-preco-custo="${produto.precoCusto}"
-                                       th:data-estoque="${produto.estoque}"
-                                       th:data-estoque-minimo="${produto.estoqueMinimo}"
-                                       th:data-categoria="${produto.categoria}"
-                                       th:data-unidade="${produto.unidade}"
-                                       style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(148, 163, 184, 0.2); background: rgba(148, 163, 184, 0.05);">
-                                        <i class="fa-solid fa-pen text-secondary" style="font-size: 0.8rem;"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Paginação -->
-            <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary border-opacity-10 bg-dark bg-opacity-25" th:if="${produtos.totalPages > 0}">
-                <div class="text-secondary small">
-                    Mostrando <span th:text="${produtos.numberOfElements}">5</span> de <span th:text="${produtos.totalElements}">10</span> produtos
-                </div>
-                <nav aria-label="Navegação de página">
-                    <ul class="pagination justify-content-center pagination-dark mb-0">
-                        <li class="page-item" th:classappend="${produtos.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{/produtos(page=${produtos.number - 1})}" tabindex="-1">
-                                &larr; Anterior
-                            </a>
-                        </li>
-                        <li class="page-item" th:classappend="${produtos.last} ? 'disabled'">
-                            <a class="page-link" th:href="@{/produtos(page=${produtos.number + 1})}">
-                                Próximo &rarr;
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
 
-        <!-- Modal Finalizar Venda -->
-        <div class="modal fade" id="modalFinalizarVenda" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header border-bottom border-secondary border-opacity-10">
-                        <h5 class="modal-title fw-bold">Finalizar Venda</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-4">
-                            <!-- Coluna Esquerda: Itens -->
-                            <div class="col-md-8 border-end border-secondary border-opacity-10">
-                                <h6 class="text-info mb-3"><i class="fa-solid fa-list me-2"></i>Itens do Pedido</h6>
-                                
-                                <div id="listaItensVenda" class="d-flex flex-column gap-2 mb-3" style="max-height: 300px; overflow-y: auto;">
-                                    <!-- Itens serão injetados aqui via JS -->
-                                    <div class="text-center text-muted py-5" id="carrinhoVazioMsg">
-                                        <i class="fa-solid fa-cart-arrow-down fa-2x mb-2"></i>
-                                        <p>Carrinho vazio</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Coluna Direita: Pagamento e Total -->
-                            <div class="col-md-4 d-flex flex-column">
-                                <h6 class="text-info mb-3"><i class="fa-solid fa-user me-2"></i>Cliente (Opcional)</h6>
-                                <select class="form-select bg-dark text-light border-secondary focus-info mb-4" id="vendaCliente">
-                                    <option value="" selected>Selecione um cliente</option>
-                                    <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}">João</option>
-                                </select>
-
-                                <h6 class="text-info mb-3"><i class="fa-solid fa-money-bill-wave me-2"></i>Forma de Pagamento</h6>
-                                <div class="d-flex flex-column gap-2 mb-4">
-                                    <div class="form-check" th:each="forma : ${formasPagamento}">
-                                        <input class="form-check-input bg-dark border-secondary" type="radio" name="formaPagamento" th:id="${forma}" th:value="${forma}" th:checked="${forma.name() == 'DINHEIRO'}">
-                                        <label class="form-check-label text-light" th:for="${forma}" th:text="${forma.descricao}">
-                                            Dinheiro
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="mt-auto pt-3 border-top border-secondary border-opacity-10">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-secondary">Total:</span>
-                                        <span class="fs-3 fw-bold text-white" id="vendaTotal">R$ 0,00</span>
-                                    </div>
-                                    <button type="button" class="btn btn-success w-100 fw-bold py-2" id="btnFinalizarVenda" disabled>
-                                        <i class="fa-solid fa-check me-2"></i> Finalizar Venda
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Botão Editar -->
+                        <button class="btn-action-trigger btn-edit-produto" type="button" title="Editar"
+                            th:data-id="${produto.id}" th:data-nome="${produto.nome}"
+                            th:data-descricao="${produto.descricao}" th:data-preco-venda="${produto.precoVenda}"
+                            th:data-preco-custo="${produto.precoCusto}" th:data-estoque="${produto.estoque}"
+                            th:data-estoque-minimo="${produto.estoqueMinimo}" th:data-categoria="${produto.categoria}"
+                            th:data-unidade="${produto.unidade}">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Novo Produto -->
+        <!-- Pagination -->
+        <nav th:if="${produtos.totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center pagination-dark">
+                <li class="page-item" th:classappend="${produtos.first} ? 'disabled'">
+                    <a class="page-link"
+                        th:href="@{/produtos(page=${produtos.number - 1}, busca=${busca}, categoria=${categoriaSelecionada})}">
+                        &larr; Anterior
+                    </a>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link" th:text="${produtos.number + 1}">1</span>
+                </li>
+                <li class="page-item" th:classappend="${produtos.last} ? 'disabled'">
+                    <a class="page-link"
+                        th:href="@{/produtos(page=${produtos.number + 1}, busca=${busca}, categoria=${categoriaSelecionada})}">
+                        Próximo &rarr;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Modal: Novo/Editar Produto -->
         <div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header border-bottom border-secondary border-opacity-10">
+                    <div class="modal-header">
                         <h5 class="modal-title fw-bold" id="modalTituloProduto">Novo Produto</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <form th:action="@{/produtos/salvar}" method="post" th:object="${novoProduto}">
-                        <div class="modal-body">
-                            
+                        <div class="modal-body p-4">
                             <input type="hidden" th:field="*{id}" id="produtoId" />
-                            
+
                             <div class="mb-3">
-                                <label for="nome" class="form-label text-light small fw-bold">Nome *</label>
-                                <input type="text" class="form-control bg-dark text-light border-secondary focus-info" id="nome" th:field="*{nome}" placeholder="Nome do produto" required>
+                                <label class="form-label small fw-bold">NOME DO PRODUTO *</label>
+                                <input type="text" class="form-control" th:field="*{nome}"
+                                    placeholder="Ex: Cera Cristalizadora" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="descricao" class="form-label text-light small fw-bold">Descrição</label>
-                                <textarea class="form-control bg-dark text-light border-secondary focus-info" id="descricao" th:field="*{descricao}" placeholder="Descrição" rows="2"></textarea>
+                                <label class="form-label small fw-bold">DESCRIÇÃO</label>
+                                <textarea class="form-control" th:field="*{descricao}"
+                                    placeholder="Detalhes do produto..." rows="2"></textarea>
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-6">
-                                    <label for="precoVendaDisplay" class="form-label text-light small fw-bold">Preço de Venda *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-dark border-secondary text-secondary">R$</span>
-                                        <input type="text" class="form-control bg-dark text-light border-secondary focus-info currency-input" id="precoVendaDisplay" placeholder="0,00" required>
+                                    <label class="form-label small fw-bold">PREÇO VENDA *</label>
+                                    <div class="currency-input-wrapper">
+                                        <span class="prefix">R$</span>
+                                        <input type="text" class="form-control currency-mask" id="precoVendaDisplay"
+                                            placeholder="0,00" required>
+                                        <input type="hidden" th:field="*{precoVenda}" id="precoVenda">
                                     </div>
-                                    <input type="hidden" id="precoVenda" th:field="*{precoVenda}">
                                 </div>
                                 <div class="col-6">
-                                    <label for="precoCustoDisplay" class="form-label text-light small fw-bold">Preço de Custo</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-dark border-secondary text-secondary">R$</span>
-                                        <input type="text" class="form-control bg-dark text-light border-secondary focus-info currency-input" id="precoCustoDisplay" placeholder="0,00">
+                                    <label class="form-label small fw-bold">PREÇO CUSTO</label>
+                                    <div class="currency-input-wrapper">
+                                        <span class="prefix">R$</span>
+                                        <input type="text" class="form-control currency-mask" id="precoCustoDisplay"
+                                            placeholder="0,00">
+                                        <input type="hidden" th:field="*{precoCusto}" id="precoCusto">
                                     </div>
-                                    <input type="hidden" id="precoCusto" th:field="*{precoCusto}">
                                 </div>
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-6">
-                                    <label for="estoque" class="form-label text-light small fw-bold">Estoque</label>
-                                    <input type="number" class="form-control bg-dark text-light border-secondary focus-info" id="estoque" th:field="*{estoque}" placeholder="0">
+                                    <label class="form-label small fw-bold">ESTOQUE ATUAL</label>
+                                    <input type="number" class="form-control" th:field="*{estoque}" placeholder="0">
                                 </div>
                                 <div class="col-6">
-                                    <label for="estoqueMinimo" class="form-label text-light small fw-bold">Estoque Mínimo</label>
-                                    <input type="number" class="form-control bg-dark text-light border-secondary focus-info" id="estoqueMinimo" th:field="*{estoqueMinimo}" value="5">
+                                    <label class="form-label small fw-bold">ESTOQUE MÍNIMO</label>
+                                    <input type="number" class="form-control" th:field="*{estoqueMinimo}"
+                                        placeholder="5">
                                 </div>
                             </div>
 
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <label for="categoria" class="form-label text-light small fw-bold">Categoria</label>
-                                    <select class="form-select bg-dark text-light border-secondary focus-info" id="categoria" th:field="*{categoria}">
-                                        <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat.descricao}">Outros</option>
+                                    <label class="form-label small fw-bold">CATEGORIA *</label>
+                                    <select class="form-select" th:field="*{categoria}" required>
+                                        <option th:each="cat : ${categorias}" th:value="${cat}"
+                                            th:text="${cat.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label for="unidade" class="form-label text-light small fw-bold">Unidade</label>
-                                    <select class="form-select bg-dark text-light border-secondary focus-info" id="unidade" th:field="*{unidade}">
-                                        <option th:each="un : ${unidades}" th:value="${un}" th:text="${un.descricao}">Unidade</option>
+                                    <label class="form-label small fw-bold">UNIDADE *</label>
+                                    <select class="form-select" th:field="*{unidade}" required>
+                                        <option th:each="un : ${unidades}" th:value="${un}" th:text="${un.descricao}">
+                                        </option>
                                     </select>
                                 </div>
                             </div>
-
                         </div>
-                        <div class="modal-footer border-top-0 pt-0">
-                            <button type="submit" class="btn btn-info w-100 fw-bold" id="btnSubmitProduto">Cadastrar Produto</button>
+                        <div class="modal-footer border-0 p-4 pt-0">
+                            <button type="submit" class="btn btn-primary w-100 fw-bold py-2"
+                                id="btnSubmitProduto">CADASTRAR PRODUTO</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-        
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Estado do Carrinho
+
+        <!-- Modal: Carrinho de Vendas -->
+        <div class="modal fade" id="modalFinalizarVenda" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Finalizar Venda</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="row g-0">
+                            <!-- Items -->
+                            <div class="col-md-7 p-4 border-end border-secondary border-opacity-10">
+                                <h6 class="text-info mb-3 d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-list-ul"></i> ITENS DO PEDIDO
+                                </h6>
+                                <div id="listaItensVenda" class="d-flex flex-column gap-2 overflow-auto"
+                                    style="max-height: 350px;">
+                                    <div class="text-center text-muted py-5" id="carrinhoVazioMsg">
+                                        <i class="fa-solid fa-cart-arrow-down fa-2x mb-2 opacity-20"></i>
+                                        <p>Carrinho vazio</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Payment -->
+                            <div class="col-md-5 p-4 bg-dark bg-opacity-20">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold">CLIENTE (OPCIONAL)</label>
+                                    <select class="form-select" id="vendaCliente">
+                                        <option value="">Selecione um cliente</option>
+                                        <option th:each="cliente : ${clientes}" th:value="${cliente.id}"
+                                            th:text="${cliente.nome}">Nome</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold mb-3">FORMA DE PAGAMENTO</label>
+                                    <div class="d-flex flex-column gap-2">
+                                        <div class="form-check" th:each="forma : ${formasPagamento}">
+                                            <input class="form-check-input" type="radio" name="formaPagamento"
+                                                th:id="'fp-' + ${forma}" th:value="${forma}"
+                                                th:checked="${forma.name() == 'DINHEIRO'}">
+                                            <label class="form-check-label text-light" th:for="'fp-' + ${forma}"
+                                                th:text="${forma.descricao}">Dinheiro</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 pt-3 border-top border-secondary border-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-secondary small fw-bold">TOTAL</span>
+                                        <span class="fs-3 fw-bold text-white" id="vendaTotal">R$ 0,00</span>
+                                    </div>
+                                    <button type="button" class="btn btn-success w-100 fw-bold py-3 shadow-lg"
+                                        id="btnConfirmarVenda" disabled>
+                                        <i class="fa-solid fa-check me-2"></i> FINALIZAR VENDA
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSRF -->
+        <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"
+            id="csrfToken" />
+
+        <!-- Scripts -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function () {
+                // Modals
+                const modalProduto = new bootstrap.Modal(document.getElementById('modalNovoProduto'));
+                const modalVenda = new bootstrap.Modal(document.getElementById('modalFinalizarVenda'));
+
+                // State
                 let carrinho = [];
 
-                // Seletores
-                const badgeCarrinho = document.getElementById('badgeCarrinho');
-                const btnAbrirVenda = document.getElementById('btnAbrirVenda');
-                const listaItensVenda = document.getElementById('listaItensVenda');
-                const carrinhoVazioMsg = document.getElementById('carrinhoVazioMsg');
-                const vendaTotal = document.getElementById('vendaTotal');
-                const btnFinalizarVenda = document.getElementById('btnFinalizarVenda');
-                
-                const modalNovoProdutoEl = document.getElementById('modalNovoProduto');
-                const modalNovoProduto = modalNovoProdutoEl ? new bootstrap.Modal(modalNovoProdutoEl) : null;
-                const btnNovoProduto = document.getElementById('btnNovoProduto');
-                const modalTituloProduto = document.getElementById('modalTituloProduto');
-                const btnSubmitProduto = document.getElementById('btnSubmitProduto');
-                const inputId = document.getElementById('produtoId');
-                const inputNome = document.getElementById('nome');
-                const inputDescricao = document.getElementById('descricao');
-                const inputPrecoVenda = document.getElementById('precoVenda');
-                const inputPrecoCusto = document.getElementById('precoCusto');
-                const inputPrecoVendaDisplay = document.getElementById('precoVendaDisplay');
-                const inputPrecoCustoDisplay = document.getElementById('precoCustoDisplay');
-
-                // --- Máscara Monetária ---
-                const formatarMoeda = (valor) => {
-                    if (!valor) return '';
-                    return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                // --- Currency Mask ---
+                const formatMoeda = (val) => {
+                    if (!val) return '0,00';
+                    return parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                 };
 
-                const aplicarMascaraMoeda = (input, hiddenInput) => {
-                    let valor = input.value.replace(/\D/g, '');
-                    if (valor === '') {
+                const applyMask = (input, hidden) => {
+                    let val = input.value.replace(/\D/g, '');
+                    if (!val) {
                         input.value = '';
-                        hiddenInput.value = '';
+                        hidden.value = '';
                         return;
                     }
-                    
-                    const decimal = parseInt(valor) / 100;
-                    input.value = decimal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    hiddenInput.value = decimal.toFixed(2);
+                    const decimal = parseInt(val) / 100;
+                    input.value = formatMoeda(decimal);
+                    hidden.value = decimal.toFixed(2);
                 };
 
-                document.querySelectorAll('.currency-input').forEach(input => {
-                    input.addEventListener('input', function() {
-                        const hiddenId = this.id.replace('Display', '');
-                        const hiddenInput = document.getElementById(hiddenId);
-                        if (hiddenInput) {
-                            aplicarMascaraMoeda(this, hiddenInput);
-                        }
+                document.querySelectorAll('.currency-mask').forEach(input => {
+                    input.addEventListener('input', function () {
+                        const targetId = this.id.replace('Display', '');
+                        const hidden = document.getElementById(targetId);
+                        applyMask(this, hidden);
                     });
                 });
 
-                const inputEstoque = document.getElementById('estoque');
-                const inputEstoqueMinimo = document.getElementById('estoqueMinimo');
-                const selectCategoria = document.getElementById('categoria');
-                const selectUnidade = document.getElementById('unidade');
+                // --- New Product ---
+                document.getElementById('btnNovoProduto').addEventListener('click', () => {
+                    document.querySelector('form[method="post"]').reset();
+                    document.getElementById('produtoId').value = '';
+                    document.getElementById('modalTituloProduto').innerText = 'Novo Produto';
+                    document.getElementById('btnSubmitProduto').innerText = 'CADASTRAR PRODUTO';
+                });
 
-                if (btnNovoProduto) {
-                    btnNovoProduto.addEventListener('click', function() {
-                        if (inputId) inputId.value = '';
-                        if (inputNome) inputNome.value = '';
-                        if (inputDescricao) inputDescricao.value = '';
-                        if (inputPrecoVenda) inputPrecoVenda.value = '';
-                        if (inputPrecoCusto) inputPrecoCusto.value = '';
-                        if (inputPrecoVendaDisplay) inputPrecoVendaDisplay.value = '';
-                        if (inputPrecoCustoDisplay) inputPrecoCustoDisplay.value = '';
-                        if (inputEstoque) inputEstoque.value = '';
-                        if (inputEstoqueMinimo) inputEstoqueMinimo.value = inputEstoqueMinimo.getAttribute('value') || '';
-                        if (selectCategoria) selectCategoria.selectedIndex = 0;
-                        if (selectUnidade) selectUnidade.selectedIndex = 0;
-                        if (modalTituloProduto) modalTituloProduto.textContent = 'Novo Produto';
-                        if (btnSubmitProduto) btnSubmitProduto.textContent = 'Cadastrar Produto';
-                    });
-                }
-
+                // --- Edit Product ---
                 document.querySelectorAll('.btn-edit-produto').forEach(btn => {
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const data = this.dataset;
+                    btn.addEventListener('click', function () {
+                        const d = this.dataset;
+                        document.getElementById('produtoId').value = d.id;
+                        document.querySelector('[name="nome"]').value = d.nome;
+                        document.querySelector('[name="descricao"]').value = d.descricao !== 'null' ? d.descricao : '';
+                        document.getElementById('precoVenda').value = d.precoVenda;
+                        document.getElementById('precoVendaDisplay').value = formatMoeda(d.precoVenda);
+                        document.getElementById('precoCusto').value = d.precoCusto !== 'null' ? d.precoCusto : '';
+                        document.getElementById('precoCustoDisplay').value = d.precoCusto !== 'null' ? formatMoeda(d.precoCusto) : '';
+                        document.querySelector('[name="estoque"]').value = d.estoque !== 'null' ? d.estoque : '';
+                        document.querySelector('[name="estoqueMinimo"]').value = d.estoqueMinimo !== 'null' ? d.estoqueMinimo : '';
+                        document.querySelector('[name="categoria"]').value = d.categoria;
+                        document.querySelector('[name="unidade"]').value = d.unidade;
 
-                        if (inputId) inputId.value = data.id || '';
-                        if (inputNome) inputNome.value = data.nome || '';
-                        if (inputDescricao) inputDescricao.value = data.descricao && data.descricao !== 'null' ? data.descricao : '';
-                        if (inputPrecoVenda) inputPrecoVenda.value = data.precoVenda || '';
-                        if (inputPrecoCusto) inputPrecoCusto.value = data.precoCusto && data.precoCusto !== 'null' ? data.precoCusto : '';
-                        
-                        if (inputPrecoVendaDisplay) {
-                            inputPrecoVendaDisplay.value = data.precoVenda ? formatarMoeda(data.precoVenda) : '';
-                        }
-                        if (inputPrecoCustoDisplay) {
-                            inputPrecoCustoDisplay.value = (data.precoCusto && data.precoCusto !== 'null') ? formatarMoeda(data.precoCusto) : '';
-                        }
-
-                        if (inputEstoque) inputEstoque.value = data.estoque && data.estoque !== 'null' ? data.estoque : '';
-                        if (inputEstoqueMinimo) inputEstoqueMinimo.value = data.estoqueMinimo && data.estoqueMinimo !== 'null' ? data.estoqueMinimo : '';
-                        if (selectCategoria && data.categoria) selectCategoria.value = data.categoria;
-                        if (selectUnidade && data.unidade) selectUnidade.value = data.unidade;
-
-                        if (modalTituloProduto) modalTituloProduto.textContent = 'Editar Produto';
-                        if (btnSubmitProduto) btnSubmitProduto.textContent = 'Salvar Alterações';
-
-                        if (modalNovoProduto) modalNovoProduto.show();
+                        document.getElementById('modalTituloProduto').innerText = 'Editar Produto';
+                        document.getElementById('btnSubmitProduto').innerText = 'SALVAR ALTERAÇÕES';
+                        modalProduto.show();
                     });
                 });
 
-                // --- Lógica de Quantidade no Card ---
-                document.querySelectorAll('.btn-qtd-menos').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const input = this.parentElement.querySelector('.input-qtd');
-                        let val = parseInt(input.value);
-                        if (val > 1) input.value = val - 1;
-                    });
-                });
+                // --- Cart Logic ---
+                const updateCartUI = (animate = false) => {
+                    const badge = document.getElementById('badgeCarrinho');
+                    const totalQtd = carrinho.reduce((acc, it) => acc + it.qtd, 0);
+                    badge.innerText = totalQtd;
 
-                document.querySelectorAll('.btn-qtd-mais').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const input = this.parentElement.querySelector('.input-qtd');
-                        input.value = parseInt(input.value) + 1;
-                    });
-                });
+                    if (animate) {
+                        badge.classList.remove('badge-animate');
+                        void badge.offsetWidth; // Trigger reflow
+                        badge.classList.add('badge-animate');
+                    }
 
-                // --- Adicionar ao Carrinho ---
-                document.querySelectorAll('.btn-add-carrinho').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.dataset.id;
-                        const nome = this.dataset.nome;
-                        const preco = parseFloat(this.dataset.preco);
-                        
-                        // Default to 1 if input not found (for table view)
-                        const qtdInput = this.querySelector('.input-qtd');
-                        const quantidade = qtdInput ? parseInt(qtdInput.value) : 1;
+                    const list = document.getElementById('listaItensVenda');
+                    const empty = document.getElementById('carrinhoVazioMsg');
+                    const confirmBtn = document.getElementById('btnConfirmarVenda');
 
-                        // Verificar se já existe
-                        const itemExistente = carrinho.find(item => item.id === id);
-                        if (itemExistente) {
-                            itemExistente.quantidade += quantidade;
-                        } else {
-                            carrinho.push({ id, nome, preco, quantidade });
-                        }
-
-                        atualizarUI();
-                        
-                        // Feedback visual (Toast ou SweetAlert seria melhor, mas aqui simples)
-                        const originalHtml = this.innerHTML;
-                        const icon = this.querySelector('i');
-                        if(icon) {
-                            icon.className = 'fa-solid fa-check text-success';
-                            setTimeout(() => {
-                                icon.className = 'fa-solid fa-cart-plus';
-                            }, 1000);
-                        }
-                    });
-                });
-
-                // --- Renderizar Modal de Venda ---
-                function atualizarUI() {
-                    // Badge
-                    const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
-                    badgeCarrinho.textContent = totalItens;
-
-                    // Lista no Modal
-                    listaItensVenda.innerHTML = '';
                     if (carrinho.length === 0) {
-                        listaItensVenda.appendChild(carrinhoVazioMsg);
-                        carrinhoVazioMsg.style.display = 'block';
-                        btnFinalizarVenda.disabled = true;
-                        vendaTotal.textContent = 'R$ 0,00';
+                        list.innerHTML = '';
+                        list.appendChild(empty);
+                        confirmBtn.disabled = true;
+                        document.getElementById('vendaTotal').innerText = 'R$ 0,00';
                         return;
                     }
-                    
-                    carrinhoVazioMsg.style.display = 'none';
-                    let totalValor = 0;
 
-                    carrinho.forEach((item, index) => {
-                        const subtotal = item.quantidade * item.preco;
-                        totalValor += subtotal;
+                    empty.remove();
+                    list.innerHTML = '';
+                    confirmBtn.disabled = false;
+                    let total = 0;
 
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'd-flex justify-content-between align-items-center bg-dark border border-secondary border-opacity-10 p-2 rounded';
-                        itemDiv.innerHTML = `
+                    carrinho.forEach((it, idx) => {
+                        const sub = it.qtd * it.preco;
+                        total += sub;
+                        const div = document.createElement('div');
+                        div.className = 'd-flex justify-content-between align-items-center bg-dark bg-opacity-40 p-3 rounded-3 border border-secondary border-opacity-10';
+                        div.innerHTML = `
                             <div class="d-flex flex-column">
-                                <span class="text-white fw-bold small">${item.nome}</span>
-                                <span class="text-secondary" style="font-size: 11px;">${item.quantidade}x R$ ${item.preco.toFixed(2)}</span>
+                                <span class="text-white fw-bold small">${it.nome}</span>
+                                <span class="text-secondary small" style="font-size: 11px;">${it.qtd}x R$ ${formatMoeda(it.preco)}</span>
                             </div>
                             <div class="d-flex align-items-center gap-3">
-                                <span class="text-info fw-bold small">R$ ${subtotal.toFixed(2)}</span>
-                                <button class="btn btn-sm btn-outline-danger border-0 p-1 btn-remover-item" data-index="${index}">
+                                <span class="text-info fw-bold">R$ ${formatMoeda(sub)}</span>
+                                <button class="btn btn-sm text-danger border-0 p-1" onclick="window.removeCartItem(${idx})">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
                         `;
-                        listaItensVenda.appendChild(itemDiv);
+                        list.appendChild(div);
+                    });
+                    document.getElementById('vendaTotal').innerText = 'R$ ' + formatMoeda(total);
+                };
+
+                window.removeCartItem = (idx) => {
+                    carrinho.splice(idx, 1);
+                    updateCartUI();
+                };
+
+                window.showToast = (message) => {
+                    let container = document.getElementById('toast-container');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'toast-container';
+                        container.style.cssText = 'position: fixed; bottom: 30px; right: 30px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; align-items: flex-end;';
+                        document.body.appendChild(container);
+                    }
+
+                    const toast = document.createElement('div');
+                    toast.className = 'custom-toast';
+                    toast.style.position = 'static'; // Allow stack
+                    toast.style.transform = 'translateX(100px)';
+                    toast.style.opacity = '0';
+                    toast.innerHTML = `<i class="fa-solid fa-cart-check text-info"></i> <span>${message}</span>`;
+                    container.appendChild(toast);
+
+                    // Animation
+                    requestAnimationFrame(() => {
+                        toast.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        toast.classList.add('show');
+                        toast.style.transform = 'translateX(0)';
+                        toast.style.opacity = '1';
                     });
 
-                    vendaTotal.textContent = 'R$ ' + totalValor.toFixed(2).replace('.', ',');
-                    btnFinalizarVenda.disabled = false;
+                    setTimeout(() => {
+                        toast.style.transform = 'translateX(100px)';
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                        if (container.children.length === 0) {
+                            // Container cleanup is optional, but keeps DOM clean
+                        }
+                    }, 2500);
+                };
 
-                    // Re-attach listeners de remover
-                    document.querySelectorAll('.btn-remover-item').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const idx = parseInt(this.dataset.index);
-                            carrinho.splice(idx, 1);
-                            atualizarUI();
-                        });
+                document.querySelectorAll('.btn-add-carrinho').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const d = this.dataset;
+                        const exist = carrinho.find(it => it.id === d.id);
+                        if (exist) {
+                            exist.qtd++;
+                        } else {
+                            carrinho.push({ id: d.id, nome: d.nome, preco: parseFloat(d.preco), qtd: 1 });
+                        }
+                        updateCartUI(true);
+                        window.showToast(`${d.nome} adicionado!`);
+
+                        // Feedback Icon
+                        const icon = this.querySelector('i');
+                        const orig = icon.className;
+                        icon.className = 'fa-solid fa-check text-success';
+
+                        if (this._timeout) clearTimeout(this._timeout);
+                        this._timeout = setTimeout(() => icon.className = orig, 800);
                     });
-                }
+                });
 
-                // --- Finalizar Venda ---
-                btnFinalizarVenda.addEventListener('click', function() {
-                    const clienteId = document.getElementById('vendaCliente').value;
-                    const formaPagamento = document.querySelector('input[name="formaPagamento"]:checked').value;
+                // --- Finalize Sale ---
+                document.getElementById('btnConfirmarVenda').addEventListener('click', async function () {
+                    this.disabled = true;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processando...';
 
-                    const vendaDTO = {
-                        clienteId: clienteId ? parseInt(clienteId) : null,
-                        formaPagamento: formaPagamento,
-                        itens: carrinho.map(item => ({
-                            produtoId: parseInt(item.id),
-                            quantidade: item.quantidade,
-                            precoUnitario: item.preco
+                    const payload = {
+                        clienteId: document.getElementById('vendaCliente').value || null,
+                        formaPagamento: document.querySelector('input[name="formaPagamento"]:checked').value,
+                        itens: carrinho.map(it => ({
+                            produtoId: parseInt(it.id),
+                            quantidade: it.qtd,
+                            precoUnitario: it.preco
                         }))
                     };
-                    
-                    // Enviar para o backend
-                    fetch('/vendas/salvar', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]').value
-                        },
-                        body: JSON.stringify(vendaDTO)
-                    })
-                    .then(response => {
+
+                    try {
+                        const csrfToken = document.getElementById('csrfToken')?.value;
+                        const response = await fetch('/vendas/salvar', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
                         if (response.ok) {
-                            return response.text();
+                            Swal.fire({
+                                title: 'Venda Concluída!',
+                                text: 'O estoque foi atualizado com sucesso.',
+                                icon: 'success',
+                                background: '#0f1623',
+                                color: '#fff'
+                            }).then(() => window.location.reload());
+                        } else {
+                            throw new Error();
                         }
-                        throw new Error('Erro na requisição');
-                    })
-                    .then(msg => {
-                        // Sucesso
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalFinalizarVenda'));
-                        modal.hide();
-                        
-                        Swal.fire({
-                            title: 'Sucesso!',
-                            text: 'Venda realizada com sucesso.',
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        }).then(() => {
-                            window.location.reload(); // Recarregar para atualizar estoque
-                        });
-                        
-                        carrinho = [];
-                        atualizarUI();
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            title: 'Erro!',
-                            text: 'Não foi possível finalizar a venda.',
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    });
-                });
-            });
-        </script>
-        
-        <script th:inline="javascript">
-        /*<![CDATA[*/
-            const produtoSucesso = [[${produtoSucesso}]];
-            const produtoNome = [[${produtoNome}]];
-            if (produtoSucesso) {
-                document.addEventListener('DOMContentLoaded', function() {
-                    let mensagem;
-                    if (produtoSucesso === 'cadastrado') {
-                        mensagem = 'Produto ' + (produtoNome || '') + ' cadastrado com sucesso.';
-                    } else {
-                        mensagem = 'Produto ' + (produtoNome || '') + ' atualizado com sucesso.';
+                    } catch (e) {
+                        Swal.fire({ title: 'Erro!', text: 'Falha ao processar venda.', icon: 'error' });
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fa-solid fa-check me-2"></i> FINALIZAR VENDA';
                     }
+                });
+
+                // --- Flash Messages ---
+                const msg = /*[[${produtoSucesso}]]*/ null;
+                const pNome = /*[[${produtoNome}]]*/ null;
+                if (msg) {
                     Swal.fire({
                         title: 'Sucesso!',
-                        text: mensagem,
+                        text: `Produto ${pNome} ${msg === 'cadastrado' ? 'cadastrado' : 'atualizado'} com sucesso.`,
                         icon: 'success',
-                        confirmButtonText: 'OK'
-                    });
-                });
-            }
-        /*]]>*/
-        </script>
-        
-        <!-- CSRF Token Hidden Input (necessário para o fetch funcionar com Spring Security) -->
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-        <style>
-            /* Card Styling Premium */
-            .service-card {
-                background-color: #0f1623;
-                border: 1px solid #1e293b;
-                border-radius: 12px;
-                transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
-            }
-
-            .service-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-                border-color: #0284c7;
-            }
-
-            /* Badge Colors (Soft) */
-            .bg-soft-info { background: rgba(14, 165, 233, 0.15); color: #38bdf8; }
-            .bg-soft-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-            .bg-soft-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-            .bg-soft-secondary { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
-            .bg-soft-primary { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-            .bg-soft-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-
-            .focus-info:focus {
-                border-color: #0ea5e9 !important;
-                box-shadow: 0 0 0 0.25rem rgba(14, 165, 233, 0.25) !important;
-            }
-            .btn-info {
-                background-color: #0ea5e9;
-                border-color: #0ea5e9;
-                color: white;
-            }
-            .btn-info:hover {
-                background-color: #0284c7;
-                border-color: #0284c7;
-            }
-            .text-info {
-                color: #38bdf8 !important;
-            }
-
-            /* Dark Theme Form Styles */
-            .modal-content {
-                background: #1e293b;
-                border: 1px solid #475569;
-            }
-            .modal-header {
-                border-bottom: 1px solid #334155;
-            }
-            .form-label {
-                color: #94a3b8;
-            }
-            .form-control, .form-select {
-                background: #0f1623;
-                border: 1px solid #334155;
-                color: white;
-            }
-            .form-control:focus, .form-select:focus {
-                background: #0f1623;
-                border-color: #3b82f6;
-                color: white;
-                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-            }
-            .btn-close-white {
-                filter: invert(1) grayscale(100%) brightness(200%);
-            }
-            .btn-primary-custom {
-                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-                color: white;
-                border: none;
-            }
-            .btn-primary-custom:hover {
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-                color: white;
-            }
-            .btn-secondary-custom {
-                background: rgba(255, 255, 255, 0.05);
-                color: #94a3b8;
-                border: 1px solid #334155;
-            }
-            .btn-secondary-custom:hover {
-                background: rgba(255, 255, 255, 0.1);
-                color: white;
-            }
-        </style>
-        
-        <!-- Mask Script -->
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Currency Mask Logic
-                const moneyInputs = document.querySelectorAll('.money-mask');
-                
-                moneyInputs.forEach(input => {
-                    input.addEventListener('input', function(e) {
-                        let value = e.target.value.replace(/\D/g, '');
-                        if (value === '') {
-                            e.target.value = '';
-                            return;
-                        }
-                        value = (parseInt(value) / 100).toFixed(2) + '';
-                        value = value.replace('.', ',');
-                        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                        e.target.value = 'R$ ' + value;
-                    });
-                    
-                    // Format on load if value exists
-                    if (input.value) {
-                        let val = parseFloat(input.value);
-                        if (!isNaN(val)) {
-                             let formatted = val.toFixed(2).replace('.', ',');
-                             formatted = formatted.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                             input.value = 'R$ ' + formatted;
-                        }
-                    }
-                });
-
-                // Unmask before submit
-                const form = document.getElementById('formProduto');
-                if (form) {
-                    form.addEventListener('submit', function() {
-                        moneyInputs.forEach(input => {
-                            let val = input.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-                            input.value = val;
-                        });
+                        background: '#0f1623',
+                        color: '#fff'
                     });
                 }
             });
+            /*]]>*/
         </script>
     </div>
 </body>
+
 </html>

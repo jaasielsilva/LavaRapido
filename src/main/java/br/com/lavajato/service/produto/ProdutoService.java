@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,26 +42,44 @@ public class ProdutoService {
         return repository.findAllByEmpresaAndAtivoTrue(usuario.getEmpresa(), pageable);
     }
 
+    public Page<Produto> listarAtivos(Pageable pageable, String busca, CategoriaProduto categoria) {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        var empresa = usuario.getEmpresa();
+
+        boolean hasBusca = StringUtils.hasText(busca);
+        boolean hasCategoria = categoria != null;
+
+        if (hasBusca && hasCategoria) {
+            return repository.buscarPorTermoECategoria(empresa, busca.trim(), categoria, pageable);
+        } else if (hasBusca) {
+            return repository.buscarPorTermo(empresa, busca.trim(), pageable);
+        } else if (hasCategoria) {
+            return repository.findAllByEmpresaAndAtivoTrueAndCategoria(empresa, categoria, pageable);
+        } else {
+            return repository.findAllByEmpresaAndAtivoTrue(empresa, pageable);
+        }
+    }
+
     public Produto salvar(Produto produto) {
         Usuario usuario = usuarioService.getUsuarioLogado();
         if (produto.getId() == null) {
             produto.setEmpresa(usuario.getEmpresa());
             Produto salvo = repository.save(produto);
-            
+
             // Lançar Despesa de Estoque Inicial no Financeiro
-            if (salvo.getEstoque() != null && salvo.getEstoque() > 0 && 
-                salvo.getPrecoCusto() != null && salvo.getPrecoCusto().compareTo(BigDecimal.ZERO) > 0) {
-                
+            if (salvo.getEstoque() != null && salvo.getEstoque() > 0 &&
+                    salvo.getPrecoCusto() != null && salvo.getPrecoCusto().compareTo(BigDecimal.ZERO) > 0) {
+
                 try {
                     BigDecimal custoTotal = salvo.getPrecoCusto().multiply(new BigDecimal(salvo.getEstoque()));
-                    
+
                     LancamentoFinanceiro lancamento = new LancamentoFinanceiro();
                     lancamento.setTipo(TipoLancamento.SAIDA);
                     lancamento.setCategoria("Compra de Estoque");
                     lancamento.setDescricao("Estoque Inicial: " + salvo.getNome());
                     lancamento.setValor(custoTotal);
                     lancamento.setData(java.time.LocalDateTime.now());
-                    
+
                     financeiroService.salvarLancamento(lancamento, usuario.getEmpresa());
                 } catch (Exception e) {
                     System.err.println("Erro ao lançar despesa de estoque: " + e.getMessage());
@@ -89,18 +108,18 @@ public class ProdutoService {
     public Optional<Produto> buscarPorId(Long id) {
         return repository.findById(id);
     }
-    
+
     // Métricas para Dashboard
     public long contarProdutos() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         return repository.countByEmpresaAndAtivoTrue(usuario.getEmpresa());
     }
-    
+
     public long contarEstoqueBaixo() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         return repository.countEstoqueBaixo(usuario.getEmpresa());
     }
-    
+
     public BigDecimal calcularValorEstoque() {
         Usuario usuario = usuarioService.getUsuarioLogado();
         BigDecimal total = repository.sumValorEstoque(usuario.getEmpresa());
@@ -109,18 +128,27 @@ public class ProdutoService {
 
     public void inicializarProdutosPadrao(Empresa empresa) {
         if (repository.countByEmpresaAndAtivoTrue(empresa) == 0) {
-            criarProduto(empresa, "Cera Cristalizadora 500ml", "Cera premium para brilho intenso", new BigDecimal("89.90"), 15, CategoriaProduto.CERA);
-            criarProduto(empresa, "Shampoo Automotivo 1L", "Shampoo neutro concentrado", new BigDecimal("35.90"), 25, CategoriaProduto.SHAMPOO);
-            criarProduto(empresa, "Silicone Gel 400g", "Silicone para painel e pneus", new BigDecimal("28.90"), 30, CategoriaProduto.SILICONE);
-            criarProduto(empresa, "Aromatizante Carro Novo", "Fragrância duradoura", new BigDecimal("19.90"), 40, CategoriaProduto.AROMATIZANTE);
-            criarProduto(empresa, "Flanela Microfibra", "Flanela alta absorção 40x60cm", new BigDecimal("15.90"), 50, CategoriaProduto.ACESSORIO);
-            criarProduto(empresa, "Pretinho para Pneus 500ml", "Revitalizador de pneus", new BigDecimal("24.90"), 20, CategoriaProduto.OUTROS);
-            criarProduto(empresa, "Limpa Vidros 500ml", "Limpa e protege vidros", new BigDecimal("18.90"), 35, CategoriaProduto.OUTROS);
-            criarProduto(empresa, "Cera Spray Rápida", "Cera em spray para retoque", new BigDecimal("45.90"), 12, CategoriaProduto.CERA);
+            criarProduto(empresa, "Cera Cristalizadora 500ml", "Cera premium para brilho intenso",
+                    new BigDecimal("89.90"), 15, CategoriaProduto.CERA);
+            criarProduto(empresa, "Shampoo Automotivo 1L", "Shampoo neutro concentrado", new BigDecimal("35.90"), 25,
+                    CategoriaProduto.SHAMPOO);
+            criarProduto(empresa, "Silicone Gel 400g", "Silicone para painel e pneus", new BigDecimal("28.90"), 30,
+                    CategoriaProduto.SILICONE);
+            criarProduto(empresa, "Aromatizante Carro Novo", "Fragrância duradoura", new BigDecimal("19.90"), 40,
+                    CategoriaProduto.AROMATIZANTE);
+            criarProduto(empresa, "Flanela Microfibra", "Flanela alta absorção 40x60cm", new BigDecimal("15.90"), 50,
+                    CategoriaProduto.ACESSORIO);
+            criarProduto(empresa, "Pretinho para Pneus 500ml", "Revitalizador de pneus", new BigDecimal("24.90"), 20,
+                    CategoriaProduto.OUTROS);
+            criarProduto(empresa, "Limpa Vidros 500ml", "Limpa e protege vidros", new BigDecimal("18.90"), 35,
+                    CategoriaProduto.OUTROS);
+            criarProduto(empresa, "Cera Spray Rápida", "Cera em spray para retoque", new BigDecimal("45.90"), 12,
+                    CategoriaProduto.CERA);
         }
     }
 
-    private void criarProduto(Empresa empresa, String nome, String descricao, BigDecimal preco, Integer estoque, CategoriaProduto categoria) {
+    private void criarProduto(Empresa empresa, String nome, String descricao, BigDecimal preco, Integer estoque,
+            CategoriaProduto categoria) {
         Produto p = new Produto();
         p.setEmpresa(empresa);
         p.setNome(nome);
