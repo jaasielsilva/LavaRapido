@@ -44,7 +44,7 @@
 
                 <div class="mb-3">
                     <label for="telefone" class="form-label">Telefone</label>
-                    <input type="text" class="form-control" id="telefone" th:field="*{telefone}">
+                    <input type="tel" class="form-control" id="telefone" th:field="*{telefone}" inputmode="numeric" maxlength="15">
                 </div>
 
                 <div class="mb-3">
@@ -62,60 +62,40 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const telefoneInput = document.getElementById('telefone');
+            var telefoneInput = document.getElementById('telefone');
+            if (!telefoneInput) return;
 
-            const aplicarMascara = (value) => {
-                if (!value) return "";
-                value = value.replace(/\D/g, "");
-                if (value.length > 11) value = value.slice(0, 11);
-
-                if (value.length > 10) {
-                    // (##) #####-####
-                    value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
-                } else if (value.length > 5) {
-                    // (##) ####-####
-                    value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
-                } else if (value.length > 2) {
-                    // (##) ####
-                    value = value.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
-                } else if (value.length > 0) {
-                    // (##
-                    value = value.replace(/^(\d{0,2}).*/, "($1");
+            function aplicarMascaraTelefone(valor) {
+                valor = valor.replace(/\D/g, '');
+                if (valor.length > 11) valor = valor.slice(0, 11);
+                if (valor.length > 10) {
+                    return valor.replace(/(\d{2})(\d{5})(\d{4})/, '($1)$2-$3');
+                } else if (valor.length > 6) {
+                    return valor.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1)$2-$3');
+                } else if (valor.length > 2) {
+                    return valor.replace(/(\d{2})(\d{0,5})/, '($1)$2');
+                } else if (valor.length > 0) {
+                    return valor.replace(/(\d{0,2})/, '($1');
                 }
-                return value;
-            };
+                return '';
+            }
 
-            telefoneInput.addEventListener('input', function (e) {
-                const start = this.selectionStart;
-                const end = this.selectionEnd;
-                const oldValue = this.value;
-                const newValue = aplicarMascara(this.value);
+            function mascararEVincular() {
+                telefoneInput.value = aplicarMascaraTelefone(telefoneInput.value);
+            }
 
-                this.value = newValue;
+            telefoneInput.addEventListener('input', mascararEVincular);
+            telefoneInput.addEventListener('change', mascararEVincular);
+            telefoneInput.addEventListener('blur', mascararEVincular);
 
-                // Simple validation feedback
-                if (newValue.replace(/\D/g, '').length >= 10) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
-                } else if (newValue.length > 0) {
-                    this.classList.remove('is-valid');
-                    this.classList.add('is-invalid');
-                } else {
-                    this.classList.remove('is-valid', 'is-invalid');
-                }
-            });
-
-            // Prevent characters other than numbers
             telefoneInput.addEventListener('keypress', function (e) {
                 if (!/[0-9]/.test(e.key)) {
                     e.preventDefault();
                 }
             });
 
-            // Apply mask on load if field is not empty
-            if (telefoneInput.value) {
-                telefoneInput.value = aplicarMascara(telefoneInput.value);
-            }
+            // Aplica máscara ao carregar valor já existente (sempre)
+            mascararEVincular();
         });
     </script>
 </body>

@@ -64,6 +64,10 @@ public class ClienteService {
         if (usuario.getPerfil() != Perfil.MASTER) {
             cliente.setEmpresa(usuario.getEmpresa());
         }
+        // Remove máscara do telefone (mantém apenas números)
+        if (cliente.getTelefone() != null) {
+            cliente.setTelefone(cliente.getTelefone().replaceAll("\\D", ""));
+        }
         return clienteRepository.save(cliente);
     }
     

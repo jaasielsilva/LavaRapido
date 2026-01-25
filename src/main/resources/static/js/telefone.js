@@ -1,28 +1,35 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    console.log("JS telefone carregado");
-
     const input = document.getElementById("telefone");
-
-    if (!input) {
-        console.log("Campo telefone não encontrado");
-        return;
-    }
-
-    console.log("Campo telefone encontrado");
+    if (!input) return;
 
     input.addEventListener("input", function () {
-        let v = this.value.replace(/\D/g, "");
 
-        if (v.length > 11) v = v.slice(0, 11);
+        let valor = this.value.replace(/\D/g, "");
 
-        if (v.length > 10)
-            v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-        else if (v.length > 5)
-            v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3");
-        else if (v.length > 2)
-            v = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
+        // Limita a 11 números
+        if (valor.length > 11) {
+            valor = valor.substring(0, 11);
+        }
 
-        this.value = v;
+        // CELULAR (11 dígitos)
+        if (valor.length === 11) {
+            valor = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+        }
+        // FIXO (10 dígitos)
+        else if (valor.length === 10) {
+            valor = valor.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+        }
+        // PARCIAL
+        else if (valor.length > 2) {
+            valor = valor.replace(/^(\d{2})(\d+)/, "($1) $2");
+        }
+        else if (valor.length > 0) {
+            valor = valor.replace(/^(\d+)/, "($1");
+        }
+
+        this.value = valor;
     });
+
+    console.log("✔ Máscara de telefone carregada corretamente");
 });
