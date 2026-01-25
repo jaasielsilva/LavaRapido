@@ -265,19 +265,16 @@
         
         <!-- Pagination -->
         <div class="mt-4 d-flex justify-content-center" th:if="${agendamentos.totalPages > 1}">
-            <nav>
+            <nav aria-label="Navegação">
                 <ul class="pagination pagination-dark">
                     <li class="page-item" th:classappend="${agendamentos.first} ? ' disabled'">
-                        <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number - 1}, dataInicio=${dataInicio}, dataFim=${dataFim}, status=${status}, busca=${busca})}">
-                            <i class="fa-solid fa-chevron-left"></i>
+                        <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number - 1}, dataInicio=${dataInicio}, dataFim=${dataFim}, status=${status}, busca=${busca})}" tabindex="-1">
+                            &larr; Anterior
                         </a>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link" th:text="${agendamentos.number + 1}">1</span>
                     </li>
                     <li class="page-item" th:classappend="${agendamentos.last} ? ' disabled'">
                         <a class="page-link" th:href="@{/agendamentos(page=${agendamentos.number + 1}, dataInicio=${dataInicio}, dataFim=${dataFim}, status=${status}, busca=${busca})}">
-                            <i class="fa-solid fa-chevron-right"></i>
+                            Próximo &rarr;
                         </a>
                     </li>
                 </ul>

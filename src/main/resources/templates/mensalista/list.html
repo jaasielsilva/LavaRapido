@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::div})}">
+<body>
+    <div>
+        <style>
+            html, body, .main {
+                background-color: #0f1623 !important;
+            }
+            
+            /* Layout & Common */
+            .list-container {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .item-row { overflow: visible; }
+            .dropdown-menu { z-index: 3000; }
+            
+            /* Item Row - Floating Style */
+            .item-row {
+                background: #0f1623;
+                border: 1px solid #1e293b;
+                border-radius: 16px;
+                padding: 15px 25px;
+                display: grid;
+                grid-template-columns: 80px 2fr 1.5fr 1.5fr 1fr 140px;
+                align-items: center;
+                gap: 20px;
+                transition: all 0.2s ease;
+                position: relative;
+            }
+            
+            .item-row:hover {
+                transform: translateY(-2px);
+                border-color: #38bdf8 !important;
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+                z-index: 10;
+            }
+            
+            /* Time Section (Dia Vencimento) */
+            .item-time {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                border-right: 1px solid rgba(255,255,255,0.05);
+                padding-right: 20px;
+            }
+            
+            .item-time .time { font-size: 18px; font-weight: 700; color: white; }
+            .item-time .date { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; }
+            
+            /* Main Info (Client) */
+            .item-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+            
+            .vehicle-icon-wrapper {
+                width: 45px; height: 45px;
+                background: rgba(56, 189, 248, 0.1);
+                border-radius: 12px;
+                display: flex; align-items: center; justify-content: center;
+                color: #38bdf8; font-size: 18px;
+            }
+            
+            .info-content { min-width: 0; }
+            .primary-text { font-weight: 600; color: white; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .secondary-text { font-size: 13px; color: var(--text-secondary); display: flex; gap: 8px; align-items: center; }
+            
+            /* Services (Payment Info) */
+            .item-services { min-width: 0; }
+            .service-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 4px; }
+            .service-text { color: #e2e8f0; font-size: 14px; }
+            
+            /* Status */
+            .item-status { display: flex; justify-content: center; }
+            .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+            
+            .status-blue { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2); }
+            .status-green { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+            .status-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+            /* End Section */
+            .item-end { display: flex; align-items: center; justify-content: flex-end; gap: 20px; }
+            .price-tag { font-weight: 700; color: #fff; font-size: 16px; }
+            
+            .btn-action-trigger {
+                width: 36px; height: 36px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary);
+                transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+            }
+            .btn-action-trigger:hover, .dropdown.show .btn-action-trigger { background: rgba(255, 255, 255, 0.05); color: white; }
+
+            /* Filter Bar */
+            .filter-bar {
+                display: flex;
+                gap: 20px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+                background: transparent;
+            }
+            
+            .filter-group label {
+                display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+                margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+            }
+            
+            .form-control-dark {
+                background-color: #0f1623; border: 1px solid #1e293b; color: white;
+                padding: 10px 15px; border-radius: 10px; font-size: 14px; width: 100%;
+            }
+            
+            .search-input-wrapper { position: relative; }
+            .search-input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+            .form-control-dark.ps-5 { padding-left: 2.5rem !important; }
+            
+            /* Suggestions */
+            .suggestions {
+                position: absolute;
+                top: calc(100% + 6px);
+                left: 0;
+                right: 0;
+                background: #0f1623;
+                border: 1px solid #334155;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                overflow: hidden;
+            }
+            .suggestion-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 10px 14px;
+                color: #e2e8f0;
+                cursor: pointer;
+                border-bottom: 1px solid rgba(255,255,255,0.04);
+            }
+            .suggestion-item:hover {
+                background: #1a253a;
+            }
+            .suggestion-item:last-child {
+                border-bottom: none;
+            }
+
+            /* Empty State */
+            .empty-state {
+                text-align: center; padding: 60px 20px; background: #0f1623; border-radius: 20px; border: 1px dashed #334155;
+            }
+            .empty-state .icon-circle {
+                width: 80px; height: 80px; background: rgba(30, 41, 59, 0.5); border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; color: #475569;
+            }
+            .empty-state h3 { color: white; font-size: 18px; margin-bottom: 8px; }
+            .empty-state p { color: var(--text-secondary); font-size: 14px; }
+        </style>
+
+        <!-- Header Section -->
+        <header class="mb-4 d-flex justify-content-between align-items-end">
+            <div>
+                <h1>Mensalistas</h1>
+                <div class="subtitle">Gestão de contratos e pagamentos</div>
+            </div>
+            <a th:href="@{/mensalistas/novo}" class="btn btn-primary d-flex align-items-center gap-2 px-4">
+                <i class="fa-solid fa-plus"></i> Novo Mensalista
+            </a>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="cards mb-5">
+            <div class="card blue">
+                <div class="card-info">
+                    <div>
+                        <h4>ATIVOS</h4>
+                            <div class="number" th:text="${resumo != null ? resumo.totalAtivos : 0}">0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Contratos Vigentes</span>
+                    </div>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+            <div class="card green">
+                <div class="card-info">
+                    <div>
+                        <h4>RECEITA PREVISTA</h4>
+                            <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo != null && resumo.receitaPrevista != null ? resumo.receitaPrevista : 0, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="muted">Mensal</span>
+                    </div>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+            </div>
+
+            <div class="card orange">
+                <div class="card-info">
+                    <div>
+                        <h4>RECEBIDO (MÊS)</h4>
+                            <div class="number" th:text="'R$ ' + ${#numbers.formatDecimal(resumo != null && resumo.recebidoMes != null ? resumo.recebidoMes : 0, 1, 'POINT', 0, 'COMMA')}">R$ 0</div>
+                    </div>
+                    <div class="stat">
+                        <span class="up"><i class="fa-solid fa-arrow-trend-up"></i> Atual</span>
+                    </div>
+                </div>
+                <div class="icon-box">
+                    <i class="fa-solid fa-cash-register"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="mb-4">
+            <form th:action="@{/mensalistas}" method="get" class="filter-bar">
+                <div class="filter-group flex-grow-1">
+                    <label>Buscar</label>
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="busca" th:value="${busca}" class="form-control-dark ps-5" placeholder="Buscar por cliente ou telefone...">
+                    </div>
+                    <div id="mensalistasSuggestions" class="suggestions d-none"></div>
+                </div>
+                <div class="filter-group d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary" style="height: 42px;">
+                        <i class="fa-solid fa-filter me-2"></i>Filtrar
+                    </button>
+                    <a th:if="${busca != null}" th:href="@{/mensalistas}" class="btn btn-outline-light ms-2" style="height: 42px;">
+                        <i class="fa-solid fa-times"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- List Container -->
+        <div id="mensalistasContainer" class="list-container" th:fragment="listaMensalistas">
+            <!-- Empty State -->
+            <div th:if="${mensalistas.empty}" class="empty-state">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-file-contract"></i>
+                </div>
+                <h3>Nenhum mensalista encontrado</h3>
+                <p>Cadastre um novo contrato para começar.</p>
+            </div>
+
+            <!-- List Items -->
+            <div th:each="m : ${mensalistas.content}" class="item-row">
+                <!-- Dia Vencimento -->
+                <div class="item-time">
+                    <span class="time" th:text="${m.diaVencimento}">05</span>
+                    <span class="date">DIA</span>
+                </div>
+
+                <!-- Cliente Info -->
+                <div class="item-main">
+                    <div class="vehicle-icon-wrapper">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="primary-text" th:text="${m.cliente != null ? m.cliente.nome : 'Cliente'}">Nome Cliente</div>
+                        <div class="secondary-text">
+                            <i class="fa-solid fa-phone" style="font-size: 10px;"></i>
+                            <span th:text="${m.cliente != null && m.cliente.telefone != null ? m.cliente.telefone : '-'}">Telefone</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ultimo Pagamento -->
+                <div class="item-services">
+                    <div class="service-label">ÚLTIMO PAGAMENTO</div>
+                    <div class="service-text">
+                        <span th:if="${m.dataUltimoPagamento != null}" th:text="${#temporals.format(m.dataUltimoPagamento, 'dd/MM/yyyy')}">01/01/2024</span>
+                        <span th:if="${m.dataUltimoPagamento == null}" class="text-muted">Nunca</span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="item-status">
+                    <span class="badge-status status-green" 
+                          th:if="${m.ativo && m.dataUltimoPagamento != null && m.dataUltimoPagamento.monthValue == #temporals.createNow().monthValue && m.dataUltimoPagamento.year == #temporals.createNow().year}">
+                        <i class="fa-solid fa-check"></i> EM DIA
+                    </span>
+                    <span class="badge-status status-red" 
+                          th:if="${m.ativo && (m.dataUltimoPagamento == null || m.dataUltimoPagamento.monthValue != #temporals.createNow().monthValue || m.dataUltimoPagamento.year != #temporals.createNow().year)}">
+                        <i class="fa-solid fa-clock"></i> PENDENTE
+                    </span>
+                    <span class="badge-status status-blue" th:if="${!m.ativo}">
+                        INATIVO
+                    </span>
+                </div>
+
+                <!-- Valor e Ações -->
+                <div class="item-end">
+                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(m.valorMensal != null ? m.valorMensal : 0, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
+                    
+                    <div class="dropdown">
+                        <button class="btn-action-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg">
+                            <li>
+                                <button class="dropdown-item text-success btn-registrar-pagamento" type="button"
+                                        th:data-id="${m.id}"
+                                        th:data-nome="${m.cliente != null ? m.cliente.nome : 'Cliente'}"
+                                        th:data-valor="${m.valorMensal != null ? m.valorMensal : 0}">
+                                    <i class="fa-solid fa-money-bill-wave me-2"></i> Registrar Pagamento
+                                </button>
+                            </li>
+                            <li><a class="dropdown-item" th:href="@{/mensalistas/editar/{id}(id=${m.id})}"><i class="fa-solid fa-pen me-2"></i> Editar</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" th:href="@{/mensalistas/excluir/{id}(id=${m.id})}" 
+                                   onclick="return confirm('Tem certeza?');">
+                                    <i class="fa-solid fa-trash me-2"></i> Excluir
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${!mensalistas.empty}" aria-label="Navegação" class="mt-4">
+            <ul class="pagination justify-content-center pagination-dark">
+                <li class="page-item" th:classappend="${mensalistas.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/mensalistas(page=${mensalistas.number - 1}, busca=${busca})}" tabindex="-1">
+                        &larr; Anterior
+                    </a>
+                </li>
+                <li class="page-item" th:classappend="${mensalistas.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/mensalistas(page=${mensalistas.number + 1}, busca=${busca})}">
+                        Próximo &rarr;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Modal Pagamento -->
+        <div class="modal fade" id="modalPagamento" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title">Registrar Pagamento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/mensalistas/pagar}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="mensalistaId" id="pagamentoMensalistaId">
+                            
+                            <div class="alert alert-info bg-opacity-10 border-info text-info">
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                                Registrando pagamento para: <strong id="pagamentoClienteNome">Nome</strong>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="dataPagamento" class="form-label text-secondary small text-uppercase fw-bold">Data do Pagamento</label>
+                                <input type="date" class="form-control bg-dark text-light border-secondary" 
+                                       id="dataPagamento" name="dataPagamento" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="valorPagamento" class="form-label text-secondary small text-uppercase fw-bold">Valor Pago (R$)</label>
+                                <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" 
+                                       id="valorPagamento" name="valor" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa-solid fa-check me-2"></i>Confirmar Pagamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function () {
+                var msgSucesso = /*[[${mensalistaSucesso}]]*/ null;
+                var msgErro = /*[[${mensalistaErro}]]*/ null;
+                
+                // Init dropdowns
+                document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(el){
+                    new bootstrap.Dropdown(el);
+                });
+                
+                function bindActions() {
+                    document.querySelectorAll('.btn-registrar-pagamento').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            var id = btn.getAttribute('data-id');
+                            var nome = btn.getAttribute('data-nome') || 'Cliente';
+                            var valor = btn.getAttribute('data-valor') || 0;
+                            abrirModalPagamento(id, nome, valor);
+                        });
+                    });
+                }
+                bindActions();
+
+                if (msgSucesso) {
+                    Swal.fire({
+                        title: 'Sucesso!',
+                        text: msgSucesso === 'pagamento' ? 'Pagamento registrado com sucesso.' : 'Operação realizada.',
+                        icon: 'success',
+                        background: '#1e293b',
+                        color: '#fff',
+                        confirmButtonColor: '#0ea5e9'
+                    });
+                }
+
+                if (msgErro) {
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: msgErro,
+                        icon: 'error',
+                        background: '#1e293b',
+                        color: '#fff',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+
+                var dp = document.getElementById('dataPagamento');
+                if (dp) { dp.valueAsDate = new Date(); }
+                
+                // Live suggestions + list update (debounced)
+                var inputBusca = document.querySelector('input[name="busca"]');
+                var sugestionsBox = document.getElementById('mensalistasSuggestions');
+                var container = document.getElementById('mensalistasContainer');
+                var debounceTimer = null;
+                
+                function renderSuggestions(items) {
+                    if (!items || items.length === 0) {
+                        sugestionsBox.classList.add('d-none');
+                        sugestionsBox.innerHTML = '';
+                        return;
+                    }
+                    sugestionsBox.innerHTML = items.map(function(it) {
+                        return '<div class="suggestion-item" data-id="'+it.id+'">' +
+                               '<div><strong>'+it.nomeCliente+'</strong><div class="text-secondary small">'+(it.telefone || '')+'</div></div>' +
+                               '<div class="small text-secondary">Dia '+(it.diaVencimento || '-')+'</div>' +
+                               '<div class="text-white fw-bold">R$ '+Number(it.valorMensal || 0).toLocaleString('pt-BR')+'</div>' +
+                               '<span class="badge '+(it.status === 'EM_DIA' ? 'bg-success' : it.status === 'PENDENTE' ? 'bg-warning' : 'bg-secondary')+'">'+it.status+'</span>' +
+                               '</div>';
+                    }).join('');
+                    sugestionsBox.classList.remove('d-none');
+                    
+                    Array.from(sugestionsBox.querySelectorAll('.suggestion-item')).forEach(function(el){
+                        el.addEventListener('click', function(){
+                            inputBusca.value = el.querySelector('strong').textContent;
+                            atualizarLista();
+                            sugestionsBox.classList.add('d-none');
+                        });
+                    });
+                }
+                
+                function atualizarLista() {
+                    var q = inputBusca.value.trim();
+                    fetch('/mensalistas/fragment?busca=' + encodeURIComponent(q))
+                        .then(function(res){ return res.text(); })
+                        .then(function(html){
+                            container.outerHTML = html;
+                            // Rebind after replacement
+                            container = document.getElementById('mensalistasContainer');
+                            document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(el){
+                                new bootstrap.Dropdown(el);
+                            });
+                            bindActions();
+                        })
+                        .catch(function(){});
+                }
+                
+                function buscarSugestoes() {
+                    var q = inputBusca.value.trim();
+                    if (q.length < 2) {
+                        sugestionsBox.classList.add('d-none');
+                        return;
+                    }
+                    fetch('/mensalistas/suggest?busca=' + encodeURIComponent(q))
+                        .then(function(res){ return res.json(); })
+                        .then(function(json){ renderSuggestions(json); })
+                        .catch(function(){});
+                }
+                
+                inputBusca.addEventListener('input', function(){
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function(){
+                        buscarSugestoes();
+                        atualizarLista();
+                    }, 300);
+                });
+                
+                document.addEventListener('click', function(e){
+                    if (!document.querySelector('.search-input-wrapper').contains(e.target)) {
+                        sugestionsBox.classList.add('d-none');
+                    }
+                });
+            });
+
+            function abrirModalPagamento(id, nome, valor) {
+                document.getElementById('pagamentoMensalistaId').value = id;
+                document.getElementById('pagamentoClienteNome').textContent = nome;
+                document.getElementById('valorPagamento').value = valor;
+                var modal = new bootstrap.Modal(document.getElementById('modalPagamento'));
+                modal.show();
+            }
+            /*]]>*/
+        </script>
+    </div>
+</body>
+</html>

@@ -8,6 +8,8 @@ import br.com.lavajato.service.servico.ServicoAvulsoService;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.usuario.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +34,9 @@ public class ServicoAvulsoController {
     private UsuarioService usuarioService;
 
     @GetMapping
-    public String listar(Model model) {
+    public String listar(@RequestParam(defaultValue = "0") int page,
+                         @RequestParam(defaultValue = "10") int size,
+                         Model model) {
         // Inicializar serviços padrão se vazio (Fallback)
         var servicosAtivos = catalogoService.listarAtivos();
         if (servicosAtivos.isEmpty()) {
@@ -49,8 +53,10 @@ public class ServicoAvulsoController {
         model.addAttribute("concluidosHoje", servicoService.contarConcluidosHoje());
         model.addAttribute("faturamentoHoje", servicoService.calcularFaturamentoHoje());
 
-        // Listagem
-        model.addAttribute("servicos", servicoService.listarTodos());
+        // Listagem paginada
+        model.addAttribute("servicos", servicoService.listarPaginado(PageRequest.of(page, size, Sort.by("dataCriacao").descending())));
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
         
         // Para o Modal
         model.addAttribute("novoServico", new ServicoAvulso());

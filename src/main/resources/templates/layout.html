@@ -93,6 +93,11 @@
             <div sec:authorize="hasAnyRole('MASTER','ADMIN')">
                 <div class="menu-label mt-4 px-3 mb-2" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); opacity: 0.6; text-transform: uppercase;">Gestão & Financeiro</div>
                 
+                <a th:href="@{/mensalistas}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/mensalistas') ? 'active' : ''}">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span>Mensalistas</span>
+                </a>
+
                 <a th:href="@{/usuarios}" th:classappend="${#httpServletRequest != null && #httpServletRequest.requestURI.startsWith('/usuarios') ? 'active' : ''}">
                     <i class="fa-solid fa-user-group"></i>
                     <span>Funcionários</span>

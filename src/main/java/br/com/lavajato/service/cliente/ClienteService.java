@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,8 +31,6 @@ public class ClienteService {
         
         if (busca != null && !busca.trim().isEmpty()) {
             if (usuario.getPerfil() == Perfil.MASTER) {
-                // Para Master, busca global (simplificado por enquanto, ou restrito à empresa se houver contexto)
-                // Assumindo busca na empresa do master por padrão ou implementar busca global depois
                 return clienteRepository.buscarPorTermo(usuario.getEmpresa(), busca, pageable);
             } else {
                 return clienteRepository.buscarPorTermo(usuario.getEmpresa(), busca, pageable);
@@ -65,14 +64,11 @@ public class ClienteService {
         if (usuario.getPerfil() != Perfil.MASTER) {
             cliente.setEmpresa(usuario.getEmpresa());
         }
-        // Se for Master, a empresa deve vir selecionada no formulário (ou tratar erro)
         return clienteRepository.save(cliente);
     }
     
     public Optional<Cliente> buscarPorId(Long id) {
         Usuario usuario = usuarioService.getUsuarioLogado();
-        // Permite buscar inativos se necessário, mas por padrão foca na consistência
-        // Se for edição, precisamos buscar mesmo se inativo? Geralmente não edita excluido.
         if (usuario.getPerfil() == Perfil.MASTER) {
             return clienteRepository.findById(id).filter(Cliente::isAtivo);
         } else {
@@ -92,15 +88,48 @@ public class ClienteService {
     }
 
     public void incrementarFidelidade(Cliente cliente) {
-        if (cliente != null) {
-            cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() + 1);
-            clienteRepository.save(cliente);
+        if (cliente == null) return;
+
+        LocalDate hoje = LocalDate.now();
+
+        // 1. Início de Ciclo (Primeira lavagem)
+        if (cliente.getQuantidadeLavagens() == 0) {
+            cliente.setDataInicioFidelidade(hoje);
+            cliente.setQuantidadeLavagens(1);
+        } 
+        else {
+            // 2. Verificar Validade do Ciclo (4 meses)
+            LocalDate inicio = cliente.getDataInicioFidelidade();
+            if (inicio == null) {
+                // Caso legado ou inconsistente, assume hoje como início
+                inicio = hoje;
+                cliente.setDataInicioFidelidade(inicio);
+            }
+
+            Period periodo = Period.between(inicio, hoje);
+            long mesesPassados = periodo.toTotalMonths();
+
+            if (mesesPassados > 4) {
+                // Expirou o ciclo: Zera e começa novo com a lavagem atual
+                cliente.setQuantidadeLavagens(1);
+                cliente.setDataInicioFidelidade(hoje);
+            } else {
+                // Dentro do prazo: Acumula
+                cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() + 1);
+            }
         }
+        
+        clienteRepository.save(cliente);
     }
 
     public void resgatarFidelidade(Cliente cliente) {
         if (cliente != null && cliente.getQuantidadeLavagens() >= 10) {
             cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() - 10);
+            
+            // Reinicia o ciclo para as próximas lavagens
+            // Isso garante que o cliente tenha mais 4 meses para juntar as próximas 10
+            cliente.setDataInicioFidelidade(LocalDate.now());
+            
             clienteRepository.save(cliente);
         }
     }

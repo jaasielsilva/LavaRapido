@@ -34,7 +34,7 @@ public class AgendamentoController {
     private ServicoCatalogoService servicoCatalogoService;
 
     @GetMapping
-    public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC, size = 20) Pageable pageable,
+    public String listar(@PageableDefault(sort = "data", direction = Sort.Direction.ASC, size = 10) Pageable pageable,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
                          @RequestParam(required = false) StatusAgendamento status,

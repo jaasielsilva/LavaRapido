@@ -38,10 +38,28 @@ public class ServicoAvulsoService {
         return repository.findAllByEmpresaOrderByDataCriacaoDesc(usuario.getEmpresa());
     }
 
-    public Page<ServicoAvulso> listarPaginado(int page, int size) {
+    public Page<ServicoAvulso> listarPaginado(Pageable pageable) {
         Usuario usuario = usuarioService.getUsuarioLogado();
-        Pageable pageable = PageRequest.of(page, size, Sort.by("dataCriacao").descending());
         return repository.findAllByEmpresaOrderByDataCriacaoDesc(usuario.getEmpresa(), pageable);
+    }
+    
+    // Manter compatibilidade se necessário, mas o ideal é usar o de cima
+    public Page<ServicoAvulso> listarPaginado(int page, int size) {
+        return listarPaginado(PageRequest.of(page, size, Sort.by("dataCriacao").descending()));
+    }
+
+    public ServicoAvulso buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+    }
+
+    public void excluir(Long id) {
+        ServicoAvulso servico = buscarPorId(id);
+        repository.delete(servico);
+    }
+
+    public void concluirServico(Long id) {
+        alterarStatus(id, StatusServico.CONCLUIDO);
     }
 
     public ServicoAvulso salvar(ServicoAvulso servicoAvulso) {
@@ -100,9 +118,6 @@ public class ServicoAvulsoService {
                 }
                 if (novoStatus == StatusServico.CONCLUIDO) {
                     s.setDataConclusao(LocalDateTime.now());
-                    // Se não tiver dataInicio (ex: pulou de fila direto pra concluído), define como agora ou criação?
-                    // Melhor definir como agora ou criação pra não quebrar cálculo, mas ideal é ter fluxo.
-                    // Vamos assumir que se dataInicio for null, define igual a conclusao (duração 0) ou dataCriacao.
                     if (s.getDataInicio() == null) {
                         s.setDataInicio(s.getDataCriacao());
                     }

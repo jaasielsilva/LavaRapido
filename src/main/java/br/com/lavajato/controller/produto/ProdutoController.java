@@ -28,7 +28,7 @@ public class ProdutoController {
     private ClienteService clienteService;
 
     @GetMapping
-    public String listar(Model model, @PageableDefault(size = 5) Pageable pageable) {
+    public String listar(Model model, @PageableDefault(size = 10) Pageable pageable) {
         model.addAttribute("produtos", service.listarAtivos(pageable));
         model.addAttribute("totalProdutos", service.contarProdutos());
         model.addAttribute("estoqueBaixo", service.contarEstoqueBaixo());

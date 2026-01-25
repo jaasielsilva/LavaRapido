@@ -41,4 +41,7 @@ public class Cliente {
 
     @Column(nullable = false, columnDefinition = "INTEGER DEFAULT 0")
     private Integer quantidadeLavagens = 0;
+
+    @Column(name = "data_inicio_fidelidade")
+    private LocalDate dataInicioFidelidade;
 }

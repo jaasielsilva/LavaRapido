@@ -370,7 +370,7 @@
                 <p>Clique em "Nova OS" para registrar um serviço.</p>
             </div>
 
-            <div th:each="servico : ${servicos}" class="item-row"
+            <div th:each="servico : ${servicos.content}" class="item-row"
                  th:classappend="${servico.atrasado ? 'atrasado' : ''}"
                  th:data-inicio="${#temporals.format(servico.dataInicio, 'yyyy-MM-dd''T''HH:mm:ss')}"
                  th:data-conclusao="${servico.dataConclusao != null ? #temporals.format(servico.dataConclusao, 'yyyy-MM-dd''T''HH:mm:ss') : ''}"
@@ -462,7 +462,7 @@
 
                 <!-- Price & Actions -->
                 <div class="item-end">
-                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(servico.valor, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
+                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(servico.valor != null ? servico.valor : 0, 1, 'POINT', 0, 'COMMA')}">R$ 100</div>
                     
                     <div class="dropdown" th:if="${servico.status.name() != 'CANCELADO'}">
                         <button class="btn-action-trigger" type="button" data-bs-toggle="dropdown">
@@ -487,6 +487,21 @@
                 </div>
             </div>
         </div>
+        
+        <nav th:if="${!servicos.empty}" aria-label="Navegação" class="mt-4">
+            <ul class="pagination justify-content-center pagination-dark">
+                <li class="page-item" th:classappend="${servicos.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/servicos-avulsos(page=${servicos.number - 1})}" tabindex="-1">
+                        &larr; Anterior
+                    </a>
+                </li>
+                <li class="page-item" th:classappend="${servicos.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/servicos-avulsos(page=${servicos.number + 1})}">
+                        Próximo &rarr;
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
     
     <script>

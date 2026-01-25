@@ -90,8 +90,78 @@
             </select>
         </div>
 
+        <!-- Lista de Produtos (Padrão Serviços Avulsos) -->
+        <div class="list-container">
+            <div th:if="${produtos.empty}" class="empty-state">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3>Nenhum produto encontrado</h3>
+                <p>Comece adicionando itens ao seu estoque.</p>
+            </div>
+
+            <div th:each="produto : ${produtos}" class="item-row" th:classappend="${produto.estoque <= produto.estoqueMinimo} ? ' atrasado' : ' em-prazo'">
+                <div class="item-main">
+                    <div class="vehicle-icon-wrapper">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="primary-text" th:text="${produto.nome}">Nome</div>
+                        <div class="secondary-text d-flex gap-2 align-items-center">
+                            <span class="badge rounded-pill border border-opacity-10 fw-semibold px-2 py-1" 
+                                  th:classappend="'bg-soft-' + ${produto.categoria.cor}"
+                                  th:text="${produto.categoria.descricao}">Categoria</span>
+                            <span class="text-secondary" th:text="${produto.unidade.sigla}">UN</span>
+                            <span class="text-secondary" th:if="${produto.descricao != null}" th:text="${produto.descricao}">Descrição</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item-status">
+                    <span class="badge-status" 
+                          th:classappend="${produto.estoque <= produto.estoqueMinimo} ? 'status-red' : 'status-green'"
+                          th:text="${produto.estoque <= produto.estoqueMinimo ? 'ESTOQUE BAIXO' : 'EM ESTOQUE'}">EM ESTOQUE</span>
+                </div>
+
+                <div class="item-end">
+                    <div class="price-tag" th:text="'R$ ' + ${#numbers.formatDecimal(produto.precoVenda != null ? produto.precoVenda : 0, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                    
+                    <div class="dropdown">
+                        <button class="btn-action-trigger" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg">
+                            <li>
+                                <button class="dropdown-item btn-edit-produto" type="button"
+                                        th:data-id="${produto.id}"
+                                        th:data-nome="${produto.nome}"
+                                        th:data-descricao="${produto.descricao}"
+                                        th:data-preco-venda="${produto.precoVenda}"
+                                        th:data-preco-custo="${produto.precoCusto}"
+                                        th:data-estoque="${produto.estoque}"
+                                        th:data-estoque-minimo="${produto.estoqueMinimo}"
+                                        th:data-categoria="${produto.categoria}"
+                                        th:data-unidade="${produto.unidade}">
+                                    <i class="fa-solid fa-pen me-2"></i> Editar
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item btn-add-carrinho" type="button"
+                                        th:data-id="${produto.id}"
+                                        th:data-nome="${produto.nome}"
+                                        th:data-preco="${produto.precoVenda}">
+                                    <i class="fa-solid fa-cart-plus me-2"></i> Adicionar ao Carrinho
+                                    <input type="hidden" class="input-qtd" value="1">
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Tabela de Produtos -->
-        <div class="card d-block w-100 border border-secondary border-opacity-10 bg-dark-subtle overflow-hidden" style="background-color: #0b121f !important;">
+        <div class="card d-block w-100 border border-secondary border-opacity-10 bg-dark-subtle overflow-hidden" style="background-color: #0b121f !important;" th:if="${false}">
             <div>
                 <table class="table table-hover align-middle mb-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.03);">
                     <thead style="background-color: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -194,21 +264,15 @@
                     Mostrando <span th:text="${produtos.numberOfElements}">5</span> de <span th:text="${produtos.totalElements}">10</span> produtos
                 </div>
                 <nav aria-label="Navegação de página">
-                    <ul class="pagination pagination-sm mb-0">
+                    <ul class="pagination justify-content-center pagination-dark mb-0">
                         <li class="page-item" th:classappend="${produtos.first} ? 'disabled'">
-                            <a class="page-link bg-dark border-secondary text-secondary" th:href="@{/produtos(page=${produtos.number - 1})}" aria-label="Anterior">
-                                <span aria-hidden="true">&laquo;</span>
+                            <a class="page-link" th:href="@{/produtos(page=${produtos.number - 1})}" tabindex="-1">
+                                &larr; Anterior
                             </a>
                         </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, produtos.totalPages - 1)}" 
-                            th:classappend="${produtos.number == i} ? 'active'">
-                            <a class="page-link" th:href="@{/produtos(page=${i})}"
-                               th:classappend="${produtos.number == i} ? 'bg-info border-info text-white' : 'bg-dark border-secondary text-secondary'"
-                               th:text="${i + 1}">1</a>
-                        </li>
                         <li class="page-item" th:classappend="${produtos.last} ? 'disabled'">
-                            <a class="page-link bg-dark border-secondary text-secondary" th:href="@{/produtos(page=${produtos.number + 1})}" aria-label="Próximo">
-                                <span aria-hidden="true">&raquo;</span>
+                            <a class="page-link" th:href="@{/produtos(page=${produtos.number + 1})}">
+                                Próximo &rarr;
                             </a>
                         </li>
                     </ul>
