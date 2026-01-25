@@ -31,6 +31,7 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -234,7 +235,7 @@ public class FinanceiroService {
                 movimentacoes.add(MovimentacaoDTO.builder()
                         .id("V-" + venda.getId())
                         .data(venda.getDataVenda())
-                        .descricao("Venda #" + venda.getId() + (venda.getCliente() != null ? " - " + venda.getCliente().getNome() : ""))
+                        .descricao(formatVendaDescricao(venda))
                         .valor(venda.getValorTotal())
                         .tipo(TipoLancamento.ENTRADA)
                         .categoria("Venda")
@@ -248,7 +249,7 @@ public class FinanceiroService {
                 movimentacoes.add(MovimentacaoDTO.builder()
                         .id("A-" + ag.getId())
                         .data(ag.getData())
-                        .descricao("Agendamento #" + ag.getId() + " - " + ag.getVeiculo().getPlaca())
+                        .descricao(formatAgendamentoDescricao(ag))
                         .valor(ag.getValor())
                         .tipo(TipoLancamento.ENTRADA)
                         .categoria("Agendamento")
@@ -262,7 +263,7 @@ public class FinanceiroService {
                 movimentacoes.add(MovimentacaoDTO.builder()
                         .id("S-" + sv.getId())
                         .data(sv.getDataConclusao())
-                        .descricao("Serviço Avulso #" + sv.getId() + " - " + (sv.getClienteAvulsoVeiculo() != null ? sv.getClienteAvulsoVeiculo() : "Veículo N/D"))
+                        .descricao(formatServicoDescricao(sv))
                         .valor(sv.getValor())
                         .tipo(TipoLancamento.ENTRADA)
                         .categoria("Serviço Avulso")
@@ -469,5 +470,40 @@ public class FinanceiroService {
 
             workbook.write(response.getOutputStream());
         }
+    }
+
+    private String formatVendaDescricao(Venda venda) {
+        String cliente = venda.getCliente() != null && venda.getCliente().getNome() != null && !venda.getCliente().getNome().isBlank()
+                ? venda.getCliente().getNome()
+                : "Cliente N/D";
+        return "Venda #" + venda.getId() + " - " + cliente;
+    }
+
+    private String formatAgendamentoDescricao(Agendamento ag) {
+        String placa = ag.getVeiculo() != null && ag.getVeiculo().getPlaca() != null && !ag.getVeiculo().getPlaca().isBlank()
+                ? ag.getVeiculo().getPlaca().trim().toUpperCase()
+                : "Placa N/D";
+        return "Agendamento #" + ag.getId() + " - " + placa;
+    }
+
+    private boolean isPlaca(String s) {
+        if (s == null) return false;
+        String t = s.trim().toUpperCase();
+        return Pattern.matches("^[A-Z]{3}\\d{4}$", t) || Pattern.matches("^[A-Z]{3}\\d[A-Z]\\d{2}$", t);
+    }
+
+    private String formatServicoDescricao(ServicoAvulso sv) {
+        if (sv.getProtocolo() != null && !sv.getProtocolo().isBlank()) {
+            return sv.getProtocolo().trim().toUpperCase();
+        }
+        String info = sv.getClienteAvulsoVeiculo();
+        String det;
+        if (info != null && !info.isBlank()) {
+            String trimmed = info.trim();
+            det = isPlaca(trimmed) ? trimmed.toUpperCase() : trimmed;
+        } else {
+            det = "Veículo N/D";
+        }
+        return "Serviço Avulso #" + sv.getId() + " - " + det;
     }
 }

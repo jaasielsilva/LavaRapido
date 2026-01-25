@@ -104,7 +104,13 @@ public class ServicoAvulsoService {
             }
         }
         
-        return repository.save(servicoAvulso);
+        ServicoAvulso salvo = repository.save(servicoAvulso);
+        if (salvo.getProtocolo() == null || salvo.getProtocolo().isBlank()) {
+            String codigo = String.format("PROC-%03d", salvo.getId());
+            salvo.setProtocolo(codigo);
+            salvo = repository.save(salvo);
+        }
+        return salvo;
     }
     
     public void alterarStatus(Long id, StatusServico novoStatus) {

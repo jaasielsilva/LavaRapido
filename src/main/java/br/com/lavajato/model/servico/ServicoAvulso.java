@@ -69,6 +69,9 @@ public class ServicoAvulso {
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean notificacaoAtrasoEnviada = false;
 
+    @Column(length = 20, unique = false)
+    private String protocolo;
+
     public String getNomeClienteDisplay() {
         if (cliente != null) {
             return cliente.getNome();
@@ -120,7 +123,7 @@ public class ServicoAvulso {
         String valorFormatado = String.format("%.2f", valor != null ? valor : BigDecimal.ZERO).replace(".", ",");
 
         return OrdemServicoMensagemUtil.gerarMensagemOrdemServico(
-            id != null ? id.toString() : "-",
+            protocolo != null && !protocolo.isBlank() ? protocolo : (id != null ? id.toString() : "-"),
             dataFormatada,
             getNomeClienteDisplay(),
             veiculo,
