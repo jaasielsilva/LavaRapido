@@ -37,16 +37,7 @@ public class ServicoAvulsoController {
     public String listar(@RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "10") int size,
                          Model model) {
-        // Inicializar serviços padrão se vazio (Fallback)
         var servicosAtivos = catalogoService.listarAtivos();
-        if (servicosAtivos.isEmpty()) {
-            try {
-                catalogoService.inicializarServicosPadrao(usuarioService.getUsuarioLogado().getEmpresa());
-                servicosAtivos = catalogoService.listarAtivos();
-            } catch (Exception e) {
-                // Log error silently or handle
-            }
-        }
 
         // Métricas
         model.addAttribute("emFila", servicoService.contarEmFila());
@@ -68,16 +59,7 @@ public class ServicoAvulsoController {
 
     @GetMapping("/novo")
     public String novo(Model model) {
-        // Inicializar serviços padrão se vazio (Fallback)
         var servicosAtivos = catalogoService.listarAtivos();
-        if (servicosAtivos.isEmpty()) {
-            try {
-                catalogoService.inicializarServicosPadrao(usuarioService.getUsuarioLogado().getEmpresa());
-                servicosAtivos = catalogoService.listarAtivos();
-            } catch (Exception e) {
-                // Log error silently
-            }
-        }
 
         model.addAttribute("novoServico", new ServicoAvulso());
         model.addAttribute("catalogoServicos", servicosAtivos);
