@@ -17,6 +17,7 @@ import br.com.lavajato.repository.servico.ServicoAvulsoRepository;
 import br.com.lavajato.repository.venda.VendaRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -325,7 +326,12 @@ public class FinanceiroService {
             dateStyle.setDataFormat(workbook.createDataFormat().getFormat("dd/MM/yyyy HH:mm"));
 
             CellStyle currencyStyle = workbook.createCellStyle();
-            currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("R$ #,##0.00"));
+            currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("R$ #,##0.00;[Red]-R$ #,##0.00"));
+
+            CellStyle totalLabelStyle = workbook.createCellStyle();
+            Font totalFont = workbook.createFont();
+            totalFont.setBold(true);
+            totalLabelStyle.setFont(totalFont);
 
             // Cabeçalho
             Row headerRow = sheet.createRow(0);
@@ -336,8 +342,13 @@ public class FinanceiroService {
                 cell.setCellStyle(headerStyle);
             }
 
+            sheet.createFreezePane(0, 1);
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, columns.length - 1));
+
             // Dados
             int rowNum = 1;
+            BigDecimal totalEntradas = BigDecimal.ZERO;
+            BigDecimal totalSaidas = BigDecimal.ZERO;
             for (MovimentacaoDTO mov : movimentacoes) {
                 Row row = sheet.createRow(rowNum++);
 
@@ -354,12 +365,41 @@ public class FinanceiroService {
                 double valor = mov.getValor().doubleValue();
                 if (mov.getTipo() == TipoLancamento.SAIDA) {
                     valor = -valor;
+                    totalSaidas = totalSaidas.add(mov.getValor() != null ? mov.getValor() : BigDecimal.ZERO);
+                } else {
+                    totalEntradas = totalEntradas.add(mov.getValor() != null ? mov.getValor() : BigDecimal.ZERO);
                 }
                 cellValor.setCellValue(valor);
                 cellValor.setCellStyle(currencyStyle);
 
                 row.createCell(5).setCellValue(mov.getOrigem());
             }
+
+            Row spacer = sheet.createRow(rowNum++);
+            Row totalEntradasRow = sheet.createRow(rowNum++);
+            Cell labelEntradas = totalEntradasRow.createCell(3);
+            labelEntradas.setCellValue("Total Entradas");
+            labelEntradas.setCellStyle(totalLabelStyle);
+            Cell valEntradas = totalEntradasRow.createCell(4);
+            valEntradas.setCellValue(totalEntradas.doubleValue());
+            valEntradas.setCellStyle(currencyStyle);
+
+            Row totalSaidasRow = sheet.createRow(rowNum++);
+            Cell labelSaidas = totalSaidasRow.createCell(3);
+            labelSaidas.setCellValue("Total Saídas");
+            labelSaidas.setCellStyle(totalLabelStyle);
+            Cell valSaidas = totalSaidasRow.createCell(4);
+            valSaidas.setCellValue(totalSaidas.multiply(new BigDecimal(-1)).doubleValue());
+            valSaidas.setCellStyle(currencyStyle);
+
+            BigDecimal saldo = totalEntradas.subtract(totalSaidas);
+            Row saldoRow = sheet.createRow(rowNum++);
+            Cell labelSaldo = saldoRow.createCell(3);
+            labelSaldo.setCellValue("Saldo");
+            labelSaldo.setCellStyle(totalLabelStyle);
+            Cell valSaldo = saldoRow.createCell(4);
+            valSaldo.setCellValue(saldo.doubleValue());
+            valSaldo.setCellStyle(currencyStyle);
 
             // Autosize columns
             for (int i = 0; i < columns.length; i++) {
