@@ -43,8 +43,8 @@
                             <div class="client-info">
                                 <h3 th:text="${cliente.nome}">Nome do Cliente</h3>
                                 <div class="client-contact">
-                                    <span><i class="fa-solid fa-phone"></i> <span
-                                            th:text="${cliente.telefone}">Telefone</span></span>
+                                    <span th:text="${cliente.telefoneFormatado}">Telefone</span>
+
                                     <span th:if="${cliente.email}"><i class="fa-solid fa-envelope"></i> <span
                                             th:text="${cliente.email}">Email</span></span>
                                 </div>

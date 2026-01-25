@@ -44,4 +44,16 @@ public class Cliente {
 
     @Column(name = "data_inicio_fidelidade")
     private LocalDate dataInicioFidelidade;
+
+    public String getTelefoneFormatado() {
+    if (telefone == null) return "";
+    String t = telefone.replaceAll("\\D", "");
+    if (t.length() == 11) {
+        return t.replaceAll("(\\d{2})(\\d{5})(\\d{4})", "($1) $2-$3");
+    } else if (t.length() == 10) {
+        return t.replaceAll("(\\d{2})(\\d{4})(\\d{4})", "($1) $2-$3");
+    }
+    return telefone;
+}
+
 }

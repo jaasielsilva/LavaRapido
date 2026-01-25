@@ -28,7 +28,7 @@ public class ClienteService {
 
     public Page<Cliente> listarPaginado(Pageable pageable, String busca) {
         Usuario usuario = usuarioService.getUsuarioLogado();
-        
+
         if (busca != null && !busca.trim().isEmpty()) {
             if (usuario.getPerfil() == Perfil.MASTER) {
                 return clienteRepository.buscarPorTermo(usuario.getEmpresa(), busca, pageable);
@@ -55,22 +55,22 @@ public class ClienteService {
 
     public Cliente salvar(Cliente cliente) {
         Usuario usuario = usuarioService.getUsuarioLogado();
-        
+
         if (cliente.getId() == null) {
             cliente.setDataCadastro(LocalDate.now());
             cliente.setAtivo(true);
         }
-        
+
         if (usuario.getPerfil() != Perfil.MASTER) {
             cliente.setEmpresa(usuario.getEmpresa());
         }
-        // Remove máscara do telefone (mantém apenas números)
-        if (cliente.getTelefone() != null) {
-            cliente.setTelefone(cliente.getTelefone().replaceAll("\\D", ""));
-        }
+
+        // Padroniza telefone com DDD
+        padronizarTelefone(cliente);
+
         return clienteRepository.save(cliente);
     }
-    
+
     public Optional<Cliente> buscarPorId(Long id) {
         Usuario usuario = usuarioService.getUsuarioLogado();
         if (usuario.getPerfil() == Perfil.MASTER) {
@@ -92,7 +92,8 @@ public class ClienteService {
     }
 
     public void incrementarFidelidade(Cliente cliente) {
-        if (cliente == null) return;
+        if (cliente == null)
+            return;
 
         LocalDate hoje = LocalDate.now();
 
@@ -100,8 +101,7 @@ public class ClienteService {
         if (cliente.getQuantidadeLavagens() == 0) {
             cliente.setDataInicioFidelidade(hoje);
             cliente.setQuantidadeLavagens(1);
-        } 
-        else {
+        } else {
             // 2. Verificar Validade do Ciclo (4 meses)
             LocalDate inicio = cliente.getDataInicioFidelidade();
             if (inicio == null) {
@@ -122,19 +122,40 @@ public class ClienteService {
                 cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() + 1);
             }
         }
-        
+
         clienteRepository.save(cliente);
     }
 
     public void resgatarFidelidade(Cliente cliente) {
         if (cliente != null && cliente.getQuantidadeLavagens() >= 10) {
             cliente.setQuantidadeLavagens(cliente.getQuantidadeLavagens() - 10);
-            
+
             // Reinicia o ciclo para as próximas lavagens
             // Isso garante que o cliente tenha mais 4 meses para juntar as próximas 10
             cliente.setDataInicioFidelidade(LocalDate.now());
-            
+
             clienteRepository.save(cliente);
         }
     }
+
+    private void padronizarTelefone(Cliente cliente) {
+        String tel = cliente.getTelefone();
+        if (tel != null && !tel.isBlank()) {
+            // Remove tudo que não é número
+            tel = tel.replaceAll("\\D", "");
+
+            // Se tiver 8 dígitos (somente número local), adiciona DDD 11
+            if (tel.length() == 8) {
+                tel = "11" + tel;
+            }
+
+            // Se tiver 9 dígitos sem DDD (celular local), adiciona DDD 11
+            if (tel.length() == 9) {
+                tel = "11" + tel;
+            }
+
+            cliente.setTelefone(tel);
+        }
+    }
+
 }
