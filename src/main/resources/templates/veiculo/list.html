@@ -110,16 +110,13 @@
             <nav>
                 <ul class="pagination pagination-dark">
                     <li class="page-item" th:classappend="${veiculos.first} ? ' disabled'">
-                        <a class="page-link" th:href="@{/veiculos(page=${veiculos.number - 1},size=${veiculos.size},busca=${busca})}">
-                            <i class="fa-solid fa-chevron-left"></i>
+                        <a class="page-link" th:href="@{/veiculos(page=${veiculos.number - 1},busca=${busca})}" tabindex="-1">
+                            &larr; Anterior
                         </a>
                     </li>
-                    <li class="page-item disabled">
-                        <span class="page-link" th:text="${veiculos.number + 1}">1</span>
-                    </li>
                     <li class="page-item" th:classappend="${veiculos.last} ? ' disabled'">
-                        <a class="page-link" th:href="@{/veiculos(page=${veiculos.number + 1},size=${veiculos.size},busca=${busca})}">
-                            <i class="fa-solid fa-chevron-right"></i>
+                        <a class="page-link" th:href="@{/veiculos(page=${veiculos.number + 1},busca=${busca})}">
+                            Próximo &rarr;
                         </a>
                     </li>
                 </ul>

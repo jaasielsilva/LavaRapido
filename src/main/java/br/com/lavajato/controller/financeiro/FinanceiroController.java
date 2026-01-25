@@ -124,6 +124,7 @@ public class FinanceiroController {
         if (fim == null) fim = LocalDate.now();
 
         List<MovimentacaoDTO> movimentacoes = financeiroService.buscarMovimentacoes(empresa, inicio, fim, tipo);
-        financeiroService.exportarExcel(movimentacoes, response);
+        List<br.com.lavajato.dto.BalancoMensalDTO> balancoMensal = financeiroService.gerarBalancoMensal(empresa, inicio, fim, tipo);
+        financeiroService.exportarExcel(movimentacoes, balancoMensal, response);
     }
 }

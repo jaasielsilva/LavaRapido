@@ -269,7 +269,7 @@ public class FinanceiroService {
         lancamentoRepository.save(lancamento);
     }
 
-    public void exportarExcel(List<MovimentacaoDTO> movimentacoes, HttpServletResponse response) throws IOException {
+    public void exportarExcel(List<MovimentacaoDTO> movimentacoes, List<BalancoMensalDTO> balancoMensal, HttpServletResponse response) throws IOException {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Relatório Financeiro");
 
@@ -322,6 +322,58 @@ public class FinanceiroService {
             // Autosize columns
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
+            }
+
+            // Segunda aba: Balanço Mensal
+            Sheet sheetBalanco = workbook.createSheet("Balanço Mensal");
+            Row headerBalanco = sheetBalanco.createRow(0);
+            String[] colsBalanco = {"Mês", "Serviços (+)", "Produtos (+)", "Receita Bruta", "Custos (-)", "Despesas (-)", "Lucro Líquido", "Margem"};
+            for (int i = 0; i < colsBalanco.length; i++) {
+                Cell cell = headerBalanco.createCell(i);
+                cell.setCellValue(colsBalanco[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            java.time.format.DateTimeFormatter mesFmt = java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", new java.util.Locale("pt", "BR"));
+            int rowB = 1;
+            for (BalancoMensalDTO b : balancoMensal) {
+                Row row = sheetBalanco.createRow(rowB++);
+                // Mês
+                row.createCell(0).setCellValue(b.getMes().format(mesFmt));
+                // Serviços (+): receitaServicos já inclui agendamentos conforme regra atual
+                Cell cServ = row.createCell(1);
+                cServ.setCellValue(b.getReceitaServicos() != null ? b.getReceitaServicos().doubleValue() : 0);
+                cServ.setCellStyle(currencyStyle);
+                // Produtos (+)
+                Cell cProd = row.createCell(2);
+                cProd.setCellValue(b.getReceitaProdutos() != null ? b.getReceitaProdutos().doubleValue() : 0);
+                cProd.setCellStyle(currencyStyle);
+                // Receita Bruta
+                Cell cRec = row.createCell(3);
+                cRec.setCellValue(b.getReceitaTotal() != null ? b.getReceitaTotal().doubleValue() : 0);
+                cRec.setCellStyle(currencyStyle);
+                // Custos (-) = custosProdutos
+                Cell cCusto = row.createCell(4);
+                cCusto.setCellValue(b.getCustosProdutos() != null ? b.getCustosProdutos().doubleValue() : 0);
+                cCusto.setCellStyle(currencyStyle);
+                // Despesas (-)
+                Cell cDesp = row.createCell(5);
+                cDesp.setCellValue(b.getDespesasOperacionais() != null ? b.getDespesasOperacionais().doubleValue() : 0);
+                cDesp.setCellStyle(currencyStyle);
+                // Lucro Líquido
+                Cell cLucro = row.createCell(6);
+                cLucro.setCellValue(b.getLucroLiquido() != null ? b.getLucroLiquido().doubleValue() : 0);
+                cLucro.setCellStyle(currencyStyle);
+                // Margem (percentual)
+                Cell cMargem = row.createCell(7);
+                double margemPercent = b.getMargemLucro() != null ? b.getMargemLucro().doubleValue() : 0;
+                cMargem.setCellValue(margemPercent / 100.0); // Excel percent
+                CellStyle percentStyle = workbook.createCellStyle();
+                percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+                cMargem.setCellStyle(percentStyle);
+            }
+            for (int i = 0; i < colsBalanco.length; i++) {
+                sheetBalanco.autoSizeColumn(i);
             }
 
             // Configurar Response

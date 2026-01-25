@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 
 @Controller
 @RequestMapping("/veiculos")
@@ -34,15 +35,11 @@ public class VeiculoController {
 
     @GetMapping
     public String listar(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @PageableDefault(size = 10, sort = "placa", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) String busca,
             Model model) {
         
-        Page<Veiculo> veiculosPage = veiculoService.listarPaginado(
-            PageRequest.of(page, size, Sort.by("placa").ascending()), 
-            busca
-        );
+        Page<Veiculo> veiculosPage = veiculoService.listarPaginado(pageable, busca);
         
         model.addAttribute("veiculos", veiculosPage);
         model.addAttribute("busca", busca);

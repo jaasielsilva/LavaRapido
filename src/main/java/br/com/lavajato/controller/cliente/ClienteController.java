@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -33,12 +34,10 @@ public class ClienteController {
     private br.com.lavajato.service.usuario.UsuarioService usuarioService;
 
     @GetMapping
-    public String listar(@RequestParam(defaultValue = "0") int page,
-                         @RequestParam(defaultValue = "10") int size,
+    public String listar(@PageableDefault(size = 10) Pageable pageable,
                          @RequestParam(required = false) String busca,
                          @RequestParam(required = false) boolean fragment,
                          Model model) {
-        Pageable pageable = PageRequest.of(page, size);
         Page<Cliente> clientesPage = clienteService.listarPaginado(pageable, busca);
         
         model.addAttribute("clientesPage", clientesPage);

@@ -68,7 +68,7 @@ public class VendaService {
             item.setQuantidade(itemDTO.getQuantidade());
             item.setPrecoUnitario(itemDTO.getPrecoUnitario());
             item.setSubtotal(itemDTO.getPrecoUnitario().multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
-            
+
             venda.adicionarItem(item);
             total = total.add(item.getSubtotal());
         }
