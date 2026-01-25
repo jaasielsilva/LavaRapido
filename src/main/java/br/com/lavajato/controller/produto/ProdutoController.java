@@ -73,4 +73,25 @@ public class ProdutoController {
         redirectAttributes.addFlashAttribute("produtoNome", produto.getNome());
         return "redirect:/produtos";
     }
+
+    @PostMapping("/scan")
+    public String scan(@RequestParam("ean") String ean,
+                       @RequestParam(value = "quantidade", defaultValue = "1") Integer quantidade,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            var opt = service.buscarPorEan(ean);
+            if (opt.isPresent()) {
+                var atualizado = service.incrementarEstoquePorEan(ean, quantidade != null ? quantidade : 1);
+                redirectAttributes.addFlashAttribute("produtoSucesso", "estoque_incrementado");
+                redirectAttributes.addFlashAttribute("produtoNome", atualizado.getNome());
+                redirectAttributes.addFlashAttribute("produtoEstoque", atualizado.getEstoque());
+            } else {
+                redirectAttributes.addFlashAttribute("produtoEan", ean);
+                redirectAttributes.addFlashAttribute("produtoScanNovo", true);
+            }
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("produtoErro", ex.getMessage());
+        }
+        return "redirect:/produtos";
+    }
 }

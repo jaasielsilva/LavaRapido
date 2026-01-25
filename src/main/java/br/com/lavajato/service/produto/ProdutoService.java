@@ -101,12 +101,26 @@ public class ProdutoService {
             existente.setEstoqueMinimo(produto.getEstoqueMinimo());
             existente.setCategoria(produto.getCategoria());
             existente.setUnidade(produto.getUnidade());
+            existente.setEan(produto.getEan());
             return repository.save(existente);
         }
     }
 
     public Optional<Produto> buscarPorId(Long id) {
         return repository.findById(id);
+    }
+    
+    public Optional<Produto> buscarPorEan(String ean) {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        return repository.findByEmpresaAndEan(usuario.getEmpresa(), ean);
+    }
+    
+    public Produto incrementarEstoquePorEan(String ean, int quantidade) {
+        Usuario usuario = usuarioService.getUsuarioLogado();
+        Produto produto = repository.findByEmpresaAndEan(usuario.getEmpresa(), ean)
+                .orElseThrow(() -> new IllegalStateException("EAN não encontrado"));
+        produto.setEstoque((produto.getEstoque() != null ? produto.getEstoque() : 0) + quantidade);
+        return repository.save(produto);
     }
 
     // Métricas para Dashboard

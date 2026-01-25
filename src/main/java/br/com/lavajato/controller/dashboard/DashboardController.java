@@ -120,6 +120,7 @@ public class DashboardController {
                     java.time.LocalDate.now().atTime(java.time.LocalTime.MAX))
                 .stream()
                 .filter(l -> l.getTipo() == br.com.lavajato.model.financeiro.TipoLancamento.ENTRADA)
+                .filter(l -> l.getVenda() == null)
                 .map(l -> l.getValor() != null ? l.getValor() : java.math.BigDecimal.ZERO)
                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
                 

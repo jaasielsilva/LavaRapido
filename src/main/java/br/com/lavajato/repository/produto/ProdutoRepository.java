@@ -18,6 +18,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     Page<Produto> findAllByEmpresaAndAtivoTrue(Empresa empresa, Pageable pageable);
 
+    java.util.Optional<Produto> findByEmpresaAndEan(Empresa empresa, String ean);
+
     @Query("SELECT p FROM Produto p WHERE p.empresa = :empresa AND p.ativo = true AND (LOWER(p.nome) LIKE LOWER(CONCAT('%', :termo, '%')) OR LOWER(p.descricao) LIKE LOWER(CONCAT('%', :termo, '%')))")
     Page<Produto> buscarPorTermo(Empresa empresa, String termo, Pageable pageable);
 

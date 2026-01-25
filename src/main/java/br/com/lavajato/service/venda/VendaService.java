@@ -12,6 +12,9 @@ import br.com.lavajato.repository.venda.VendaRepository;
 import br.com.lavajato.service.cliente.ClienteService;
 import br.com.lavajato.service.produto.ProdutoService;
 import br.com.lavajato.service.usuario.UsuarioService;
+import br.com.lavajato.model.financeiro.LancamentoFinanceiro;
+import br.com.lavajato.model.financeiro.TipoLancamento;
+import br.com.lavajato.repository.financeiro.LancamentoFinanceiroRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,9 @@ public class VendaService {
 
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private LancamentoFinanceiroRepository lancamentoFinanceiroRepository;
 
     @Transactional
     public void registrarVenda(VendaDTO vendaDTO) {
@@ -66,8 +72,12 @@ public class VendaService {
             ItemVenda item = new ItemVenda();
             item.setProduto(produto);
             item.setQuantidade(itemDTO.getQuantidade());
-            item.setPrecoUnitario(itemDTO.getPrecoUnitario());
-            item.setSubtotal(itemDTO.getPrecoUnitario().multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
+            BigDecimal precoUnitario = itemDTO.getPrecoUnitario() != null ? itemDTO.getPrecoUnitario() : produto.getPrecoVenda();
+            if (precoUnitario == null) {
+                throw new RuntimeException("Preço de venda não informado para o produto: " + produto.getNome());
+            }
+            item.setPrecoUnitario(precoUnitario);
+            item.setSubtotal(precoUnitario.multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
 
             venda.adicionarItem(item);
             total = total.add(item.getSubtotal());
@@ -75,6 +85,16 @@ public class VendaService {
 
         venda.setValorTotal(total);
         vendaRepository.save(venda);
+        
+        LancamentoFinanceiro lanc = new LancamentoFinanceiro();
+        lanc.setEmpresa(usuario.getEmpresa());
+        lanc.setTipo(TipoLancamento.ENTRADA);
+        lanc.setValor(total);
+        lanc.setData(LocalDateTime.now());
+        lanc.setDescricao("Venda #" + venda.getId());
+        lanc.setCategoria("Venda");
+        lanc.setVenda(venda);
+        lancamentoFinanceiroRepository.save(lanc);
     }
 
     public BigDecimal calcularFaturamentoHoje(Empresa empresa) {

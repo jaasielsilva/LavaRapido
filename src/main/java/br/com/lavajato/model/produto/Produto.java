@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 @Entity
-@Table(name = "produtos")
+@Table(name = "produtos", uniqueConstraints = @UniqueConstraint(columnNames = {"empresa_id", "ean"}))
 public class Produto {
 
     @Id
@@ -41,6 +41,9 @@ public class Produto {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UnidadeMedida unidade;
+
+    @Column(length = 20)
+    private String ean;
 
     private boolean ativo = true;
 }

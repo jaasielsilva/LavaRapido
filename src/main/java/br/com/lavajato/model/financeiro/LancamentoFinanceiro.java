@@ -1,6 +1,7 @@
 package br.com.lavajato.model.financeiro;
 
 import br.com.lavajato.model.empresa.Empresa;
+import br.com.lavajato.model.venda.Venda;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -34,4 +35,8 @@ public class LancamentoFinanceiro {
     private TipoLancamento tipo;
 
     private String categoria; // Ex: Aluguel, Luz, Ajuste de Caixa
+    
+    @ManyToOne
+    @JoinColumn(name = "venda_id")
+    private Venda venda;
 }

@@ -17,6 +17,7 @@ public class BalancoMensalDTO {
     private BigDecimal receitaTotal;
     
     private BigDecimal custosProdutos; // Custo de Mercadoria Vendida (CMV)
+    private BigDecimal investimentoEstoque; // Saídas relacionadas a compra/estoque
     private BigDecimal despesasOperacionais; // Saídas manuais
     private BigDecimal custosTotal; // Soma de custos + despesas
     

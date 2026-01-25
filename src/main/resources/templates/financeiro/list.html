@@ -483,6 +483,7 @@
                             <th>Produtos (+)</th>
                             <th>Receita Bruta</th>
                             <th>Custos (-)</th>
+                            <th>Estoque (-)</th>
                             <th>Despesas (-)</th>
                             <th>Lucro Líquido</th>
                         </tr>
@@ -507,6 +508,7 @@
                             </td>
                             <td class="text-warning-custom fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(item.receitaTotal != null ? item.receitaTotal : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(item.custosProdutos != null ? item.custosProdutos : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(item.investimentoEstoque != null ? item.investimentoEstoque : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(item.despesasOperacionais != null ? item.despesasOperacionais : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-success-custom fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(item.lucroLiquido != null ? item.lucroLiquido : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                         </tr>
@@ -518,6 +520,7 @@
                             <td class="text-purple-custom" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.receitaProdutos != null ? totalBalanco.receitaProdutos : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-warning-custom" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.receitaTotal != null ? totalBalanco.receitaTotal : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(totalBalanco.custosProdutos != null ? totalBalanco.custosProdutos : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                            <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(totalBalanco.investimentoEstoque != null ? totalBalanco.investimentoEstoque : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-danger-custom" th:text="'- R$ ' + ${#numbers.formatDecimal(totalBalanco.despesasOperacionais != null ? totalBalanco.despesasOperacionais : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                             <td class="text-success-custom" style="font-size: 1.1rem;" th:text="'R$ ' + ${#numbers.formatDecimal(totalBalanco.lucroLiquido != null ? totalBalanco.lucroLiquido : 0, 1, 'POINT', 2, 'COMMA')}">0,00</td>
                         </tr>

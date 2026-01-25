@@ -69,6 +69,7 @@ public class FinanceiroController {
             .receitaProdutos(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getReceitaProdutos).reduce(BigDecimal.ZERO, BigDecimal::add))
             .receitaTotal(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getReceitaTotal).reduce(BigDecimal.ZERO, BigDecimal::add))
             .custosProdutos(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getCustosProdutos).reduce(BigDecimal.ZERO, BigDecimal::add))
+            .investimentoEstoque(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getInvestimentoEstoque).reduce(BigDecimal.ZERO, BigDecimal::add))
             .despesasOperacionais(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getDespesasOperacionais).reduce(BigDecimal.ZERO, BigDecimal::add))
             .lucroLiquido(balancoMensal.stream().map(br.com.lavajato.dto.BalancoMensalDTO::getLucroLiquido).reduce(BigDecimal.ZERO, BigDecimal::add))
             .build();

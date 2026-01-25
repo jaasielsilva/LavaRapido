@@ -66,6 +66,7 @@ public class FinanceiroService {
         BigDecimal receitaAgendamentos = agendamentos.stream().map(a -> a.getValor() != null ? a.getValor() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal receitasExtras = considerarEntradas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
+                .filter(l -> l.getVenda() == null)
                 .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
         
@@ -80,8 +81,25 @@ public class FinanceiroService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
+        BigDecimal investimentoEstoque = considerarSaidas ? lancamentos.stream()
+                .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
+                .filter(l -> {
+                    String c = l.getCategoria() != null ? l.getCategoria() : "";
+                    String d = l.getDescricao() != null ? l.getDescricao() : "";
+                    String s = (c + " " + d).toLowerCase();
+                    return s.contains("estoque") || s.contains("fornecedor") || s.contains("compra");
+                })
+                .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
+
         BigDecimal despesasOperacionais = considerarSaidas ? lancamentos.stream()
                 .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
+                .filter(l -> {
+                    String c = l.getCategoria() != null ? l.getCategoria() : "";
+                    String d = l.getDescricao() != null ? l.getDescricao() : "";
+                    String s = (c + " " + d).toLowerCase();
+                    return !(s.contains("estoque") || s.contains("fornecedor") || s.contains("compra"));
+                })
                 .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
@@ -100,6 +118,7 @@ public class FinanceiroService {
         resumo.put("receitaServicos", receitaServicos.add(receitaAgendamentos)); // Unifica serviços avulsos + agendamentos
         resumo.put("receitaAgendamentos", receitaAgendamentos); // Mantém separado caso precise detalhar depois
         resumo.put("receitaProdutos", receitaVendas);
+        resumo.put("investimentoEstoque", investimentoEstoque);
         resumo.put("lucroLiquido", lucroLiquido);
         resumo.put("margemLucro", margemLucro);
         resumo.put("qtdServicos", qtdServicos + agendamentos.size()); // Soma quantidades
@@ -137,6 +156,7 @@ public class FinanceiroService {
             BigDecimal recProdutos = vendasMes.stream().map(v -> v.getValorTotal() != null ? v.getValorTotal() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal recExtras = considerarEntradas ? lancamentosMes.stream()
                     .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
+                    .filter(l -> l.getVenda() == null)
                     .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
             
@@ -150,8 +170,25 @@ public class FinanceiroService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
+            BigDecimal invEstq = considerarSaidas ? lancamentosMes.stream()
+                    .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
+                    .filter(l -> {
+                        String c = l.getCategoria() != null ? l.getCategoria() : "";
+                        String d = l.getDescricao() != null ? l.getDescricao() : "";
+                        String s = (c + " " + d).toLowerCase();
+                        return s.contains("estoque") || s.contains("fornecedor") || s.contains("compra");
+                    })
+                    .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
+
             BigDecimal despOp = considerarSaidas ? lancamentosMes.stream()
                     .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
+                    .filter(l -> {
+                        String c = l.getCategoria() != null ? l.getCategoria() : "";
+                        String d = l.getDescricao() != null ? l.getDescricao() : "";
+                        String s = (c + " " + d).toLowerCase();
+                        return !(s.contains("estoque") || s.contains("fornecedor") || s.contains("compra"));
+                    })
                     .map(l -> l.getValor() != null ? l.getValor() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
 
@@ -167,6 +204,7 @@ public class FinanceiroService {
                     .receitaProdutos(recProdutos)
                     .receitaTotal(recTotal)
                     .custosProdutos(custoProd)
+                    .investimentoEstoque(invEstq)
                     .despesasOperacionais(despOp)
                     .custosTotal(custoProd.add(despOp))
                     .lucroLiquido(lucro)
@@ -237,6 +275,10 @@ public class FinanceiroService {
         List<LancamentoFinanceiro> lancamentos = lancamentoRepository.findByEmpresaAndDataBetween(empresa, dataInicio, dataFim);
         
         for (LancamentoFinanceiro lanc : lancamentos) {
+            // Ignorar lançamentos vinculados a vendas para evitar duplicidade nas entradas
+            if (lanc.getVenda() != null) {
+                continue;
+            }
             // Filtrar pelo tipo se necessário
             if (tipoFiltro != null && !tipoFiltro.equals("TODOS")) {
                 if (!lanc.getTipo().name().equals(tipoFiltro)) {
@@ -327,7 +369,7 @@ public class FinanceiroService {
             // Segunda aba: Balanço Mensal
             Sheet sheetBalanco = workbook.createSheet("Balanço Mensal");
             Row headerBalanco = sheetBalanco.createRow(0);
-            String[] colsBalanco = {"Mês", "Serviços (+)", "Produtos (+)", "Receita Bruta", "Custos (-)", "Despesas (-)", "Lucro Líquido", "Margem"};
+            String[] colsBalanco = {"Mês", "Serviços (+)", "Produtos (+)", "Receita Bruta", "Custos (-)", "Estoque (-)", "Despesas (-)", "Lucro Líquido", "Margem"};
             for (int i = 0; i < colsBalanco.length; i++) {
                 Cell cell = headerBalanco.createCell(i);
                 cell.setCellValue(colsBalanco[i]);
@@ -352,20 +394,24 @@ public class FinanceiroService {
                 Cell cRec = row.createCell(3);
                 cRec.setCellValue(b.getReceitaTotal() != null ? b.getReceitaTotal().doubleValue() : 0);
                 cRec.setCellStyle(currencyStyle);
-                // Custos (-) = custosProdutos
+                // Custos (-)
                 Cell cCusto = row.createCell(4);
                 cCusto.setCellValue(b.getCustosProdutos() != null ? b.getCustosProdutos().doubleValue() : 0);
                 cCusto.setCellStyle(currencyStyle);
+                // Estoque (-)
+                Cell cEstq = row.createCell(5);
+                cEstq.setCellValue(b.getInvestimentoEstoque() != null ? b.getInvestimentoEstoque().doubleValue() : 0);
+                cEstq.setCellStyle(currencyStyle);
                 // Despesas (-)
-                Cell cDesp = row.createCell(5);
+                Cell cDesp = row.createCell(6);
                 cDesp.setCellValue(b.getDespesasOperacionais() != null ? b.getDespesasOperacionais().doubleValue() : 0);
                 cDesp.setCellStyle(currencyStyle);
                 // Lucro Líquido
-                Cell cLucro = row.createCell(6);
+                Cell cLucro = row.createCell(7);
                 cLucro.setCellValue(b.getLucroLiquido() != null ? b.getLucroLiquido().doubleValue() : 0);
                 cLucro.setCellStyle(currencyStyle);
                 // Margem (percentual)
-                Cell cMargem = row.createCell(7);
+                Cell cMargem = row.createCell(8);
                 double margemPercent = b.getMargemLucro() != null ? b.getMargemLucro().doubleValue() : 0;
                 cMargem.setCellValue(margemPercent / 100.0); // Excel percent
                 CellStyle percentStyle = workbook.createCellStyle();

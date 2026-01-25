@@ -352,6 +352,10 @@
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info"
                         id="badgeCarrinho">0</span>
                 </button>
+                <button class="btn btn-secondary px-4 d-flex align-items-center gap-2" data-bs-toggle="modal"
+                    data-bs-target="#modalScanner" id="btnScanner">
+                    <i class="fa-solid fa-barcode"></i> Scanner
+                </button>
                 <button class="btn btn-primary px-4 d-flex align-items-center gap-2" data-bs-toggle="modal"
                     data-bs-target="#modalNovoProduto" id="btnNovoProduto">
                     <i class="fa-solid fa-plus"></i> Novo Produto
@@ -509,7 +513,7 @@
                             th:data-descricao="${produto.descricao}" th:data-preco-venda="${produto.precoVenda}"
                             th:data-preco-custo="${produto.precoCusto}" th:data-estoque="${produto.estoque}"
                             th:data-estoque-minimo="${produto.estoqueMinimo}" th:data-categoria="${produto.categoria}"
-                            th:data-unidade="${produto.unidade}">
+                            th:data-unidade="${produto.unidade}" th:data-ean="${produto.ean}">
                             <i class="fa-solid fa-pen"></i>
                         </button>
                     </div>
@@ -611,10 +615,45 @@
                                     </select>
                                 </div>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">CÓDIGO EAN</label>
+                                <input type="text" class="form-control" th:field="*{ean}" placeholder="Digite ou escaneie o código de barras">
+                            </div>
                         </div>
                         <div class="modal-footer border-0 p-4 pt-0">
                             <button type="submit" class="btn btn-primary w-100 fw-bold py-2"
                                 id="btnSubmitProduto">CADASTRAR PRODUTO</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal: Scanner de Produtos -->
+        <div class="modal fade" id="modalScanner" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Scanner de Produtos</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/produtos/scan}" method="post">
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">CÓDIGO EAN</label>
+                                <input type="text" class="form-control" name="ean" id="scanEan" placeholder="Aponte o leitor e bip" autofocus>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">QUANTIDADE</label>
+                                <input type="number" class="form-control" name="quantidade" id="scanQtd" value="1" min="1">
+                            </div>
+                            <p class="text-secondary small">Se o EAN existir, o estoque será incrementado. Se não existir, será solicitado o cadastro com dados do produto.</p>
+                        </div>
+                        <div class="modal-footer border-0 p-4 pt-0">
+                            <button type="submit" class="btn btn-secondary w-100 fw-bold py-2">
+                                Processar Leitura
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -749,6 +788,7 @@
                         document.querySelector('[name="estoqueMinimo"]').value = d.estoqueMinimo !== 'null' ? d.estoqueMinimo : '';
                         document.querySelector('[name="categoria"]').value = d.categoria;
                         document.querySelector('[name="unidade"]').value = d.unidade;
+                        document.querySelector('[name="ean"]').value = d.ean !== 'null' ? d.ean : '';
 
                         document.getElementById('modalTituloProduto').innerText = 'Editar Produto';
                         document.getElementById('btnSubmitProduto').innerText = 'SALVAR ALTERAÇÕES';
@@ -916,14 +956,22 @@
                 // --- Flash Messages ---
                 const msg = /*[[${produtoSucesso}]]*/ null;
                 const pNome = /*[[${produtoNome}]]*/ null;
-                if (msg) {
-                    Swal.fire({
-                        title: 'Sucesso!',
-                        text: `Produto ${pNome} ${msg === 'cadastrado' ? 'cadastrado' : 'atualizado'} com sucesso.`,
-                        icon: 'success',
-                        background: '#0f1623',
-                        color: '#fff'
-                    });
+                const pEstoque = /*[[${produtoEstoque}]]*/ null;
+                if (msg === 'cadastrado' || msg === 'atualizado') {
+                    Swal.fire({ title: 'Sucesso!', text: `Produto ${pNome} ${msg} com sucesso.`, icon: 'success', background: '#0f1623', color: '#fff' });
+                } else if (msg === 'estoque_incrementado') {
+                    Swal.fire({ title: 'Estoque Atualizado!', text: `${pNome} agora possui ${pEstoque} em estoque.`, icon: 'success', background: '#0f1623', color: '#fff' });
+                }
+                
+                const scanNovo = /*[[${produtoScanNovo}]]*/ false;
+                const scanEan = /*[[${produtoEan}]]*/ null;
+                if (scanNovo) {
+                    document.querySelector('form[method="post"]').reset();
+                    document.getElementById('produtoId').value = '';
+                    document.getElementById('modalTituloProduto').innerText = 'Novo Produto';
+                    document.getElementById('btnSubmitProduto').innerText = 'CADASTRAR PRODUTO';
+                    if (scanEan) document.querySelector('[name="ean"]').value = scanEan;
+                    modalProduto.show();
                 }
             });
             /*]]>*/
