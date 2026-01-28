@@ -30,6 +30,16 @@ public class EmpresaService {
     }
 
     public Empresa salvar(Empresa empresa) {
+        if (empresa.getCnpj() != null) {
+            String digits = empresa.getCnpj().replaceAll("\\D", "");
+            if (digits.length() > 14) {
+                digits = digits.substring(0, 14);
+            }
+            if (digits.length() == 14) {
+                String formatted = digits.replaceFirst("(\\d{2})(\\d{3})(\\d{3})(\\d{4})(\\d{2})", "$1.$2.$3/$4-$5");
+                empresa.setCnpj(formatted);
+            }
+        }
         return empresaRepository.save(empresa);
     }
 

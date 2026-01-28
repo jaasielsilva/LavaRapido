@@ -87,6 +87,61 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    position: relative;
+    scrollbar-color: rgba(56, 189, 248, 0.6) rgba(255, 255, 255, 0.06);
+}
+.sidebar-main::-webkit-scrollbar {
+    width: 8px;
+}
+.sidebar-main::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+}
+.sidebar-main::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.45), rgba(14, 165, 233, 0.55));
+    border-radius: 999px;
+    border: 2px solid rgba(8, 11, 18, 0.6);
+}
+.sidebar-main:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.7), rgba(14, 165, 233, 0.85));
+    border-color: rgba(30, 41, 59, 0.7);
+}
+.sidebar-main:active::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.9), rgba(14, 165, 233, 0.95));
+}
+.sidebar-main::before,
+.sidebar-main::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 16px;
+    pointer-events: none;
+    z-index: 1;
+    display: none;
+}
+.sidebar-main.has-scroll::before,
+.sidebar-main.has-scroll::after {
+    display: block;
+}
+.sidebar-main::before {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(8, 11, 18, 0.9), rgba(8, 11, 18, 0));
+}
+.sidebar-main::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(8, 11, 18, 0.9), rgba(8, 11, 18, 0));
+}
+.sidebar-main.at-top::before {
+    display: none;
+}
+.sidebar-main.at-bottom::after {
+    display: none;
 }
 
 .sidebar-footer {
@@ -614,5 +669,44 @@ header h1 {
     
     .grid-content {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-height: 800px) {
+    .sidebar {
+        padding: 20px 16px;
+    }
+    .logo {
+        margin-bottom: 24px;
+    }
+    .menu {
+        gap: 6px;
+    }
+    .menu a {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    .version {
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-height: 680px) {
+    .logo-text span {
+        display: none;
+    }
+    .version {
+        display: none;
+    }
+}
+
+@media (min-height: 900px) {
+    .sidebar-main {
+        scrollbar-width: none;
+    }
+    .sidebar-main::-webkit-scrollbar {
+        width: 0;
+        height: 0;
     }
 }

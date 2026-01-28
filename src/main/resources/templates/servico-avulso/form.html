@@ -153,7 +153,7 @@
             </div>
         </header>
 
-        <form th:action="@{/servicos-avulsos/salvar}" th:object="${novoServico}" method="post" id="formNovaOS">
+        <form th:action="@{/servicos-avulsos/salvar}" th:object="${novoServico}" method="post" id="formNovaOS" enctype="multipart/form-data">
             <div class="row g-4">
                 
                 <!-- Left Column: Client -->
@@ -267,7 +267,7 @@
 
                             <div th:unless="${catalogoServicos.empty}" class="services-grid">
                                 <label th:each="servico : ${catalogoServicos}" class="service-radio-card">
-                                    <input type="radio" name="servico" th:value="${servico.id}" th:data-preco="${servico.preco}" required>
+                                    <input type="radio" name="servico" th:value="${servico.id}" th:data-preco="${servico.preco}">
                                     <div class="service-card-content">
                                         <div class="service-icon-lg" th:classappend="'bg-soft-' + ${servico.categoria.cor}">
                                             <i class="fa-solid" th:classappend="${servico.categoria.name() == 'LAVAGEM' ? 'fa-soap' : (servico.categoria.name() == 'POLIMENTO' ? 'fa-gem' : (servico.categoria.name() == 'ESTETICA' ? 'fa-wand-magic-sparkles' : 'fa-star'))}"></i>
@@ -278,6 +278,23 @@
                                     </div>
                                 </label>
                             </div>
+                        </div>
+
+                        <!-- Photos Upload -->
+                        <div class="mb-4">
+                            <div class="section-title">
+                                <i class="fa-solid fa-camera"></i>
+                                Fotos do Veículo (opcional)
+                            </div>
+                            <div class="alert alert-dark border-secondary d-flex align-items-center gap-3 mb-3">
+                                <i class="fa-solid fa-circle-info text-info"></i>
+                                <div class="small text-muted">
+                                    Anexe fotos para evidência de estado do veículo na abertura da OS.
+                                    Formatos: JPG/PNG • Máx. 10MB por imagem • Até 8 imagens.
+                                </div>
+                            </div>
+                            <input type="file" id="fotosInput" name="fotos" accept="image/*" multiple class="form-control bg-dark text-light border-secondary">
+                            <div id="previewGrid" class="mt-3 d-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px;"></div>
                         </div>
 
                         <!-- Price Override -->
@@ -466,6 +483,99 @@
                 $('input[name="servico"]').on('change', function() {
                     const preco = $(this).data('preco');
                     $('#valor').val(preco);
+                });
+
+                // Photos preview
+                const $fotos = $('#fotosInput');
+                const $grid = $('#previewGrid');
+                $fotos.on('change', function() {
+                    const files = this.files;
+                    $grid.empty();
+                    const maxFiles = 8;
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    let count = 0;
+                    Array.from(files).forEach(f => {
+                        if (count >= maxFiles) return;
+                        if (!f.type.startsWith('image/')) return;
+                        if (f.size > maxSize) return;
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const card = $(`
+                                <div class="border border-secondary rounded" style="background:#0f1623; padding:8px;">
+                                    <img src="${e.target.result}" alt="preview" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">
+                                </div>
+                            `);
+                            $grid.append(card);
+                        };
+                        reader.readAsDataURL(f);
+                        count++;
+                    });
+                });
+
+                $('#formNovaOS').on('submit', function(e) {
+                    const servicoSelecionado = $('input[name="servico"]').is(':checked');
+                    const clienteSelecionado = $('#clienteIdHidden').val();
+                    const avulsoAtivo = $('#toggleAvulso').is(':checked');
+                    const avulsoNome = $('input[name="clienteAvulsoNome"]').val();
+                    const avulsoVeiculo = $('input[name="clienteAvulsoVeiculo"]').val();
+
+                    if (!servicoSelecionado) {
+                        e.preventDefault();
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Selecione um serviço',
+                                text: 'É necessário escolher um serviço antes de continuar.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK',
+                                background: '#0f1623',
+                                color: '#fff'
+                            }).then(() => {
+                                const $grid = $('.services-grid');
+                                if ($grid.length) {
+                                    $('html, body').animate({ scrollTop: $grid.offset().top - 80 }, 300);
+                                }
+                            });
+                        } else {
+                            alert('Selecione um serviço antes de continuar.');
+                            const $grid = $('.services-grid');
+                            if ($grid.length) {
+                                $('html, body').animate({ scrollTop: $grid.offset().top - 80 }, 300);
+                            }
+                        }
+                        return;
+                    }
+
+                    if (!clienteSelecionado && !(avulsoAtivo && avulsoNome && avulsoVeiculo)) {
+                        e.preventDefault();
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Informe o cliente',
+                                text: 'Selecione um cliente ou preencha os dados de cliente avulso.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK',
+                                background: '#0f1623',
+                                color: '#fff'
+                            }).then(() => {
+                                if (avulsoAtivo) {
+                                    const $sec = $('#sectionClienteAvulso');
+                                    if ($sec.length) $('html, body').animate({ scrollTop: $sec.offset().top - 80 }, 300);
+                                } else {
+                                    const $sec = $('#sectionBuscaCliente');
+                                    if ($sec.length) $('html, body').animate({ scrollTop: $sec.offset().top - 80 }, 300);
+                                }
+                            });
+                        } else {
+                            alert('Selecione um cliente ou preencha os dados de cliente avulso.');
+                            if (avulsoAtivo) {
+                                const $sec = $('#sectionClienteAvulso');
+                                if ($sec.length) $('html, body').animate({ scrollTop: $sec.offset().top - 80 }, 300);
+                            } else {
+                                const $sec = $('#sectionBuscaCliente');
+                                if ($sec.length) $('html, body').animate({ scrollTop: $sec.offset().top - 80 }, 300);
+                            }
+                        }
+                        return;
+                    }
                 });
             });
         </script>

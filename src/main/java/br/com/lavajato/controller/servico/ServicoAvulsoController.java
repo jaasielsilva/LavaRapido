@@ -32,6 +32,9 @@ public class ServicoAvulsoController {
 
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private br.com.lavajato.service.storage.FileStorageService fileStorageService;
 
     @GetMapping
     public String listar(@RequestParam(defaultValue = "0") int page,
@@ -69,6 +72,7 @@ public class ServicoAvulsoController {
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute ServicoAvulso servico,
                          @RequestParam("servico") Long servicoId,
+                         @RequestParam(value = "fotos", required = false) org.springframework.web.multipart.MultipartFile[] fotos,
                          RedirectAttributes redirectAttributes) {
         catalogoService.buscarPorId(servicoId).ifPresentOrElse(
                 servico::setServico,
@@ -83,7 +87,16 @@ public class ServicoAvulsoController {
         }
 
         try {
-            servicoService.salvar(servico);
+            ServicoAvulso salvo = servicoService.salvar(servico);
+            // Salvar fotos anexadas, se houver
+            try {
+                if (fotos != null && fotos.length > 0) {
+                    fileStorageService.salvarFotosServico(salvo.getEmpresa(), salvo, fotos);
+                }
+            } catch (Exception e) {
+                // Não impede cadastro da OS; apenas registra que houve erro ao salvar anexos
+                System.err.println("Erro ao salvar fotos da OS: " + e.getMessage());
+            }
             redirectAttributes.addFlashAttribute("servicoAvulsoSucesso", "cadastrado");
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("servicoAvulsoErro", e.getMessage());
