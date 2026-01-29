@@ -284,16 +284,21 @@
                         <div class="mb-4">
                             <div class="section-title">
                                 <i class="fa-solid fa-camera"></i>
-                                Fotos do Veículo (opcional)
+                                Câmera
                             </div>
                             <div class="alert alert-dark border-secondary d-flex align-items-center gap-3 mb-3">
                                 <i class="fa-solid fa-circle-info text-info"></i>
                                 <div class="small text-muted">
-                                    Anexe fotos para evidência de estado do veículo na abertura da OS.
-                                    Formatos: JPG/PNG • Máx. 10MB por imagem • Até 8 imagens.
+                                    Tire fotos para evidência de estado do veículo. Máx. 10MB por imagem, até 8 imagens.
                                 </div>
                             </div>
-                            <input type="file" id="fotosInput" name="fotos" accept="image/*" multiple class="form-control bg-dark text-light border-secondary">
+                            <div class="d-flex gap-3 align-items-center">
+                                <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" id="btnCamera">
+                                    <i class="fa-solid fa-camera me-2"></i>Abrir Câmera
+                                </button>
+                                <span class="text-muted small">Selecionadas: <span id="fotosCount">0</span>/8</span>
+                            </div>
+                            <input type="file" id="fotosInput" name="fotos" accept="image/*" capture="environment" multiple class="d-none">
                             <div id="previewGrid" class="mt-3 d-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px;"></div>
                         </div>
 
@@ -485,19 +490,16 @@
                     $('#valor').val(preco);
                 });
 
-                // Photos preview
                 const $fotos = $('#fotosInput');
                 const $grid = $('#previewGrid');
-                $fotos.on('change', function() {
-                    const files = this.files;
+                const $count = $('#fotosCount');
+                const maxFiles = 8;
+                const maxSize = 10 * 1024 * 1024;
+                const dt = new DataTransfer();
+
+                function renderPreview(files) {
                     $grid.empty();
-                    const maxFiles = 8;
-                    const maxSize = 10 * 1024 * 1024; // 10MB
-                    let count = 0;
                     Array.from(files).forEach(f => {
-                        if (count >= maxFiles) return;
-                        if (!f.type.startsWith('image/')) return;
-                        if (f.size > maxSize) return;
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             const card = $(`
@@ -508,8 +510,22 @@
                             $grid.append(card);
                         };
                         reader.readAsDataURL(f);
-                        count++;
                     });
+                    $count.text(files.length);
+                }
+
+                $('#btnCamera').on('click', function() { $fotos.click(); });
+
+                $fotos.on('change', function() {
+                    const files = Array.from(this.files);
+                    files.forEach(f => {
+                        if (dt.files.length >= maxFiles) return;
+                        if (!f.type.startsWith('image/')) return;
+                        if (f.size > maxSize) return;
+                        dt.items.add(f);
+                    });
+                    $fotos[0].files = dt.files;
+                    renderPreview(dt.files);
                 });
 
                 $('#formNovaOS').on('submit', function(e) {
