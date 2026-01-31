@@ -2,32 +2,32 @@ spring:
   application:
     name: lavajato
   datasource:
-    url: jdbc:mysql://localhost:3306/LavaRapido?createDatabaseIfNotExist=true&serverTimezone=UTC
-    username: root
-    password: 12345
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/LavaRapido?createDatabaseIfNotExist=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:12345}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
   thymeleaf:
-    cache: false
+    cache: ${SPRING_THYMELEAF_CACHE:false}
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: silvajasiel30@gmail.com
-    password: uatakfluohmgczdo
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:true}
           starttls:
-            enable: true
-            required: true
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:true}
+            required: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED:true}
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
