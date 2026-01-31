@@ -503,7 +503,7 @@
                         <!-- Botão Adicionar ao Carrinho -->
                         <button class="btn-action-trigger btn-add-carrinho" type="button" title="Adicionar ao Carrinho"
                             th:data-id="${produto.id}" th:data-nome="${produto.nome}"
-                            th:data-preco="${produto.precoVenda}">
+                            th:data-preco="${produto.precoVenda}" th:data-estoque="${produto.estoque}">
                             <i class="fa-solid fa-cart-plus"></i>
                         </button>
 
@@ -809,7 +809,13 @@
                     }
 
                     const list = document.getElementById('listaItensVenda');
-                    const empty = document.getElementById('carrinhoVazioMsg');
+                    const empty = document.getElementById('carrinhoVazioMsg') || (() => {
+                        const el = document.createElement('div');
+                        el.id = 'carrinhoVazioMsg';
+                        el.className = 'text-center text-muted py-5';
+                        el.innerHTML = '<i class="fa-solid fa-cart-arrow-down fa-2x mb-2 opacity-20"></i><p>Carrinho vazio</p>';
+                        return el;
+                    })();
                     const confirmBtn = document.getElementById('btnConfirmarVenda');
 
                     if (carrinho.length === 0) {
@@ -820,7 +826,7 @@
                         return;
                     }
 
-                    empty.remove();
+                    if (empty && empty.parentElement) empty.remove();
                     list.innerHTML = '';
                     confirmBtn.disabled = false;
                     let total = 0;
@@ -863,37 +869,36 @@
 
                     const toast = document.createElement('div');
                     toast.className = 'custom-toast';
-                    toast.style.position = 'static'; // Allow stack
-                    toast.style.transform = 'translateX(100px)';
-                    toast.style.opacity = '0';
+                    toast.style.position = 'static';
                     toast.innerHTML = `<i class="fa-solid fa-cart-check text-info"></i> <span>${message}</span>`;
                     container.appendChild(toast);
 
-                    // Animation
                     requestAnimationFrame(() => {
-                        toast.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                         toast.classList.add('show');
-                        toast.style.transform = 'translateX(0)';
-                        toast.style.opacity = '1';
                     });
 
                     setTimeout(() => {
-                        toast.style.transform = 'translateX(100px)';
-                        toast.style.opacity = '0';
+                        toast.classList.remove('show');
                         setTimeout(() => toast.remove(), 300);
-                        if (container.children.length === 0) {
-                            // Container cleanup is optional, but keeps DOM clean
-                        }
                     }, 2500);
                 };
 
                 document.querySelectorAll('.btn-add-carrinho').forEach(btn => {
                     btn.addEventListener('click', function () {
                         const d = this.dataset;
+                        const estoque = parseInt(d.estoque || '0', 10);
                         const exist = carrinho.find(it => it.id === d.id);
                         if (exist) {
+                            if (exist.qtd >= estoque) {
+                                window.showToast(`Estoque insuficiente para ${d.nome}`);
+                                return;
+                            }
                             exist.qtd++;
                         } else {
+                            if (estoque <= 0) {
+                                window.showToast(`Estoque insuficiente para ${d.nome}`);
+                                return;
+                            }
                             carrinho.push({ id: d.id, nome: d.nome, preco: parseFloat(d.preco), qtd: 1 });
                         }
                         updateCartUI(true);

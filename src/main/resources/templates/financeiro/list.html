@@ -441,6 +441,17 @@
                 </div>
             </div>
 
+            <div class="stat-card card-saldo">
+                <div class="stat-icon bg-icon-blue"><i class="fa-solid fa-cash-register"></i></div>
+                <div>
+                    <span class="stat-label">Saldo do Período</span>
+                    <div class="stat-value text-info" th:text="'R$ ' + ${#numbers.formatDecimal(saldoPeriodo != null ? saldoPeriodo : 0, 0, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                    <div class="stat-meta">
+                        <span>Entradas − Saídas</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="stat-card card-servicos">
                 <div class="stat-icon bg-icon-blue"><i class="fa-solid fa-wrench"></i></div>
                 <div>

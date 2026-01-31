@@ -1,5 +1,33 @@
 package br.com.lavajato.service.financeiro;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import br.com.lavajato.dto.BalancoMensalDTO;
 import br.com.lavajato.dto.MovimentacaoDTO;
 import br.com.lavajato.model.agendamento.Agendamento;
@@ -17,23 +45,6 @@ import br.com.lavajato.repository.servico.ServicoAvulsoRepository;
 import br.com.lavajato.repository.venda.VendaRepository;
 import br.com.lavajato.service.usuario.UsuarioService;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 public class FinanceiroService {
@@ -129,6 +140,9 @@ public class FinanceiroService {
         resumo.put("margemLucro", margemLucro);
         resumo.put("qtdServicos", qtdServicos + agendamentos.size()); // Soma quantidades
         resumo.put("qtdProdutos", qtdProdutos);
+        
+        BigDecimal saldoPeriodo = receitaTotal.subtract(investimentoEstoque).subtract(despesasOperacionais);
+        resumo.put("saldoPeriodo", saldoPeriodo);
         
         // Média Mensal (Simples: divide pelo número de meses no intervalo)
         long meses = java.time.temporal.ChronoUnit.MONTHS.between(YearMonth.from(inicio), YearMonth.from(fim)) + 1;

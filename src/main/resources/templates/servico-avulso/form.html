@@ -274,7 +274,7 @@
                                         </div>
                                         <div class="fw-bold text-white" th:text="${servico.nome}">Lavagem</div>
                                         <div class="small text-muted" th:text="${servico.tempoMinutos} + ' min'">30 min</div>
-                                        <div class="fw-bold text-success fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 0, 'COMMA')}">R$ 50</div>
+                                        <div class="fw-bold text-success fs-5" th:text="'R$ ' + ${#numbers.formatDecimal(servico.preco, 1, 'POINT', 2, 'COMMA')}">R$ 50,00</div>
                                     </div>
                                 </label>
                             </div>
@@ -307,8 +307,8 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div class="flex-grow-1">
                                     <label class="form-label text-muted small uppercase fw-bold mb-1">Valor Personalizado (Opcional)</label>
-                                    <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" 
-                                           th:field="*{valor}" placeholder="Preço do catálogo">
+                                    <input type="text" id="valorDisplay" class="form-control bg-dark text-light border-secondary" placeholder="Preço do catálogo">
+                                    <input type="hidden" id="valor" th:field="*{valor}">
                                 </div>
                                 <div class="text-end">
                                     <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale">
@@ -330,6 +330,18 @@
 
         <script>
             $(document).ready(function() {
+                function formatMoeda(value) {
+                    const num = typeof value === 'number' ? value : parseFloat(String(value).replace(',', '.'));
+                    const v = isNaN(num) ? 0 : num;
+                    return v.toFixed(2).replace('.', ',');
+                }
+                function applyMask(input, hidden) {
+                    let val = input.value.replace(/[^\d]/g, '');
+                    if (val.length === 0) val = '0';
+                    const num = parseInt(val, 10) / 100;
+                    input.value = 'R$ ' + formatMoeda(num);
+                    if (hidden) hidden.value = num.toFixed(2);
+                }
                 const $inputBusca = $('#inputBuscaCliente');
                 const $listaResultados = $('#listaResultados');
                 const $clienteIdHidden = $('#clienteIdHidden');
@@ -344,7 +356,8 @@
                 const $divFidelidade = $('#divFidelidadeAvulso');
                 const $spanPontos = $('#spanPontosAvulso');
                 const $checkFidelidade = $('#usoFidelidade');
-                const $valorInput = $('input[name="valor"]'); // This might target multiple if hidden exists? No, th:field="*{valor}" creates one input usually.
+                const $valorInputHidden = $('#valor');
+                const $valorInputDisplay = $('#valorDisplay');
                 // Wait, there is a "valor" input in "Valor Personalizado".
                 
                 let valorAnterior = '';
@@ -361,17 +374,20 @@
 
                 $checkFidelidade.on('change', function() {
                     if ($(this).is(':checked')) {
-                         valorAnterior = $valorInput.val();
-                         $valorInput.val('0.00').prop('readonly', true).addClass('text-muted');
+                         valorAnterior = $valorInputHidden.val();
+                         $valorInputHidden.val('0.00');
+                         $valorInputDisplay.val('R$ 0,00').prop('readonly', true).addClass('text-muted');
                          // Also update radio button visual if needed, but the radio selection stays.
                     } else {
-                         $valorInput.prop('readonly', false).removeClass('text-muted');
+                         $valorInputDisplay.prop('readonly', false).removeClass('text-muted');
                          // Restore value from selected service or previous manual value
                          const selectedServicePrice = $('input[name="servico"]:checked').data('preco');
                          if (selectedServicePrice) {
-                             $valorInput.val(selectedServicePrice);
+                             $valorInputHidden.val(parseFloat(selectedServicePrice).toFixed(2));
+                             $valorInputDisplay.val('R$ ' + formatMoeda(selectedServicePrice));
                          } else if (valorAnterior) {
-                             $valorInput.val(valorAnterior);
+                             $valorInputHidden.val(valorAnterior);
+                             $valorInputDisplay.val('R$ ' + formatMoeda(valorAnterior));
                          }
                     }
                 });
@@ -487,8 +503,18 @@
                 // Auto-fill price
                 $('input[name="servico"]').on('change', function() {
                     const preco = $(this).data('preco');
-                    $('#valor').val(preco);
+                    $valorInputHidden.val(parseFloat(preco).toFixed(2));
+                    $valorInputDisplay.val('R$ ' + formatMoeda(preco));
                 });
+
+                $valorInputDisplay.on('input', function() {
+                    applyMask(this, $valorInputHidden[0]);
+                });
+                if ($valorInputHidden.val()) {
+                    $valorInputDisplay.val('R$ ' + formatMoeda($valorInputHidden.val()));
+                } else {
+                    $valorInputDisplay.val('');
+                }
 
                 const $fotos = $('#fotosInput');
                 const $grid = $('#previewGrid');
